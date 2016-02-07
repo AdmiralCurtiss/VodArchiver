@@ -1,3 +1,11 @@
+# Visual Studio files/dirs
+.vs
+bin
+obj
+Debug
+Release
+packages
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
