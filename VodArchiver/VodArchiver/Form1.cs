@@ -18,8 +18,9 @@ namespace VodArchiver {
 			twixel = new Twixel( "", "", Twixel.APIVersion.v3 );
 		}
 
-		private async void button1_Click( object sender, EventArgs e ) {
-			string id = "v16680710";
+		private async void buttonDownload_Click( object sender, EventArgs e ) {
+			string id = textboxMediaId.Text.Trim();
+			if ( id == "" ) { return; }
 			Task<string[]> task = GetFileUrlsOfTwitchVod( twixel, id );
 			await task;
 
