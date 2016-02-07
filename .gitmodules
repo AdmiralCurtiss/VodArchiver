@@ -2,3 +2,7 @@
 	path = Twixel
 	url = https://github.com/AdmiralCurtiss/Twixel.git
 	branch = vod
+[submodule "MediaToolkit"]
+	path = MediaToolkit
+	url = https://github.com/AdmiralCurtiss/MediaToolkit.git
+	branch = additional-options
