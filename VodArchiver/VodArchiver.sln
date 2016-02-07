@@ -7,20 +7,33 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VodArchiver", "VodArchiver\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Twixel", "..\Twixel\Twixel\Twixel.csproj", "{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaToolkit", "..\MediaToolkit\MediaToolkit src\MediaToolkit\MediaToolkit.csproj", "{124AB335-EEAC-416F-B06B-80AD3CF56E38}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		DebugToConsole|Any CPU = DebugToConsole|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{D809A464-CA77-4653-80EF-F0C5CCF4DDEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D809A464-CA77-4653-80EF-F0C5CCF4DDEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D809A464-CA77-4653-80EF-F0C5CCF4DDEF}.DebugToConsole|Any CPU.ActiveCfg = Debug|Any CPU
+		{D809A464-CA77-4653-80EF-F0C5CCF4DDEF}.DebugToConsole|Any CPU.Build.0 = Debug|Any CPU
 		{D809A464-CA77-4653-80EF-F0C5CCF4DDEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D809A464-CA77-4653-80EF-F0C5CCF4DDEF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}.DebugToConsole|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}.DebugToConsole|Any CPU.Build.0 = Debug|Any CPU
 		{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{124AB335-EEAC-416F-B06B-80AD3CF56E38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{124AB335-EEAC-416F-B06B-80AD3CF56E38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{124AB335-EEAC-416F-B06B-80AD3CF56E38}.DebugToConsole|Any CPU.ActiveCfg = DebugToConsole|Any CPU
+		{124AB335-EEAC-416F-B06B-80AD3CF56E38}.DebugToConsole|Any CPU.Build.0 = DebugToConsole|Any CPU
+		{124AB335-EEAC-416F-B06B-80AD3CF56E38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{124AB335-EEAC-416F-B06B-80AD3CF56E38}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

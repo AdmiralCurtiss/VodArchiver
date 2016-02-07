@@ -80,6 +80,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\MediaToolkit\MediaToolkit src\MediaToolkit\MediaToolkit.csproj">
+      <Project>{124ab335-eeac-416f-b06b-80ad3cf56e38}</Project>
+      <Name>MediaToolkit</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Twixel\Twixel\Twixel.csproj">
       <Project>{dfd0db77-dbc7-4b79-8747-f9caf6274dbe}</Project>
       <Name>Twixel</Name>
