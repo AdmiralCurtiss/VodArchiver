@@ -21,14 +21,8 @@ namespace VodArchiver {
 		private async void buttonDownload_Click( object sender, EventArgs e ) {
 			string id = textboxMediaId.Text.Trim();
 			if ( id == "" ) { return; }
-			Task<string[]> task = GetFileUrlsOfTwitchVod( twixel, id );
-			await task;
-
-			if ( task.Status == TaskStatus.RanToCompletion ) {
-				DownloadAndCombineFilePartsTS( id + "-twitch", task.Result );
-			} else {
-				Console.WriteLine( "error!" );
-			}
+			string[] urls = await GetFileUrlsOfTwitchVod( twixel, id );
+			await DownloadAndCombineFilePartsTS( id + "-twitch", urls );
 		}
 
 		public static async void VideoInfo( string id, Twixel twixel ) {
@@ -48,7 +42,7 @@ namespace VodArchiver {
 			Console.WriteLine( v.ToString() );
 		}
 
-		public static void DownloadAndCombineFilePartsTS( string targetFolder, string[] urls ) {
+		public static async Task DownloadAndCombineFilePartsTS( string targetFolder, string[] urls ) {
 			Directory.CreateDirectory( targetFolder );
 
 			// download files
@@ -71,7 +65,10 @@ namespace VodArchiver {
 					while ( !success ) {
 						try {
 							Console.WriteLine( "Downloading " + url + "..." );
-							client.DownloadFile( url, outpath_temp );
+							byte[] data = await client.DownloadDataTaskAsync( url );
+							using ( FileStream fs = File.Create( outpath_temp ) ) {
+								await fs.WriteAsync( data, 0, data.Length );
+							}
 							success = true;
 						} catch ( System.Net.WebException ex ) {
 							Console.WriteLine( ex.ToString() );
@@ -90,7 +87,7 @@ namespace VodArchiver {
 			using ( var fs = new FileStream( combinedFilename, FileMode.Create ) ) {
 				foreach ( var file in files ) {
 					using ( var part = new FileStream( file, FileMode.Open ) ) {
-						part.CopyTo( fs );
+						await part.CopyToAsync( fs );
 					}
 				}
 
@@ -98,17 +95,19 @@ namespace VodArchiver {
 			}
 
 			// remux
-			string finalFilename = Path.Combine( targetFolder, "final.mp4" );
-			Console.WriteLine( "Remuxing to " + finalFilename + "..." );
-			var inputFile = new MediaToolkit.Model.MediaFile( combinedFilename );
-			var outputFile = new MediaToolkit.Model.MediaFile( finalFilename );
+			await Task.Run( () => Remux( Path.Combine( targetFolder, "final.mp4" ), combinedFilename ) );
+		}
+
+		public static void Remux( string targetName, string sourceName ) {
+			Console.WriteLine( "Remuxing to " + targetName + "..." );
+			var inputFile = new MediaToolkit.Model.MediaFile( sourceName );
+			var outputFile = new MediaToolkit.Model.MediaFile( targetName );
 			using ( var engine = new MediaToolkit.Engine( "ffmpeg.exe" ) ) {
 				MediaToolkit.Options.ConversionOptions options = new MediaToolkit.Options.ConversionOptions();
 				options.AdditionalOptions = "-codec copy -bsf:a aac_adtstoasc";
 				engine.Convert( inputFile, outputFile, options );
 			}
-
-			Console.WriteLine( "Created " + finalFilename + "!" );
+			Console.WriteLine( "Created " + targetName + "!" );
 		}
 
 		public static string GetM3U8PathFromM3U_Twitch( string m3u, string videoType ) {
