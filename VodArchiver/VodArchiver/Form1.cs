@@ -31,6 +31,23 @@ namespace VodArchiver {
 			}
 		}
 
+		public static async void VideoInfo( string id, Twixel twixel ) {
+			Video v = await twixel.RetrieveVideo( id );
+			switch ( v.status ) {
+				case "recording":
+					// video is still live, and will get more parts added over time
+					break;
+				case "recorded":
+					// live stream is done, video probably won't change, except maybe for muting/unmuting I guess?
+					break;
+				default:
+					// are there other states?
+					Console.WriteLine( "Encountered unknown video status: " + v.status );
+					break;
+			}
+			Console.WriteLine( v.ToString() );
+		}
+
 		public static void DownloadAndCombineFilePartsTS( string targetFolder, string[] urls ) {
 			Directory.CreateDirectory( targetFolder );
 
