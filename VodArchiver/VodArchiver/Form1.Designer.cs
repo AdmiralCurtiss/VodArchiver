@@ -26,6 +26,7 @@
 			this.buttonDownload = new System.Windows.Forms.Button();
 			this.labelMediaId = new System.Windows.Forms.Label();
 			this.textboxMediaId = new System.Windows.Forms.TextBox();
+			this.comboBoxService = new System.Windows.Forms.ComboBox();
 			this.SuspendLayout();
 			// 
 			// buttonDownload
@@ -54,11 +55,24 @@
 			this.textboxMediaId.Size = new System.Drawing.Size(100, 20);
 			this.textboxMediaId.TabIndex = 2;
 			// 
+			// comboBoxService
+			// 
+			this.comboBoxService.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.comboBoxService.FormattingEnabled = true;
+			this.comboBoxService.Items.AddRange(new object[] {
+            "Twitch",
+            "Hitbox"});
+			this.comboBoxService.Location = new System.Drawing.Point(12, 39);
+			this.comboBoxService.Name = "comboBoxService";
+			this.comboBoxService.Size = new System.Drawing.Size(89, 21);
+			this.comboBoxService.TabIndex = 3;
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(284, 261);
+			this.Controls.Add(this.comboBoxService);
 			this.Controls.Add(this.textboxMediaId);
 			this.Controls.Add(this.labelMediaId);
 			this.Controls.Add(this.buttonDownload);
@@ -74,5 +88,6 @@
 		private System.Windows.Forms.Button buttonDownload;
 		private System.Windows.Forms.Label labelMediaId;
 		private System.Windows.Forms.TextBox textboxMediaId;
+		private System.Windows.Forms.ComboBox comboBoxService;
 	}
 }
