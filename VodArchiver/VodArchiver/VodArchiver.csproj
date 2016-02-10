@@ -59,6 +59,10 @@
     <Compile Include="Hitbox.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VideoJobs\HitboxVideoJob.cs" />
+    <Compile Include="VideoJobs\IVideoJob.cs" />
+    <Compile Include="VideoJobs\TsVideoJob.cs" />
+    <Compile Include="VideoJobs\TwitchVideoJob.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
