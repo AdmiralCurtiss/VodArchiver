@@ -7,14 +7,24 @@ using System.Threading.Tasks;
 
 namespace VodArchiver.VideoJobs {
 	public abstract class TsVideoJob : IVideoJob {
+		public abstract string ServiceName { get; set; }
+		public abstract string Username { get; set; }
+		public abstract string VideoId { get; set; }
+		public abstract string Status { get; set; }
+
 		public async Task Run() {
+			Status = "Retrieving video info...";
 			string[] urls = await GetFileUrlsOfVod();
 			string tempFolder = GetTempFolder();
+			Status = "Downloading files...";
 			string[] files = await TsVideoJob.Download( tempFolder, urls );
 			string combinedFilename = Path.Combine( tempFolder, "combined.ts" );
+			Status = "Combining downloaded video parts...";
 			await TsVideoJob.Combine( combinedFilename, files );
 			string remuxedFilename = Path.Combine( GetTargetFolder(), GetTargetFilenameWithoutExtension() + ".mp4" );
+			Status = "Remuxing to MP4...";
 			await Task.Run( () => TsVideoJob.Remux( remuxedFilename, combinedFilename ) );
+			Status = "Done!";
 		}
 
 		public abstract Task<string[]> GetFileUrlsOfVod();

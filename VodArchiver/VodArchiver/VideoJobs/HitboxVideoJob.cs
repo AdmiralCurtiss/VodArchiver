@@ -8,15 +8,23 @@ using System.Threading.Tasks;
 
 namespace VodArchiver.VideoJobs {
 	public class HitboxVideoJob : TsVideoJob {
-		string VideoId;
+		public override string ServiceName { get; set; }
+		public override string Username { get; set; }
+		public override string VideoId { get; set; }
+		public override string Status { get; set; }
+
 		HitboxVideo VideoInfo = null;
 
 		public HitboxVideoJob( string id ) {
+			ServiceName = "Hitbox";
+			Username = "...";
 			VideoId = id;
+			Status = "...";
 		}
 
 		public override async Task<string[]> GetFileUrlsOfVod() {
 			VideoInfo = await Hitbox.RetrieveVideo( VideoId );
+			Username = VideoInfo.MediaUserName;
 			// TODO: Figure out how to determine quality when there are multiple.
 			string m3u8path = "http://edge.bf.hitbox.tv/static/videos/vods" + GetM3U8PathFromM3U( VideoInfo.MediaProfiles.First().Url );
 			string folderpath = TsVideoJob.GetFolder( m3u8path );

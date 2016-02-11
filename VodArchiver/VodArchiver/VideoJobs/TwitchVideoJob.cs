@@ -8,18 +8,26 @@ using TwixelAPI;
 
 namespace VodArchiver.VideoJobs {
 	public class TwitchVideoJob : TsVideoJob {
+		public override string ServiceName { get; set; }
+		public override string Username { get; set; }
+		public override string VideoId { get; set; }
+		public override string Status { get; set; }
+
 		Twixel TwitchAPI;
-		string VideoId;
 		string VideoQuality = "chunked";
 		TwixelAPI.Video VideoInfo = null;
 
 		public TwitchVideoJob( Twixel api, string id ) {
-			TwitchAPI = api;
+			ServiceName = "Twitch";
+			Username = "...";
 			VideoId = id;
+			Status = "...";
+			TwitchAPI = api;
 		}
 
 		public override async Task<string[]> GetFileUrlsOfVod() {
 			VideoInfo = await TwitchAPI.RetrieveVideo( VideoId );
+			Username = VideoInfo.channel["name"];
 			string m3u = await TwitchAPI.RetrieveVodM3U( VideoId );
 			string m3u8path = GetM3U8PathFromM3U( m3u, VideoQuality );
 			string folderpath = TsVideoJob.GetFolder( m3u8path );
