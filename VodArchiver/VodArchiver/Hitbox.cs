@@ -26,9 +26,10 @@ namespace VodArchiver {
 		public string MediaFile;
 		public int MediaUserId;
 		public HitboxMediaProfile[] MediaProfiles;
-		public string MediaDateAdded;
+		public DateTime MediaDateAdded;
 		public string MediaTitle;
 		public string MediaDescription;
+		public string MediaGame;
 		public double MediaDuration;
 
 		public HitboxVideo( JObject jo ) {
@@ -37,9 +38,10 @@ namespace VodArchiver {
 			MediaId = (int)video["media_id"];
 			MediaFile = (string)video["media_file"];
 			MediaUserId = (int)video["media_user_id"];
-			MediaDateAdded = (string)video["media_date_added"];
+			MediaDateAdded = DateTime.Parse( (string)video["media_date_added"] );
 			MediaTitle = (string)video["media_title"];
 			MediaDescription = (string)video["media_description"];
+			MediaGame = (string)video["category_name"];
 			MediaDuration = (double)video["media_duration"];
 			string profileString = (string)video["media_profiles"];
 			Console.WriteLine( profileString );

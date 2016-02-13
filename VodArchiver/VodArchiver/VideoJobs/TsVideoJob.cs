@@ -10,6 +10,10 @@ namespace VodArchiver.VideoJobs {
 		public abstract string ServiceName { get; set; }
 		public abstract string Username { get; set; }
 		public abstract string VideoId { get; set; }
+		public abstract string VideoTitle { get; set; }
+		public abstract string VideoGame { get; set; }
+		public abstract DateTime VideoTimestamp { get; set; }
+		public abstract TimeSpan VideoLength { get; set; }
 		public abstract string Status { get; set; }
 
 		public abstract StatusUpdate.IStatusUpdate StatusUpdater { get; set; }

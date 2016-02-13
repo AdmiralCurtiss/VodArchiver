@@ -11,6 +11,10 @@ namespace VodArchiver.VideoJobs {
 		public override string ServiceName { get; set; }
 		public override string Username { get; set; }
 		public override string VideoId { get; set; }
+		public override string VideoTitle { get; set; }
+		public override string VideoGame { get; set; }
+		public override DateTime VideoTimestamp { get; set; }
+		public override TimeSpan VideoLength { get; set; }
 		private string _Status;
 		public override string Status {
 			get {
@@ -37,6 +41,11 @@ namespace VodArchiver.VideoJobs {
 		public override async Task<string[]> GetFileUrlsOfVod() {
 			VideoInfo = await Hitbox.RetrieveVideo( VideoId );
 			Username = VideoInfo.MediaUserName;
+			VideoTitle = VideoInfo.MediaTitle;
+			VideoGame = VideoInfo.MediaGame;
+			VideoTimestamp = VideoInfo.MediaDateAdded;
+			VideoLength = TimeSpan.FromSeconds( VideoInfo.MediaDuration );
+
 			// TODO: Figure out how to determine quality when there are multiple.
 			string m3u8path = "http://edge.bf.hitbox.tv/static/videos/vods" + GetM3U8PathFromM3U( VideoInfo.MediaProfiles.First().Url );
 			string folderpath = TsVideoJob.GetFolder( m3u8path );

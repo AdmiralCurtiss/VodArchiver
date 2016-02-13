@@ -11,6 +11,10 @@ namespace VodArchiver.VideoJobs {
 		public override string ServiceName { get; set; }
 		public override string Username { get; set; }
 		public override string VideoId { get; set; }
+		public override string VideoTitle { get; set; }
+		public override string VideoGame { get; set; }
+		public override DateTime VideoTimestamp { get; set; }
+		public override TimeSpan VideoLength { get; set; }
 		private string _Status;
 		public override string Status {
 			get {
@@ -40,6 +44,11 @@ namespace VodArchiver.VideoJobs {
 		public override async Task<string[]> GetFileUrlsOfVod() {
 			VideoInfo = await TwitchAPI.RetrieveVideo( VideoId );
 			Username = VideoInfo.channel["name"];
+			VideoTitle = VideoInfo.title;
+			VideoGame = VideoInfo.game;
+			VideoTimestamp = VideoInfo.recordedAt;
+			VideoLength = TimeSpan.FromSeconds( VideoInfo.length );
+
 			string m3u = await TwitchAPI.RetrieveVodM3U( VideoId );
 			string m3u8path = GetM3U8PathFromM3U( m3u, VideoQuality );
 			string folderpath = TsVideoJob.GetFolder( m3u8path );
