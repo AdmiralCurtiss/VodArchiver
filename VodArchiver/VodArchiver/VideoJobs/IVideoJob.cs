@@ -11,6 +11,8 @@ namespace VodArchiver.VideoJobs {
 		string VideoId { get; set; }
 		string Status { get; set; }
 
+		StatusUpdate.IStatusUpdate StatusUpdater { get; set; }
+
 		Task Run();
 	}
 }

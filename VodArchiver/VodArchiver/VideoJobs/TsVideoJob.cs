@@ -12,12 +12,14 @@ namespace VodArchiver.VideoJobs {
 		public abstract string VideoId { get; set; }
 		public abstract string Status { get; set; }
 
+		public abstract StatusUpdate.IStatusUpdate StatusUpdater { get; set; }
+
 		public async Task Run() {
 			Status = "Retrieving video info...";
 			string[] urls = await GetFileUrlsOfVod();
 			string tempFolder = GetTempFolder();
 			Status = "Downloading files...";
-			string[] files = await TsVideoJob.Download( tempFolder, urls );
+			string[] files = await Download( tempFolder, urls );
 			string combinedFilename = Path.Combine( tempFolder, "combined.ts" );
 			Status = "Combining downloaded video parts...";
 			await TsVideoJob.Combine( combinedFilename, files );
@@ -52,7 +54,7 @@ namespace VodArchiver.VideoJobs {
 			return filenames.ToArray();
 		}
 
-		public static async Task<string[]> Download( string targetFolder, string[] urls ) {
+		public async Task<string[]> Download( string targetFolder, string[] urls ) {
 			Directory.CreateDirectory( targetFolder );
 
 			List<string> files = new List<string>( urls.Length );
@@ -73,7 +75,7 @@ namespace VodArchiver.VideoJobs {
 					bool success = false;
 					while ( !success ) {
 						try {
-							Console.WriteLine( "Downloading " + url + "..." );
+							Status = "Downloading files... (" + ( i + 1 ) + "/" + urls.Length + ")";
 							byte[] data = await client.DownloadDataTaskAsync( url );
 							using ( FileStream fs = File.Create( outpath_temp ) ) {
 								await fs.WriteAsync( data, 0, data.Length );

@@ -37,6 +37,7 @@ namespace VodArchiver {
 					throw new Exception( comboBoxService.SelectedText + " is not a valid service." );
 			}
 
+			job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
 			objectListViewDownloads.AddObject( job );
 			await job.Run();
 		}

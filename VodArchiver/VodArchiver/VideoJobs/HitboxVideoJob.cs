@@ -11,11 +11,23 @@ namespace VodArchiver.VideoJobs {
 		public override string ServiceName { get; set; }
 		public override string Username { get; set; }
 		public override string VideoId { get; set; }
-		public override string Status { get; set; }
+		private string _Status;
+		public override string Status {
+			get {
+				return _Status;
+			}
+			set {
+				_Status = value;
+				StatusUpdater.Update();
+			}
+		}
+
+		public override StatusUpdate.IStatusUpdate StatusUpdater { get; set; }
 
 		HitboxVideo VideoInfo = null;
 
-		public HitboxVideoJob( string id ) {
+		public HitboxVideoJob( string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
+			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
 			ServiceName = "Hitbox";
 			Username = "...";
 			VideoId = id;

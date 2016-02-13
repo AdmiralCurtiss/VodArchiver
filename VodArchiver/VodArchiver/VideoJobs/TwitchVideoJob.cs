@@ -11,13 +11,25 @@ namespace VodArchiver.VideoJobs {
 		public override string ServiceName { get; set; }
 		public override string Username { get; set; }
 		public override string VideoId { get; set; }
-		public override string Status { get; set; }
+		private string _Status;
+		public override string Status {
+			get {
+				return _Status;
+			}
+			set {
+				_Status = value;
+				StatusUpdater.Update();
+			}
+		}
+
+		public override StatusUpdate.IStatusUpdate StatusUpdater { get; set; }
 
 		Twixel TwitchAPI;
 		string VideoQuality = "chunked";
 		TwixelAPI.Video VideoInfo = null;
 
-		public TwitchVideoJob( Twixel api, string id ) {
+		public TwitchVideoJob( Twixel api, string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
+			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
 			ServiceName = "Twitch";
 			Username = "...";
 			VideoId = id;
