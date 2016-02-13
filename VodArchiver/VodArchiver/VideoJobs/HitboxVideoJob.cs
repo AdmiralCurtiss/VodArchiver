@@ -80,14 +80,6 @@ namespace VodArchiver.VideoJobs {
 			throw new Exception( m3u + " contains no valid url" );
 		}
 
-		public override string GetTempFolder() {
-			return "hitbox-" + VideoInfo.MediaUserName + "-" + VideoId;
-		}
-
-		public override string GetTargetFolder() {
-			return "muxed";
-		}
-
 		public override string GetTargetFilenameWithoutExtension() {
 			return "hitbox_" + VideoInfo.MediaUserName + "_" + VideoId;
 		}

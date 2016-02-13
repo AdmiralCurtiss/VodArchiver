@@ -34,8 +34,15 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public abstract Task<string[]> GetFileUrlsOfVod();
-		public abstract string GetTempFolder();
-		public abstract string GetTargetFolder();
+
+		public virtual string GetTempFolder() {
+			return System.IO.Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() );
+		}
+
+		public virtual string GetTargetFolder() {
+			return Util.TargetFolderPath;
+		}
+
 		public abstract string GetTargetFilenameWithoutExtension();
 
 		public static string GetFolder( string m3u8path ) {

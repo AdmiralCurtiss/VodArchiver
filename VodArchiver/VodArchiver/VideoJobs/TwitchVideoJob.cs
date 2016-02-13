@@ -77,16 +77,8 @@ namespace VodArchiver.VideoJobs {
 			throw new Exception( m3u + " contains no valid url" );
 		}
 
-		public override string GetTempFolder() {
-			return "twitch-" + VideoInfo.channel["name"] + "-" + VideoId;
-		}
-
-		public override string GetTargetFolder() {
-			return "muxed";
-		}
-
 		public override string GetTargetFilenameWithoutExtension() {
-			return "twitch_" + VideoInfo.channel["name"] + "_" + VideoId + "_" + VideoQuality + ( VideoInfo.status == "recorded" ? "" : "_" + VideoInfo.status );
+			return "twitch_" + Username + "_" + VideoId + "_" + VideoQuality + ( VideoInfo.status == "recorded" ? "" : "_" + VideoInfo.status );
 		}
 	}
 }

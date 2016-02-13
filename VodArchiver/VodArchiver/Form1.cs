@@ -41,5 +41,9 @@ namespace VodArchiver {
 			objectListViewDownloads.AddObject( job );
 			await job.Run();
 		}
+
+		private void buttonSettings_Click( object sender, EventArgs e ) {
+			new SettingsWindow().ShowDialog();
+		}
 	}
 }
