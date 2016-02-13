@@ -39,7 +39,11 @@ namespace VodArchiver {
 
 			job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
 			objectListViewDownloads.AddObject( job );
-			await job.Run();
+			try {
+				await job.Run();
+			} catch ( Exception ex ) {
+				job.Status = "ERROR: " + ex.ToString();
+			}
 		}
 
 		private void buttonSettings_Click( object sender, EventArgs e ) {
