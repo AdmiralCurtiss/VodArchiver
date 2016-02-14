@@ -85,6 +85,12 @@ namespace VodArchiver {
 				return;
 			}
 
+			CreateAndEnqueueJob( service, id );
+			textboxMediaId.Text = "";
+			await RunJob();
+		}
+
+		public void CreateAndEnqueueJob( StreamService service, string id ) {
 			IVideoJob job;
 			switch ( service ) {
 				case StreamService.Twitch:
@@ -101,12 +107,9 @@ namespace VodArchiver {
 			objectListViewDownloads.AddObject( job );
 			job.Status = "Waiting...";
 			JobQueue.Enqueue( job );
-			textboxMediaId.Text = "";
-
-			await RunJob();
 		}
 
-		private async Task RunJob() {
+		public async Task RunJob() {
 			bool runNewJob = false;
 			IVideoJob job = null;
 			lock ( Lock ) {
@@ -132,6 +135,10 @@ namespace VodArchiver {
 
 		private void buttonSettings_Click( object sender, EventArgs e ) {
 			new SettingsWindow().ShowDialog();
+		}
+
+		private void buttonFetchUser_Click( object sender, EventArgs e ) {
+			new VodList( this, TwitchAPI ).Show();
 		}
 	}
 }

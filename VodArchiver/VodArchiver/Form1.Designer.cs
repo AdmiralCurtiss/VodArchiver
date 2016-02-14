@@ -37,6 +37,7 @@
 			this.olvColumn8 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.olvColumn4 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.buttonSettings = new System.Windows.Forms.Button();
+			this.buttonFetchUser = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -54,7 +55,7 @@
 			// labelMediaId
 			// 
 			this.labelMediaId.AutoSize = true;
-			this.labelMediaId.Location = new System.Drawing.Point(143, 15);
+			this.labelMediaId.Location = new System.Drawing.Point(266, 15);
 			this.labelMediaId.Name = "labelMediaId";
 			this.labelMediaId.Size = new System.Drawing.Size(87, 13);
 			this.labelMediaId.TabIndex = 1;
@@ -64,9 +65,9 @@
 			// 
 			this.textboxMediaId.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.textboxMediaId.Location = new System.Drawing.Point(236, 12);
+			this.textboxMediaId.Location = new System.Drawing.Point(359, 12);
 			this.textboxMediaId.Name = "textboxMediaId";
-			this.textboxMediaId.Size = new System.Drawing.Size(616, 20);
+			this.textboxMediaId.Size = new System.Drawing.Size(493, 20);
 			this.textboxMediaId.TabIndex = 2;
 			// 
 			// comboBoxService
@@ -77,7 +78,7 @@
             "Autodetect",
             "Twitch",
             "Hitbox"});
-			this.comboBoxService.Location = new System.Drawing.Point(42, 13);
+			this.comboBoxService.Location = new System.Drawing.Point(165, 13);
 			this.comboBoxService.Name = "comboBoxService";
 			this.comboBoxService.Size = new System.Drawing.Size(89, 21);
 			this.comboBoxService.TabIndex = 3;
@@ -183,12 +184,24 @@
 			this.buttonSettings.UseVisualStyleBackColor = true;
 			this.buttonSettings.Click += new System.EventHandler(this.buttonSettings_Click);
 			// 
+			// buttonFetchUser
+			// 
+			this.buttonFetchUser.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.buttonFetchUser.Location = new System.Drawing.Point(42, 13);
+			this.buttonFetchUser.Name = "buttonFetchUser";
+			this.buttonFetchUser.Size = new System.Drawing.Size(117, 20);
+			this.buttonFetchUser.TabIndex = 6;
+			this.buttonFetchUser.Text = "Fetch User\'s Videos";
+			this.buttonFetchUser.UseVisualStyleBackColor = true;
+			this.buttonFetchUser.Click += new System.EventHandler(this.buttonFetchUser_Click);
+			// 
 			// Form1
 			// 
 			this.AcceptButton = this.buttonDownload;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(945, 477);
+			this.Controls.Add(this.buttonFetchUser);
 			this.Controls.Add(this.buttonSettings);
 			this.Controls.Add(this.objectListViewDownloads);
 			this.Controls.Add(this.comboBoxService);
@@ -219,5 +232,6 @@
 		private BrightIdeasSoftware.OLVColumn olvColumn7;
 		private BrightIdeasSoftware.OLVColumn olvColumn8;
 		private System.Windows.Forms.Button buttonSettings;
+		private System.Windows.Forms.Button buttonFetchUser;
 	}
 }

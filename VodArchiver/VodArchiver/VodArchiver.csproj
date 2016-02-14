@@ -79,6 +79,12 @@
     <Compile Include="VideoJobs\IVideoJob.cs" />
     <Compile Include="VideoJobs\TsVideoJob.cs" />
     <Compile Include="VideoJobs\TwitchVideoJob.cs" />
+    <Compile Include="VodList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="VodList.Designer.cs">
+      <DependentUpon>VodList.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
@@ -94,6 +100,9 @@
     </Compile>
     <EmbeddedResource Include="SettingsWindow.resx">
       <DependentUpon>SettingsWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="VodList.resx">
+      <DependentUpon>VodList.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
