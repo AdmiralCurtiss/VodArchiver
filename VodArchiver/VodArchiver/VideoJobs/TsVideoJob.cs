@@ -27,6 +27,7 @@ namespace VodArchiver.VideoJobs {
 			string combinedFilename = Path.Combine( tempFolder, "combined.ts" );
 			Status = "Combining downloaded video parts...";
 			await TsVideoJob.Combine( combinedFilename, files );
+			await Util.DeleteFiles( files );
 			string remuxedFilename = Path.Combine( GetTargetFolder(), GetTargetFilenameWithoutExtension() + ".mp4" );
 			Status = "Remuxing to MP4...";
 			await Task.Run( () => TsVideoJob.Remux( remuxedFilename, combinedFilename ) );

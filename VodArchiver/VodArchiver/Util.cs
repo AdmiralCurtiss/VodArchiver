@@ -25,5 +25,15 @@ namespace VodArchiver {
 				}
 			}
 		}
+
+		public static async Task DeleteFile( string file ) {
+			await Task.Run( () => System.IO.File.Delete( file ) );
+		}
+
+		public static async Task DeleteFiles( string[] files ) {
+			foreach ( string file in files ) {
+				await DeleteFile( file );
+			}
+		}
 	}
 }
