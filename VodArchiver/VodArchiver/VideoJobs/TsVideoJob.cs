@@ -74,10 +74,10 @@ namespace VodArchiver.VideoJobs {
 				string url = urls[i];
 				string outpath = Path.Combine( targetFolder, "part" + i.ToString( "D8" ) + ".ts" );
 				string outpath_temp = outpath + ".tmp";
-				if ( File.Exists( outpath_temp ) ) {
-					File.Delete( outpath_temp );
+				if ( await Util.FileExists( outpath_temp ) ) {
+					await Util.DeleteFile( outpath_temp );
 				}
-				if ( File.Exists( outpath ) ) {
+				if ( await Util.FileExists( outpath ) ) {
 					Console.WriteLine( "Already have " + url + "..." );
 					files.Add( outpath );
 					continue;

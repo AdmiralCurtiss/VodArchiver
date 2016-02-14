@@ -26,6 +26,10 @@ namespace VodArchiver {
 			}
 		}
 
+		public static async Task<bool> FileExists( string file ) {
+			return await Task.Run( () => System.IO.File.Exists( file ) );
+		}
+
 		public static async Task DeleteFile( string file ) {
 			await Task.Run( () => System.IO.File.Delete( file ) );
 		}
