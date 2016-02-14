@@ -106,6 +106,7 @@ namespace VodArchiver {
 			objectListViewDownloads.AddObject( job );
 			job.Status = "Waiting...";
 			JobQueue.Enqueue( job );
+			textboxMediaId.Text = "";
 
 			await RunJob();
 		}
