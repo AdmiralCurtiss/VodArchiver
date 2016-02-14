@@ -117,7 +117,7 @@
 			// 
 			// olvColumn3
 			// 
-			this.olvColumn3.AspectName = "ServiceName";
+			this.olvColumn3.AspectName = "Service";
 			this.olvColumn3.IsEditable = false;
 			this.olvColumn3.Text = "Service";
 			this.olvColumn3.Width = 78;

@@ -5,10 +5,11 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
 	public class HitboxVideoJob : TsVideoJob {
-		public override string ServiceName { get; set; }
+		public override StreamService Service { get; set; }
 		public override string Username { get; set; }
 		public override string VideoId { get; set; }
 		public override string VideoTitle { get; set; }
@@ -32,7 +33,7 @@ namespace VodArchiver.VideoJobs {
 
 		public HitboxVideoJob( string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
-			ServiceName = "Hitbox";
+			Service = StreamService.Hitbox;
 			Username = "...";
 			VideoId = id;
 			Status = "...";

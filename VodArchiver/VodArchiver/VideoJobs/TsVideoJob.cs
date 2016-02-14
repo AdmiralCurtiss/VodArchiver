@@ -4,10 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
-	public abstract class TsVideoJob : IVideoJob {
-		public abstract string ServiceName { get; set; }
+	public abstract class TsVideoJob : IVideoInfo, IVideoJob {
+		public abstract StreamService Service { get; set; }
 		public abstract string Username { get; set; }
 		public abstract string VideoId { get; set; }
 		public abstract string VideoTitle { get; set; }

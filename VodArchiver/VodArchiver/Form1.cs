@@ -11,15 +11,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TwixelAPI;
+using VodArchiver.VideoInfo;
 using VodArchiver.VideoJobs;
 
 namespace VodArchiver {
-	public enum Service {
-		Unknown,
-		Twitch,
-		Hitbox
-	}
-
 	public partial class Form1 : Form {
 		Twixel TwitchAPI;
 		System.Collections.Concurrent.ConcurrentQueue<IVideoJob> JobQueue;
@@ -34,33 +29,33 @@ namespace VodArchiver {
 			RunningJobs = 0;
 		}
 
-		public static string ParseId( string url, out Service service ) {
+		public static string ParseId( string url, out StreamService service ) {
 			Uri uri = new Uri( url );
 
 			if ( uri.Host.Contains( "twitch.tv" ) ) {
-				service = Service.Twitch;
+				service = StreamService.Twitch;
 			} else if ( uri.Host.Contains( "hitbox.tv" ) ) {
-				service = Service.Hitbox;
+				service = StreamService.Hitbox;
 			} else {
 				throw new FormatException();
 			}
 
 			switch ( service ) {
-				case Service.Twitch:
+				case StreamService.Twitch:
 					return uri.Segments[uri.Segments.Length - 2].Trim( '/' ) + uri.Segments.Last();
-				case Service.Hitbox:
+				case StreamService.Hitbox:
 					return uri.Segments.Last();
 			}
 
 			throw new FormatException();
 		}
 
-		public static Service GetServiceFromString( string s ) {
+		public static StreamService GetServiceFromString( string s ) {
 			switch ( s ) {
 				case "Twitch":
-					return Service.Twitch;
+					return StreamService.Twitch;
 				case "Hitbox":
-					return Service.Hitbox;
+					return StreamService.Hitbox;
 				default:
 					throw new Exception( s + " is not a valid service." );
 			}
@@ -70,7 +65,7 @@ namespace VodArchiver {
 			string unparsedId = textboxMediaId.Text.Trim();
 			if ( unparsedId == "" ) { return; }
 
-			Service service = Service.Unknown;
+			StreamService service = StreamService.Unknown;
 			string id;
 			if ( unparsedId.Contains( '/' ) ) {
 				try {
@@ -85,17 +80,17 @@ namespace VodArchiver {
 
 			if ( comboBoxService.Text != "Autodetect" ) {
 				service = GetServiceFromString( comboBoxService.Text );
-			} else if ( service == Service.Unknown ) {
+			} else if ( service == StreamService.Unknown ) {
 				MessageBox.Show( "Can't autodetect service without URL!" );
 				return;
 			}
 
 			IVideoJob job;
 			switch ( service ) {
-				case Service.Twitch:
+				case StreamService.Twitch:
 					job = new TwitchVideoJob( TwitchAPI, id );
 					break;
-				case Service.Hitbox:
+				case StreamService.Hitbox:
 					job = new HitboxVideoJob( id );
 					break;
 				default:

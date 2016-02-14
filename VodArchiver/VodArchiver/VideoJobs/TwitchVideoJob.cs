@@ -4,11 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VodArchiver.VideoInfo;
 using TwixelAPI;
 
 namespace VodArchiver.VideoJobs {
 	public class TwitchVideoJob : TsVideoJob {
-		public override string ServiceName { get; set; }
+		public override StreamService Service { get; set; }
 		public override string Username { get; set; }
 		public override string VideoId { get; set; }
 		public override string VideoTitle { get; set; }
@@ -34,7 +35,7 @@ namespace VodArchiver.VideoJobs {
 
 		public TwitchVideoJob( Twixel api, string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
-			ServiceName = "Twitch";
+			Service = StreamService.Twitch;
 			Username = "...";
 			VideoId = id;
 			Status = "...";
