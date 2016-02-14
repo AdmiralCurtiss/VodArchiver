@@ -14,6 +14,12 @@ using TwixelAPI;
 using VodArchiver.VideoJobs;
 
 namespace VodArchiver {
+	public enum Service {
+		Unknown,
+		Twitch,
+		Hitbox
+	}
+
 	public partial class Form1 : Form {
 		Twixel TwitchAPI;
 		System.Collections.Concurrent.ConcurrentQueue<IVideoJob> JobQueue;
@@ -28,20 +34,72 @@ namespace VodArchiver {
 			RunningJobs = 0;
 		}
 
+		public static string ParseId( string url, out Service service ) {
+			Uri uri = new Uri( url );
+
+			if ( uri.Host.Contains( "twitch.tv" ) ) {
+				service = Service.Twitch;
+			} else if ( uri.Host.Contains( "hitbox.tv" ) ) {
+				service = Service.Hitbox;
+			} else {
+				throw new FormatException();
+			}
+
+			switch ( service ) {
+				case Service.Twitch:
+					return uri.Segments[uri.Segments.Length - 2].Trim( '/' ) + uri.Segments.Last();
+				case Service.Hitbox:
+					return uri.Segments.Last();
+			}
+
+			throw new FormatException();
+		}
+
+		public static Service GetServiceFromString( string s ) {
+			switch ( s ) {
+				case "Twitch":
+					return Service.Twitch;
+				case "Hitbox":
+					return Service.Hitbox;
+				default:
+					throw new Exception( s + " is not a valid service." );
+			}
+		}
+
 		private async void buttonDownload_Click( object sender, EventArgs e ) {
-			string id = textboxMediaId.Text.Trim();
-			if ( id == "" ) { return; }
+			string unparsedId = textboxMediaId.Text.Trim();
+			if ( unparsedId == "" ) { return; }
+
+			Service service = Service.Unknown;
+			string id;
+			if ( unparsedId.Contains( '/' ) ) {
+				try {
+					id = ParseId( unparsedId, out service );
+				} catch ( Exception ) {
+					MessageBox.Show( "Can't determine service and/or video ID of " + unparsedId );
+					return;
+				}
+			} else {
+				id = unparsedId;
+			}
+
+			if ( comboBoxService.Text != "Autodetect" ) {
+				service = GetServiceFromString( comboBoxService.Text );
+			} else if ( service == Service.Unknown ) {
+				MessageBox.Show( "Can't autodetect service without URL!" );
+				return;
+			}
 
 			IVideoJob job;
-			switch ( comboBoxService.Text ) {
-				case "Twitch":
+			switch ( service ) {
+				case Service.Twitch:
 					job = new TwitchVideoJob( TwitchAPI, id );
 					break;
-				case "Hitbox":
+				case Service.Hitbox:
 					job = new HitboxVideoJob( id );
 					break;
 				default:
-					throw new Exception( comboBoxService.SelectedText + " is not a valid service." );
+					throw new Exception( service.ToString() + " isn't a known service." );
 			}
 
 			job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );

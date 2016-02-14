@@ -56,17 +56,17 @@
 			this.labelMediaId.AutoSize = true;
 			this.labelMediaId.Location = new System.Drawing.Point(143, 15);
 			this.labelMediaId.Name = "labelMediaId";
-			this.labelMediaId.Size = new System.Drawing.Size(50, 13);
+			this.labelMediaId.Size = new System.Drawing.Size(87, 13);
 			this.labelMediaId.TabIndex = 1;
-			this.labelMediaId.Text = "Media ID";
+			this.labelMediaId.Text = "URL or Media ID";
 			// 
 			// textboxMediaId
 			// 
 			this.textboxMediaId.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.textboxMediaId.Location = new System.Drawing.Point(199, 12);
+			this.textboxMediaId.Location = new System.Drawing.Point(236, 12);
 			this.textboxMediaId.Name = "textboxMediaId";
-			this.textboxMediaId.Size = new System.Drawing.Size(653, 20);
+			this.textboxMediaId.Size = new System.Drawing.Size(616, 20);
 			this.textboxMediaId.TabIndex = 2;
 			// 
 			// comboBoxService
@@ -74,6 +74,7 @@
 			this.comboBoxService.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.comboBoxService.FormattingEnabled = true;
 			this.comboBoxService.Items.AddRange(new object[] {
+            "Autodetect",
             "Twitch",
             "Hitbox"});
 			this.comboBoxService.Location = new System.Drawing.Point(42, 13);
