@@ -38,6 +38,7 @@
 			this.olvColumn4 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.buttonSettings = new System.Windows.Forms.Button();
 			this.buttonFetchUser = new System.Windows.Forms.Button();
+			this.olvColumn9 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -92,6 +93,7 @@
 			this.objectListViewDownloads.AllColumns.Add(this.olvColumn6);
 			this.objectListViewDownloads.AllColumns.Add(this.olvColumn7);
 			this.objectListViewDownloads.AllColumns.Add(this.olvColumn8);
+			this.objectListViewDownloads.AllColumns.Add(this.olvColumn9);
 			this.objectListViewDownloads.AllColumns.Add(this.olvColumn4);
 			this.objectListViewDownloads.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
@@ -105,6 +107,7 @@
             this.olvColumn6,
             this.olvColumn7,
             this.olvColumn8,
+            this.olvColumn9,
             this.olvColumn4});
 			this.objectListViewDownloads.Cursor = System.Windows.Forms.Cursors.Default;
 			this.objectListViewDownloads.HighlightBackgroundColor = System.Drawing.Color.Empty;
@@ -126,6 +129,7 @@
 			// olvColumn1
 			// 
 			this.olvColumn1.AspectName = "VideoInfo.VideoId";
+			this.olvColumn1.Groupable = false;
 			this.olvColumn1.IsEditable = false;
 			this.olvColumn1.Text = "Video ID";
 			this.olvColumn1.Width = 68;
@@ -140,6 +144,7 @@
 			// olvColumn5
 			// 
 			this.olvColumn5.AspectName = "VideoInfo.VideoTitle";
+			this.olvColumn5.Groupable = false;
 			this.olvColumn5.IsEditable = false;
 			this.olvColumn5.Text = "Title";
 			this.olvColumn5.Width = 205;
@@ -154,6 +159,7 @@
 			// olvColumn7
 			// 
 			this.olvColumn7.AspectName = "VideoInfo.VideoTimestamp";
+			this.olvColumn7.Groupable = false;
 			this.olvColumn7.IsEditable = false;
 			this.olvColumn7.Text = "Timestamp";
 			this.olvColumn7.Width = 119;
@@ -161,6 +167,7 @@
 			// olvColumn8
 			// 
 			this.olvColumn8.AspectName = "VideoInfo.VideoLength";
+			this.olvColumn8.Groupable = false;
 			this.olvColumn8.IsEditable = false;
 			this.olvColumn8.Text = "Duration";
 			// 
@@ -194,6 +201,12 @@
 			this.buttonFetchUser.Text = "Fetch User\'s Videos";
 			this.buttonFetchUser.UseVisualStyleBackColor = true;
 			this.buttonFetchUser.Click += new System.EventHandler(this.buttonFetchUser_Click);
+			// 
+			// olvColumn9
+			// 
+			this.olvColumn9.AspectName = "VideoInfo.VideoRecordingState";
+			this.olvColumn9.IsEditable = false;
+			this.olvColumn9.Text = "Recording State";
 			// 
 			// DownloadForm
 			// 
@@ -233,5 +246,6 @@
 		private BrightIdeasSoftware.OLVColumn olvColumn8;
 		private System.Windows.Forms.Button buttonSettings;
 		private System.Windows.Forms.Button buttonFetchUser;
+		private BrightIdeasSoftware.OLVColumn olvColumn9;
 	}
 }

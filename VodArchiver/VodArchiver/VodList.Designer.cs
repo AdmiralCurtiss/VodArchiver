@@ -36,6 +36,7 @@
 			this.textboxUsername = new System.Windows.Forms.TextBox();
 			this.labelUsername = new System.Windows.Forms.Label();
 			this.buttonDownload = new System.Windows.Forms.Button();
+			this.olvColumn4 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewVideos)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -48,6 +49,7 @@
 			this.objectListViewVideos.AllColumns.Add(this.olvColumn6);
 			this.objectListViewVideos.AllColumns.Add(this.olvColumn7);
 			this.objectListViewVideos.AllColumns.Add(this.olvColumn8);
+			this.objectListViewVideos.AllColumns.Add(this.olvColumn4);
 			this.objectListViewVideos.AllColumns.Add(this.downloadButton);
 			this.objectListViewVideos.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
@@ -61,13 +63,14 @@
             this.olvColumn6,
             this.olvColumn7,
             this.olvColumn8,
+            this.olvColumn4,
             this.downloadButton});
 			this.objectListViewVideos.Cursor = System.Windows.Forms.Cursors.Default;
 			this.objectListViewVideos.HighlightBackgroundColor = System.Drawing.Color.Empty;
 			this.objectListViewVideos.HighlightForegroundColor = System.Drawing.Color.Empty;
 			this.objectListViewVideos.Location = new System.Drawing.Point(12, 38);
 			this.objectListViewVideos.Name = "objectListViewVideos";
-			this.objectListViewVideos.Size = new System.Drawing.Size(829, 418);
+			this.objectListViewVideos.Size = new System.Drawing.Size(898, 418);
 			this.objectListViewVideos.TabIndex = 9;
 			this.objectListViewVideos.UseCompatibleStateImageBehavior = false;
 			this.objectListViewVideos.View = System.Windows.Forms.View.Details;
@@ -156,7 +159,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.textboxUsername.Location = new System.Drawing.Point(168, 12);
 			this.textboxUsername.Name = "textboxUsername";
-			this.textboxUsername.Size = new System.Drawing.Size(592, 20);
+			this.textboxUsername.Size = new System.Drawing.Size(661, 20);
 			this.textboxUsername.TabIndex = 7;
 			// 
 			// labelUsername
@@ -171,7 +174,7 @@
 			// buttonDownload
 			// 
 			this.buttonDownload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonDownload.Location = new System.Drawing.Point(766, 12);
+			this.buttonDownload.Location = new System.Drawing.Point(835, 12);
 			this.buttonDownload.Name = "buttonDownload";
 			this.buttonDownload.Size = new System.Drawing.Size(75, 20);
 			this.buttonDownload.TabIndex = 5;
@@ -179,12 +182,18 @@
 			this.buttonDownload.UseVisualStyleBackColor = true;
 			this.buttonDownload.Click += new System.EventHandler(this.buttonDownload_Click);
 			// 
+			// olvColumn4
+			// 
+			this.olvColumn4.AspectName = "VideoRecordingState";
+			this.olvColumn4.IsEditable = false;
+			this.olvColumn4.Text = "Recording State";
+			// 
 			// VodList
 			// 
 			this.AcceptButton = this.buttonDownload;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(853, 468);
+			this.ClientSize = new System.Drawing.Size(922, 468);
 			this.Controls.Add(this.objectListViewVideos);
 			this.Controls.Add(this.comboBoxService);
 			this.Controls.Add(this.textboxUsername);
@@ -213,5 +222,6 @@
 		private System.Windows.Forms.Label labelUsername;
 		private System.Windows.Forms.Button buttonDownload;
 		private BrightIdeasSoftware.OLVColumn downloadButton;
+		private BrightIdeasSoftware.OLVColumn olvColumn4;
 	}
 }
