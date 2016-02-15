@@ -11,7 +11,13 @@ namespace VodArchiver.VideoInfo {
 		Hitbox
 	}
 
-	interface IVideoInfo {
+	public enum RecordingState {
+		Unknown,
+		Live,
+		Recorded,
+	}
+
+	public interface IVideoInfo {
 		StreamService Service { get; set; }
 		string Username { get; set; }
 		string VideoId { get; set; }
@@ -19,5 +25,6 @@ namespace VodArchiver.VideoInfo {
 		string VideoGame { get; set; }
 		DateTime VideoTimestamp { get; set; }
 		TimeSpan VideoLength { get; set; }
+		RecordingState VideoRecordingState { get; set; }
 	}
 }

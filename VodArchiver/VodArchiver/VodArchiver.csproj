@@ -73,6 +73,8 @@
     <Compile Include="StatusUpdate\NullStatusUpdate.cs" />
     <Compile Include="StatusUpdate\ObjectListViewStatusUpdate.cs" />
     <Compile Include="Util.cs" />
+    <Compile Include="VideoInfo\GenericVideoInfo.cs" />
+    <Compile Include="VideoInfo\HitboxVideoInfo.cs" />
     <Compile Include="VideoInfo\IVideoInfo.cs" />
     <Compile Include="VideoInfo\TwitchVideoInfo.cs" />
     <Compile Include="VideoJobs\HitboxVideoJob.cs" />

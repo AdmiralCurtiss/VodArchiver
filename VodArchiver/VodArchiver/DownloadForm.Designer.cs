@@ -118,49 +118,49 @@
 			// 
 			// olvColumn3
 			// 
-			this.olvColumn3.AspectName = "Service";
+			this.olvColumn3.AspectName = "VideoInfo.Service";
 			this.olvColumn3.IsEditable = false;
 			this.olvColumn3.Text = "Service";
 			this.olvColumn3.Width = 78;
 			// 
 			// olvColumn1
 			// 
-			this.olvColumn1.AspectName = "VideoId";
+			this.olvColumn1.AspectName = "VideoInfo.VideoId";
 			this.olvColumn1.IsEditable = false;
 			this.olvColumn1.Text = "Video ID";
 			this.olvColumn1.Width = 68;
 			// 
 			// olvColumn2
 			// 
-			this.olvColumn2.AspectName = "Username";
+			this.olvColumn2.AspectName = "VideoInfo.Username";
 			this.olvColumn2.IsEditable = false;
 			this.olvColumn2.Text = "Username";
 			this.olvColumn2.Width = 93;
 			// 
 			// olvColumn5
 			// 
-			this.olvColumn5.AspectName = "VideoTitle";
+			this.olvColumn5.AspectName = "VideoInfo.VideoTitle";
 			this.olvColumn5.IsEditable = false;
 			this.olvColumn5.Text = "Title";
 			this.olvColumn5.Width = 205;
 			// 
 			// olvColumn6
 			// 
-			this.olvColumn6.AspectName = "VideoGame";
+			this.olvColumn6.AspectName = "VideoInfo.VideoGame";
 			this.olvColumn6.IsEditable = false;
 			this.olvColumn6.Text = "Game";
 			this.olvColumn6.Width = 99;
 			// 
 			// olvColumn7
 			// 
-			this.olvColumn7.AspectName = "VideoTimestamp";
+			this.olvColumn7.AspectName = "VideoInfo.VideoTimestamp";
 			this.olvColumn7.IsEditable = false;
 			this.olvColumn7.Text = "Timestamp";
 			this.olvColumn7.Width = 119;
 			// 
 			// olvColumn8
 			// 
-			this.olvColumn8.AspectName = "VideoLength";
+			this.olvColumn8.AspectName = "VideoInfo.VideoLength";
 			this.olvColumn8.IsEditable = false;
 			this.olvColumn8.Text = "Duration";
 			// 
@@ -195,7 +195,7 @@
 			this.buttonFetchUser.UseVisualStyleBackColor = true;
 			this.buttonFetchUser.Click += new System.EventHandler(this.buttonFetchUser_Click);
 			// 
-			// Form1
+			// DownloadForm
 			// 
 			this.AcceptButton = this.buttonDownload;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -208,7 +208,7 @@
 			this.Controls.Add(this.textboxMediaId);
 			this.Controls.Add(this.labelMediaId);
 			this.Controls.Add(this.buttonDownload);
-			this.Name = "Form1";
+			this.Name = "DownloadForm";
 			this.Text = "Form1";
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).EndInit();
 			this.ResumeLayout(false);

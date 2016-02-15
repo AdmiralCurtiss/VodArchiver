@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace VodArchiver.VideoInfo {
-	class TwitchVideoInfo : IVideoInfo {
+	public class TwitchVideoInfo : IVideoInfo {
 		TwixelAPI.Video VideoInfo;
 
 		public TwitchVideoInfo( TwixelAPI.Video video ) {
@@ -59,6 +59,24 @@ namespace VodArchiver.VideoInfo {
 
 			set {
 				VideoInfo.length = (long)value.TotalSeconds;
+			}
+		}
+
+		public RecordingState VideoRecordingState {
+			get {
+				switch ( VideoInfo.status ) {
+					case "recording": return RecordingState.Live;
+					case "recorded": return RecordingState.Recorded;
+					default: return RecordingState.Unknown;
+				}
+			}
+
+			set {
+				switch ( value ) {
+					case RecordingState.Live: VideoInfo.status = "recording"; break;
+					case RecordingState.Recorded: VideoInfo.status = "recorded"; break;
+					default: VideoInfo.status = "?"; break;
+				}
 			}
 		}
 

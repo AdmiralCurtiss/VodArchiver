@@ -9,13 +9,6 @@ using TwixelAPI;
 
 namespace VodArchiver.VideoJobs {
 	public class TwitchVideoJob : TsVideoJob {
-		public override StreamService Service { get; set; }
-		public override string Username { get; set; }
-		public override string VideoId { get; set; }
-		public override string VideoTitle { get; set; }
-		public override string VideoGame { get; set; }
-		public override DateTime VideoTimestamp { get; set; }
-		public override TimeSpan VideoLength { get; set; }
 		private string _Status;
 		public override string Status {
 			get {
@@ -31,26 +24,17 @@ namespace VodArchiver.VideoJobs {
 
 		Twixel TwitchAPI;
 		string VideoQuality = "chunked";
-		TwixelAPI.Video VideoInfo = null;
 
 		public TwitchVideoJob( Twixel api, string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
-			Service = StreamService.Twitch;
-			Username = "...";
-			VideoId = id;
-			Status = "...";
+			VideoInfo = new GenericVideoInfo() { Service = StreamService.Twitch, VideoId = id };
 			TwitchAPI = api;
 		}
 
 		public override async Task<string[]> GetFileUrlsOfVod() {
-			VideoInfo = await TwitchAPI.RetrieveVideo( VideoId );
-			Username = VideoInfo.channel["name"];
-			VideoTitle = VideoInfo.title;
-			VideoGame = VideoInfo.game;
-			VideoTimestamp = VideoInfo.recordedAt;
-			VideoLength = TimeSpan.FromSeconds( VideoInfo.length );
+			VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ) );
 
-			string m3u = await TwitchAPI.RetrieveVodM3U( VideoId );
+			string m3u = await TwitchAPI.RetrieveVodM3U( VideoInfo.VideoId );
 			string m3u8path = GetM3U8PathFromM3U( m3u, VideoQuality );
 			string folderpath = TsVideoJob.GetFolder( m3u8path );
 			string m3u8 = await Twixel.GetWebData( new Uri( m3u8path ) );
@@ -79,7 +63,7 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public override string GetTargetFilenameWithoutExtension() {
-			return "twitch_" + Username + "_" + VideoId + "_" + VideoQuality + ( VideoInfo.status == "recorded" ? "" : "_" + VideoInfo.status );
+			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoId + "_" + VideoQuality + ( VideoInfo.VideoRecordingState == RecordingState.Recorded ? "" : "_" + VideoInfo.VideoRecordingState.ToString() );
 		}
 	}
 }

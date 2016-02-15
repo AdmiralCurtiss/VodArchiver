@@ -7,14 +7,8 @@ using System.Threading.Tasks;
 using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
-	public abstract class TsVideoJob : IVideoInfo, IVideoJob {
-		public abstract StreamService Service { get; set; }
-		public abstract string Username { get; set; }
-		public abstract string VideoId { get; set; }
-		public abstract string VideoTitle { get; set; }
-		public abstract string VideoGame { get; set; }
-		public abstract DateTime VideoTimestamp { get; set; }
-		public abstract TimeSpan VideoLength { get; set; }
+	public abstract class TsVideoJob : IVideoJob {
+		public IVideoInfo VideoInfo;
 		public abstract string Status { get; set; }
 
 		public abstract StatusUpdate.IStatusUpdate StatusUpdater { get; set; }

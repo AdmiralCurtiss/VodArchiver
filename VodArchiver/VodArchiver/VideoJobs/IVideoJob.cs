@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace VodArchiver.VideoJobs {
-	interface IVideoJob {
+	public interface IVideoJob {
 		string Status { get; set; }
 		StatusUpdate.IStatusUpdate StatusUpdater { get; set; }
 

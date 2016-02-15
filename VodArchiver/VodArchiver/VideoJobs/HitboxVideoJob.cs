@@ -9,13 +9,6 @@ using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
 	public class HitboxVideoJob : TsVideoJob {
-		public override StreamService Service { get; set; }
-		public override string Username { get; set; }
-		public override string VideoId { get; set; }
-		public override string VideoTitle { get; set; }
-		public override string VideoGame { get; set; }
-		public override DateTime VideoTimestamp { get; set; }
-		public override TimeSpan VideoLength { get; set; }
 		private string _Status;
 		public override string Status {
 			get {
@@ -29,26 +22,18 @@ namespace VodArchiver.VideoJobs {
 
 		public override StatusUpdate.IStatusUpdate StatusUpdater { get; set; }
 
-		HitboxVideo VideoInfo = null;
-
 		public HitboxVideoJob( string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
-			Service = StreamService.Hitbox;
-			Username = "...";
-			VideoId = id;
+			VideoInfo = new GenericVideoInfo() { Service = StreamService.Hitbox, VideoId = id };
 			Status = "...";
 		}
 
 		public override async Task<string[]> GetFileUrlsOfVod() {
-			VideoInfo = await Hitbox.RetrieveVideo( VideoId );
-			Username = VideoInfo.MediaUserName;
-			VideoTitle = VideoInfo.MediaTitle;
-			VideoGame = VideoInfo.MediaGame;
-			VideoTimestamp = VideoInfo.MediaDateAdded;
-			VideoLength = TimeSpan.FromSeconds( VideoInfo.MediaDuration );
+			HitboxVideo video = await Hitbox.RetrieveVideo( VideoInfo.VideoId );
+			VideoInfo = new HitboxVideoInfo( video );
 
 			// TODO: Figure out how to determine quality when there are multiple.
-			string m3u8path = "http://edge.bf.hitbox.tv/static/videos/vods" + GetM3U8PathFromM3U( VideoInfo.MediaProfiles.First().Url );
+			string m3u8path = "http://edge.bf.hitbox.tv/static/videos/vods" + GetM3U8PathFromM3U( video.MediaProfiles.First().Url );
 			string folderpath = TsVideoJob.GetFolder( m3u8path );
 			string m3u8;
 
@@ -82,7 +67,7 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public override string GetTargetFilenameWithoutExtension() {
-			return "hitbox_" + VideoInfo.MediaUserName + "_" + VideoId;
+			return "hitbox_" + VideoInfo.Username + "_" + VideoInfo.VideoId;
 		}
 	}
 }
