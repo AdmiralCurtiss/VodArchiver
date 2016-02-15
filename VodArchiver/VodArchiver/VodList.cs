@@ -12,12 +12,12 @@ using VodArchiver.VideoInfo;
 
 namespace VodArchiver {
 	public partial class VodList : Form {
-		Form1 Parent;
+		DownloadForm DownloadWindow;
 		Twixel TwitchAPI;
 
-		public VodList( Form1 parent, Twixel twixel ) {
+		public VodList( DownloadForm parent, Twixel twixel ) {
 			InitializeComponent();
-			Parent = parent;
+			DownloadWindow = parent;
 			TwitchAPI = twixel;
 		}
 
@@ -32,8 +32,8 @@ namespace VodArchiver {
 
 		private async void objectListViewVideos_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
 			IVideoInfo videoInfo = (IVideoInfo)e.Model;
-			Parent.CreateAndEnqueueJob( videoInfo.Service, videoInfo.VideoId );
-			await Parent.RunJob();
+			DownloadWindow.CreateAndEnqueueJob( videoInfo.Service, videoInfo.VideoId );
+			await DownloadWindow.RunJob();
 		}
 	}
 }

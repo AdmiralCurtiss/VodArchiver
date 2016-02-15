@@ -15,13 +15,13 @@ using VodArchiver.VideoInfo;
 using VodArchiver.VideoJobs;
 
 namespace VodArchiver {
-	public partial class Form1 : Form {
+	public partial class DownloadForm : Form {
 		Twixel TwitchAPI;
 		System.Collections.Concurrent.ConcurrentQueue<IVideoJob> JobQueue;
 		private int RunningJobs;
 		private object Lock = new object();
 
-		public Form1() {
+		public DownloadForm() {
 			InitializeComponent();
 			comboBoxService.SelectedIndex = 0;
 			TwitchAPI = new Twixel( "", "", Twixel.APIVersion.v3 );

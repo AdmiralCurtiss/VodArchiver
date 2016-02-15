@@ -1,5 +1,5 @@
 ﻿namespace VodArchiver {
-	partial class Form1 {
+	partial class DownloadForm {
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
