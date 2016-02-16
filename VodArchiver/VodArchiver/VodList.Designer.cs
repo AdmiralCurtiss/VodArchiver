@@ -36,7 +36,7 @@
 			this.textboxUsername = new System.Windows.Forms.TextBox();
 			this.labelUsername = new System.Windows.Forms.Label();
 			this.buttonDownload = new System.Windows.Forms.Button();
-			this.columnState = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnRecordingState = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewVideos)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -49,7 +49,7 @@
 			this.objectListViewVideos.AllColumns.Add(this.columnGame);
 			this.objectListViewVideos.AllColumns.Add(this.columnTimestamp);
 			this.objectListViewVideos.AllColumns.Add(this.columnLength);
-			this.objectListViewVideos.AllColumns.Add(this.columnState);
+			this.objectListViewVideos.AllColumns.Add(this.columnRecordingState);
 			this.objectListViewVideos.AllColumns.Add(this.downloadButton);
 			this.objectListViewVideos.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
@@ -63,7 +63,7 @@
             this.columnGame,
             this.columnTimestamp,
             this.columnLength,
-            this.columnState,
+            this.columnRecordingState,
             this.downloadButton});
 			this.objectListViewVideos.Cursor = System.Windows.Forms.Cursors.Default;
 			this.objectListViewVideos.HighlightBackgroundColor = System.Drawing.Color.Empty;
@@ -178,12 +178,12 @@
 			this.buttonDownload.UseVisualStyleBackColor = true;
 			this.buttonDownload.Click += new System.EventHandler(this.buttonDownload_Click);
 			// 
-			// columnState
+			// columnRecordingState
 			// 
-			this.columnState.AspectName = "VideoRecordingState";
-			this.columnState.IsEditable = false;
-			this.columnState.Text = "Recording State";
-			this.columnState.Width = 90;
+			this.columnRecordingState.AspectName = "VideoRecordingState";
+			this.columnRecordingState.IsEditable = false;
+			this.columnRecordingState.Text = "Recording State";
+			this.columnRecordingState.Width = 90;
 			// 
 			// VodList
 			// 
@@ -219,6 +219,6 @@
 		private System.Windows.Forms.Label labelUsername;
 		private System.Windows.Forms.Button buttonDownload;
 		private BrightIdeasSoftware.OLVColumn downloadButton;
-		private BrightIdeasSoftware.OLVColumn columnState;
+		private BrightIdeasSoftware.OLVColumn columnRecordingState;
 	}
 }
