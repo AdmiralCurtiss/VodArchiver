@@ -19,15 +19,32 @@ namespace VodArchiver {
 			InitializeComponent();
 			DownloadWindow = parent;
 			TwitchAPI = twixel;
+			comboBoxService.Text = "Twitch (Recordings)";
 		}
 
-		private async void buttonDownload_Click( object sender, EventArgs e ) {
-			Total<List<Video>> broadcasts = await TwitchAPI.RetrieveVideos( textboxUsername.Text.Trim(), 0, 25, true, false );
-			//Total<List<Video>> highlights = await TwitchAPI.RetrieveVideos( textboxUsername.Text.Trim(), 0, 25, false, false );
-
-			foreach ( var v in broadcasts.wrapped ) {
-				objectListViewVideos.AddObject( new TwitchVideoInfo( v ) );
+		private async void buttonFetch_Click( object sender, EventArgs e ) {
+			List<IVideoInfo> videosToAdd = new List<IVideoInfo>();
+			switch ( comboBoxService.Text ) {
+				case "Twitch (Recordings)":
+				case "Twitch (Highlights)":
+					Total<List<Video>> broadcasts = await TwitchAPI.RetrieveVideos( textboxUsername.Text.Trim(), 0, 25, comboBoxService.Text == "Twitch (Recordings)", false );
+					foreach ( var v in broadcasts.wrapped ) {
+						videosToAdd.Add( new TwitchVideoInfo( v ) );
+					}
+					break;
+				case "Hitbox":
+					List<HitboxVideo> videos = await Hitbox.RetrieveVideos( textboxUsername.Text.Trim() );
+					foreach ( var v in videos ) {
+						videosToAdd.Add( new HitboxVideoInfo( v ) );
+					}
+					break;
 			}
+
+			objectListViewVideos.SuspendLayout();
+			foreach ( var v in videosToAdd ) {
+				objectListViewVideos.AddObject( v );
+			}
+			objectListViewVideos.ResumeLayout();
 		}
 
 		private async void objectListViewVideos_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {

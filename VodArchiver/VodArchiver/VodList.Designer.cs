@@ -31,12 +31,13 @@
 			this.columnGame = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnTimestamp = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnLength = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnRecordingState = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnType = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.downloadButton = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.comboBoxService = new System.Windows.Forms.ComboBox();
 			this.textboxUsername = new System.Windows.Forms.TextBox();
 			this.labelUsername = new System.Windows.Forms.Label();
-			this.buttonDownload = new System.Windows.Forms.Button();
-			this.columnRecordingState = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.buttonFetch = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewVideos)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -50,6 +51,7 @@
 			this.objectListViewVideos.AllColumns.Add(this.columnTimestamp);
 			this.objectListViewVideos.AllColumns.Add(this.columnLength);
 			this.objectListViewVideos.AllColumns.Add(this.columnRecordingState);
+			this.objectListViewVideos.AllColumns.Add(this.columnType);
 			this.objectListViewVideos.AllColumns.Add(this.downloadButton);
 			this.objectListViewVideos.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
@@ -64,13 +66,14 @@
             this.columnTimestamp,
             this.columnLength,
             this.columnRecordingState,
+            this.columnType,
             this.downloadButton});
 			this.objectListViewVideos.Cursor = System.Windows.Forms.Cursors.Default;
 			this.objectListViewVideos.HighlightBackgroundColor = System.Drawing.Color.Empty;
 			this.objectListViewVideos.HighlightForegroundColor = System.Drawing.Color.Empty;
 			this.objectListViewVideos.Location = new System.Drawing.Point(12, 38);
 			this.objectListViewVideos.Name = "objectListViewVideos";
-			this.objectListViewVideos.Size = new System.Drawing.Size(898, 418);
+			this.objectListViewVideos.Size = new System.Drawing.Size(959, 432);
 			this.objectListViewVideos.TabIndex = 9;
 			this.objectListViewVideos.UseCompatibleStateImageBehavior = false;
 			this.objectListViewVideos.View = System.Windows.Forms.View.Details;
@@ -124,6 +127,20 @@
 			this.columnLength.IsEditable = false;
 			this.columnLength.Text = "Duration";
 			// 
+			// columnRecordingState
+			// 
+			this.columnRecordingState.AspectName = "VideoRecordingState";
+			this.columnRecordingState.IsEditable = false;
+			this.columnRecordingState.Text = "Recording State";
+			this.columnRecordingState.Width = 90;
+			// 
+			// columnType
+			// 
+			this.columnType.AspectName = "VideoType";
+			this.columnType.IsEditable = false;
+			this.columnType.Text = "Type";
+			this.columnType.Width = 49;
+			// 
 			// downloadButton
 			// 
 			this.downloadButton.AspectName = "Service";
@@ -141,61 +158,54 @@
 			this.comboBoxService.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.comboBoxService.FormattingEnabled = true;
 			this.comboBoxService.Items.AddRange(new object[] {
-            "Autodetect",
-            "Twitch",
+            "Twitch (Recordings)",
+            "Twitch (Highlights)",
             "Hitbox"});
 			this.comboBoxService.Location = new System.Drawing.Point(12, 12);
 			this.comboBoxService.Name = "comboBoxService";
-			this.comboBoxService.Size = new System.Drawing.Size(89, 21);
+			this.comboBoxService.Size = new System.Drawing.Size(133, 21);
 			this.comboBoxService.TabIndex = 8;
 			// 
 			// textboxUsername
 			// 
 			this.textboxUsername.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.textboxUsername.Location = new System.Drawing.Point(168, 12);
+			this.textboxUsername.Location = new System.Drawing.Point(212, 12);
 			this.textboxUsername.Name = "textboxUsername";
-			this.textboxUsername.Size = new System.Drawing.Size(661, 20);
+			this.textboxUsername.Size = new System.Drawing.Size(678, 20);
 			this.textboxUsername.TabIndex = 7;
 			// 
 			// labelUsername
 			// 
 			this.labelUsername.AutoSize = true;
-			this.labelUsername.Location = new System.Drawing.Point(107, 15);
+			this.labelUsername.Location = new System.Drawing.Point(151, 15);
 			this.labelUsername.Name = "labelUsername";
 			this.labelUsername.Size = new System.Drawing.Size(55, 13);
 			this.labelUsername.TabIndex = 6;
 			this.labelUsername.Text = "Username";
 			// 
-			// buttonDownload
+			// buttonFetch
 			// 
-			this.buttonDownload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonDownload.Location = new System.Drawing.Point(835, 12);
-			this.buttonDownload.Name = "buttonDownload";
-			this.buttonDownload.Size = new System.Drawing.Size(75, 20);
-			this.buttonDownload.TabIndex = 5;
-			this.buttonDownload.Text = "Fetch";
-			this.buttonDownload.UseVisualStyleBackColor = true;
-			this.buttonDownload.Click += new System.EventHandler(this.buttonDownload_Click);
-			// 
-			// columnRecordingState
-			// 
-			this.columnRecordingState.AspectName = "VideoRecordingState";
-			this.columnRecordingState.IsEditable = false;
-			this.columnRecordingState.Text = "Recording State";
-			this.columnRecordingState.Width = 90;
+			this.buttonFetch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.buttonFetch.Location = new System.Drawing.Point(896, 12);
+			this.buttonFetch.Name = "buttonFetch";
+			this.buttonFetch.Size = new System.Drawing.Size(75, 20);
+			this.buttonFetch.TabIndex = 5;
+			this.buttonFetch.Text = "Fetch";
+			this.buttonFetch.UseVisualStyleBackColor = true;
+			this.buttonFetch.Click += new System.EventHandler(this.buttonFetch_Click);
 			// 
 			// VodList
 			// 
-			this.AcceptButton = this.buttonDownload;
+			this.AcceptButton = this.buttonFetch;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(922, 468);
+			this.ClientSize = new System.Drawing.Size(983, 482);
 			this.Controls.Add(this.objectListViewVideos);
 			this.Controls.Add(this.comboBoxService);
 			this.Controls.Add(this.textboxUsername);
 			this.Controls.Add(this.labelUsername);
-			this.Controls.Add(this.buttonDownload);
+			this.Controls.Add(this.buttonFetch);
 			this.Name = "VodList";
 			this.Text = "VodList";
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewVideos)).EndInit();
@@ -217,8 +227,9 @@
 		private System.Windows.Forms.ComboBox comboBoxService;
 		private System.Windows.Forms.TextBox textboxUsername;
 		private System.Windows.Forms.Label labelUsername;
-		private System.Windows.Forms.Button buttonDownload;
+		private System.Windows.Forms.Button buttonFetch;
 		private BrightIdeasSoftware.OLVColumn downloadButton;
 		private BrightIdeasSoftware.OLVColumn columnRecordingState;
+		private BrightIdeasSoftware.OLVColumn columnType;
 	}
 }
