@@ -31,9 +31,9 @@ namespace VodArchiver {
 		public string MediaDescription;
 		public string MediaGame;
 		public double MediaDuration;
+		public int MediaTypeId;
 
-		public HitboxVideo( JObject jo ) {
-			JToken video = jo["video"][0];
+		public HitboxVideo( JToken video ) {
 			MediaUserName = (string)video["media_user_name"];
 			MediaId = (int)video["media_id"];
 			MediaFile = (string)video["media_file"];
@@ -50,6 +50,7 @@ namespace VodArchiver {
 			for ( int i = 0; i < MediaProfiles.Length; ++i ) {
 				MediaProfiles[i] = new HitboxMediaProfile( profiles[i] );
 			}
+			MediaTypeId = (int)video["media_type_id"];
 		}
 	}
 
@@ -60,10 +61,29 @@ namespace VodArchiver {
 
 			HttpClient client = new HttpClient();
 			HttpResponseMessage response = await client.GetAsync( uri );
-			string responseString;
 			if ( response.StatusCode == HttpStatusCode.OK ) {
-				responseString = await response.Content.ReadAsStringAsync();
-				return new HitboxVideo( JObject.Parse( responseString ) );
+				string responseString = await response.Content.ReadAsStringAsync();
+				return new HitboxVideo( JObject.Parse( responseString )["video"][0] );
+			} else {
+				throw new Exception( "Hitbox request failed." );
+			}
+		}
+
+		public static async Task<List<HitboxVideo>> RetrieveVideos( string username, string filter = "recent", int offset = 0, int limit = 100 ) {
+			Uri uri = new Uri( apiUrl + "media/video/" + username + "/list?filter=" + filter + "&limit=" + limit + "&offset=" + offset );
+
+			HttpClient client = new HttpClient();
+			HttpResponseMessage response = await client.GetAsync( uri );
+			if ( response.StatusCode == HttpStatusCode.OK ) {
+				string responseString = await response.Content.ReadAsStringAsync();
+				JObject jo = JObject.Parse( responseString );
+				var jsonVideos = jo["video"];
+
+				List<HitboxVideo> videos = new List<HitboxVideo>();
+				foreach ( var v in jsonVideos ) {
+					videos.Add( new HitboxVideo( v ) );
+				}
+				return videos;
 			} else {
 				throw new Exception( "Hitbox request failed." );
 			}
