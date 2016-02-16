@@ -99,5 +99,17 @@ namespace VodArchiver.VideoInfo {
 				VideoInfo.title = value;
 			}
 		}
+
+		public VideoFileType VideoType {
+			get {
+				if ( VideoId.StartsWith( "v" ) ) { return VideoFileType.M3U; }
+				if ( VideoId.StartsWith( "a" ) ) { return VideoFileType.FLVs; }
+				return VideoFileType.Unknown;
+			}
+
+			set {
+				throw new InvalidOperationException();
+			}
+		}
 	}
 }

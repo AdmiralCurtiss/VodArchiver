@@ -14,5 +14,6 @@ namespace VodArchiver.VideoInfo {
 		public RecordingState VideoRecordingState { get; set; }
 		public DateTime VideoTimestamp { get; set; }
 		public string VideoTitle { get; set; }
+		public VideoFileType VideoType { get; set; }
 	}
 }

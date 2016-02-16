@@ -91,5 +91,19 @@ namespace VodArchiver.VideoInfo {
 				VideoInfo.MediaTitle = value;
 			}
 		}
+
+		public VideoFileType VideoType {
+			get {
+				if ( VideoInfo.MediaProfiles.First().Url.EndsWith( "m3u8" ) ) {
+					return VideoFileType.M3U;
+				}
+
+				return VideoFileType.Unknown;
+			}
+
+			set {
+				throw new InvalidOperationException();
+			}
+		}
 	}
 }

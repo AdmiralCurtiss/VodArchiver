@@ -17,6 +17,12 @@ namespace VodArchiver.VideoInfo {
 		Recorded,
 	}
 
+	public enum VideoFileType {
+		M3U,
+		FLVs,
+		Unknown
+	}
+
 	public interface IVideoInfo {
 		StreamService Service { get; set; }
 		string Username { get; set; }
@@ -26,5 +32,6 @@ namespace VodArchiver.VideoInfo {
 		DateTime VideoTimestamp { get; set; }
 		TimeSpan VideoLength { get; set; }
 		RecordingState VideoRecordingState { get; set; }
+		VideoFileType VideoType { get; set; }
 	}
 }
