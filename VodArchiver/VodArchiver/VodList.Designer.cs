@@ -24,46 +24,46 @@
 		/// </summary>
 		private void InitializeComponent() {
 			this.objectListViewVideos = new BrightIdeasSoftware.ObjectListView();
-			this.olvColumn3 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
-			this.olvColumn1 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
-			this.olvColumn2 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
-			this.olvColumn5 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
-			this.olvColumn6 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
-			this.olvColumn7 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
-			this.olvColumn8 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnService = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnVideoId = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnUsername = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnTitle = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnGame = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnTimestamp = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnLength = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.downloadButton = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.comboBoxService = new System.Windows.Forms.ComboBox();
 			this.textboxUsername = new System.Windows.Forms.TextBox();
 			this.labelUsername = new System.Windows.Forms.Label();
 			this.buttonDownload = new System.Windows.Forms.Button();
-			this.olvColumn4 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnState = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewVideos)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// objectListViewVideos
 			// 
-			this.objectListViewVideos.AllColumns.Add(this.olvColumn3);
-			this.objectListViewVideos.AllColumns.Add(this.olvColumn1);
-			this.objectListViewVideos.AllColumns.Add(this.olvColumn2);
-			this.objectListViewVideos.AllColumns.Add(this.olvColumn5);
-			this.objectListViewVideos.AllColumns.Add(this.olvColumn6);
-			this.objectListViewVideos.AllColumns.Add(this.olvColumn7);
-			this.objectListViewVideos.AllColumns.Add(this.olvColumn8);
-			this.objectListViewVideos.AllColumns.Add(this.olvColumn4);
+			this.objectListViewVideos.AllColumns.Add(this.columnService);
+			this.objectListViewVideos.AllColumns.Add(this.columnVideoId);
+			this.objectListViewVideos.AllColumns.Add(this.columnUsername);
+			this.objectListViewVideos.AllColumns.Add(this.columnTitle);
+			this.objectListViewVideos.AllColumns.Add(this.columnGame);
+			this.objectListViewVideos.AllColumns.Add(this.columnTimestamp);
+			this.objectListViewVideos.AllColumns.Add(this.columnLength);
+			this.objectListViewVideos.AllColumns.Add(this.columnState);
 			this.objectListViewVideos.AllColumns.Add(this.downloadButton);
 			this.objectListViewVideos.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.objectListViewVideos.CellEditUseWholeCell = false;
 			this.objectListViewVideos.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.olvColumn3,
-            this.olvColumn1,
-            this.olvColumn2,
-            this.olvColumn5,
-            this.olvColumn6,
-            this.olvColumn7,
-            this.olvColumn8,
-            this.olvColumn4,
+            this.columnService,
+            this.columnVideoId,
+            this.columnUsername,
+            this.columnTitle,
+            this.columnGame,
+            this.columnTimestamp,
+            this.columnLength,
+            this.columnState,
             this.downloadButton});
 			this.objectListViewVideos.Cursor = System.Windows.Forms.Cursors.Default;
 			this.objectListViewVideos.HighlightBackgroundColor = System.Drawing.Color.Empty;
@@ -76,57 +76,53 @@
 			this.objectListViewVideos.View = System.Windows.Forms.View.Details;
 			this.objectListViewVideos.ButtonClick += new System.EventHandler<BrightIdeasSoftware.CellClickEventArgs>(this.objectListViewVideos_ButtonClick);
 			// 
-			// olvColumn3
+			// columnService
 			// 
-			this.olvColumn3.AspectName = "Service";
-			this.olvColumn3.IsEditable = false;
-			this.olvColumn3.Text = "Service";
-			this.olvColumn3.Width = 78;
+			this.columnService.AspectName = "Service";
+			this.columnService.IsEditable = false;
+			this.columnService.Text = "Service";
+			this.columnService.Width = 78;
 			// 
-			// olvColumn1
+			// columnVideoId
 			// 
-			this.olvColumn1.AspectName = "VideoId";
-			this.olvColumn1.Groupable = false;
-			this.olvColumn1.IsEditable = false;
-			this.olvColumn1.Text = "Video ID";
-			this.olvColumn1.Width = 68;
+			this.columnVideoId.AspectName = "VideoId";
+			this.columnVideoId.IsEditable = false;
+			this.columnVideoId.Text = "Video ID";
+			this.columnVideoId.Width = 68;
 			// 
-			// olvColumn2
+			// columnUsername
 			// 
-			this.olvColumn2.AspectName = "Username";
-			this.olvColumn2.IsEditable = false;
-			this.olvColumn2.Text = "Username";
-			this.olvColumn2.Width = 93;
+			this.columnUsername.AspectName = "Username";
+			this.columnUsername.IsEditable = false;
+			this.columnUsername.Text = "Username";
+			this.columnUsername.Width = 93;
 			// 
-			// olvColumn5
+			// columnTitle
 			// 
-			this.olvColumn5.AspectName = "VideoTitle";
-			this.olvColumn5.Groupable = false;
-			this.olvColumn5.IsEditable = false;
-			this.olvColumn5.Text = "Title";
-			this.olvColumn5.Width = 205;
+			this.columnTitle.AspectName = "VideoTitle";
+			this.columnTitle.IsEditable = false;
+			this.columnTitle.Text = "Title";
+			this.columnTitle.Width = 205;
 			// 
-			// olvColumn6
+			// columnGame
 			// 
-			this.olvColumn6.AspectName = "VideoGame";
-			this.olvColumn6.IsEditable = false;
-			this.olvColumn6.Text = "Game";
-			this.olvColumn6.Width = 99;
+			this.columnGame.AspectName = "VideoGame";
+			this.columnGame.IsEditable = false;
+			this.columnGame.Text = "Game";
+			this.columnGame.Width = 99;
 			// 
-			// olvColumn7
+			// columnTimestamp
 			// 
-			this.olvColumn7.AspectName = "VideoTimestamp";
-			this.olvColumn7.Groupable = false;
-			this.olvColumn7.IsEditable = false;
-			this.olvColumn7.Text = "Timestamp";
-			this.olvColumn7.Width = 119;
+			this.columnTimestamp.AspectName = "VideoTimestamp";
+			this.columnTimestamp.IsEditable = false;
+			this.columnTimestamp.Text = "Timestamp";
+			this.columnTimestamp.Width = 119;
 			// 
-			// olvColumn8
+			// columnLength
 			// 
-			this.olvColumn8.AspectName = "VideoLength";
-			this.olvColumn8.Groupable = false;
-			this.olvColumn8.IsEditable = false;
-			this.olvColumn8.Text = "Duration";
+			this.columnLength.AspectName = "VideoLength";
+			this.columnLength.IsEditable = false;
+			this.columnLength.Text = "Duration";
 			// 
 			// downloadButton
 			// 
@@ -182,11 +178,12 @@
 			this.buttonDownload.UseVisualStyleBackColor = true;
 			this.buttonDownload.Click += new System.EventHandler(this.buttonDownload_Click);
 			// 
-			// olvColumn4
+			// columnState
 			// 
-			this.olvColumn4.AspectName = "VideoRecordingState";
-			this.olvColumn4.IsEditable = false;
-			this.olvColumn4.Text = "Recording State";
+			this.columnState.AspectName = "VideoRecordingState";
+			this.columnState.IsEditable = false;
+			this.columnState.Text = "Recording State";
+			this.columnState.Width = 90;
 			// 
 			// VodList
 			// 
@@ -210,18 +207,18 @@
 		#endregion
 
 		private BrightIdeasSoftware.ObjectListView objectListViewVideos;
-		private BrightIdeasSoftware.OLVColumn olvColumn3;
-		private BrightIdeasSoftware.OLVColumn olvColumn1;
-		private BrightIdeasSoftware.OLVColumn olvColumn2;
-		private BrightIdeasSoftware.OLVColumn olvColumn5;
-		private BrightIdeasSoftware.OLVColumn olvColumn6;
-		private BrightIdeasSoftware.OLVColumn olvColumn7;
-		private BrightIdeasSoftware.OLVColumn olvColumn8;
+		private BrightIdeasSoftware.OLVColumn columnService;
+		private BrightIdeasSoftware.OLVColumn columnVideoId;
+		private BrightIdeasSoftware.OLVColumn columnUsername;
+		private BrightIdeasSoftware.OLVColumn columnTitle;
+		private BrightIdeasSoftware.OLVColumn columnGame;
+		private BrightIdeasSoftware.OLVColumn columnTimestamp;
+		private BrightIdeasSoftware.OLVColumn columnLength;
 		private System.Windows.Forms.ComboBox comboBoxService;
 		private System.Windows.Forms.TextBox textboxUsername;
 		private System.Windows.Forms.Label labelUsername;
 		private System.Windows.Forms.Button buttonDownload;
 		private BrightIdeasSoftware.OLVColumn downloadButton;
-		private BrightIdeasSoftware.OLVColumn olvColumn4;
+		private BrightIdeasSoftware.OLVColumn columnState;
 	}
 }
