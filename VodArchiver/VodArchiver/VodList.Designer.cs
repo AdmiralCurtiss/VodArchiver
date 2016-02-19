@@ -172,7 +172,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.textboxUsername.Location = new System.Drawing.Point(212, 12);
 			this.textboxUsername.Name = "textboxUsername";
-			this.textboxUsername.Size = new System.Drawing.Size(678, 20);
+			this.textboxUsername.Size = new System.Drawing.Size(595, 20);
 			this.textboxUsername.TabIndex = 7;
 			// 
 			// labelUsername
@@ -187,9 +187,9 @@
 			// buttonFetch
 			// 
 			this.buttonFetch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonFetch.Location = new System.Drawing.Point(896, 12);
+			this.buttonFetch.Location = new System.Drawing.Point(813, 12);
 			this.buttonFetch.Name = "buttonFetch";
-			this.buttonFetch.Size = new System.Drawing.Size(75, 20);
+			this.buttonFetch.Size = new System.Drawing.Size(158, 20);
 			this.buttonFetch.TabIndex = 5;
 			this.buttonFetch.Text = "Fetch";
 			this.buttonFetch.UseVisualStyleBackColor = true;
