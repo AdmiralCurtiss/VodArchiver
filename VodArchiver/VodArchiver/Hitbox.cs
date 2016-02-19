@@ -44,7 +44,6 @@ namespace VodArchiver {
 			MediaGame = (string)video["category_name"];
 			MediaDuration = (double)video["media_duration"];
 			string profileString = (string)video["media_profiles"];
-			Console.WriteLine( profileString );
 			JToken profiles = JToken.Parse( profileString );
 			MediaProfiles = new HitboxMediaProfile[profiles.Count()];
 			for ( int i = 0; i < MediaProfiles.Length; ++i ) {
