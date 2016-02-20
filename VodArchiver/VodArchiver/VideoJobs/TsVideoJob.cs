@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
+	[Serializable]
 	public abstract class TsVideoJob : IVideoJob {
 		public override async Task Run() {
 			Status = "Retrieving video info...";

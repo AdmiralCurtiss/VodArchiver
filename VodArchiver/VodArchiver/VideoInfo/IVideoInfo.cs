@@ -23,6 +23,7 @@ namespace VodArchiver.VideoInfo {
 		Unknown
 	}
 
+	[Serializable]
 	public abstract class IVideoInfo {
 		public virtual StreamService Service { get; set; }
 		public virtual string Username { get; set; }

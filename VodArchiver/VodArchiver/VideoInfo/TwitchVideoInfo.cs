@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace VodArchiver.VideoInfo {
+	[Serializable]
 	public class TwitchVideoInfo : IVideoInfo {
 		TwixelAPI.Video VideoInfo;
 

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace VodArchiver.VideoJobs {
+	[Serializable]
 	public abstract class IVideoJob {
 		private string _Status;
 		public virtual string Status {
@@ -17,7 +18,8 @@ namespace VodArchiver.VideoJobs {
 			}
 		}
 
-		public virtual StatusUpdate.IStatusUpdate StatusUpdater { get; set; }
+		[NonSerialized]
+		public StatusUpdate.IStatusUpdate StatusUpdater;
 		
 		public virtual VideoInfo.IVideoInfo VideoInfo { get; set; }
 

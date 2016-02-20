@@ -20,6 +20,7 @@ namespace VodArchiver {
 		System.Collections.Concurrent.ConcurrentQueue<IVideoJob> JobQueue;
 		private int RunningJobs;
 		private object Lock = new object();
+		const int MaxRunningJobs = 3;
 
 		public DownloadForm() {
 			InitializeComponent();
@@ -27,6 +28,8 @@ namespace VodArchiver {
 			TwitchAPI = new Twixel( "", "", Twixel.APIVersion.v3 );
 			JobQueue = new System.Collections.Concurrent.ConcurrentQueue<IVideoJob>();
 			RunningJobs = 0;
+
+			LoadJobs();
 		}
 
 		public static string ParseId( string url, out StreamService service ) {
@@ -61,7 +64,7 @@ namespace VodArchiver {
 			}
 		}
 
-		private async void buttonDownload_Click( object sender, EventArgs e ) {
+		private void buttonDownload_Click( object sender, EventArgs e ) {
 			string unparsedId = textboxMediaId.Text.Trim();
 			if ( unparsedId == "" ) { return; }
 
@@ -87,7 +90,7 @@ namespace VodArchiver {
 
 			CreateAndEnqueueJob( service, id );
 			textboxMediaId.Text = "";
-			await RunJob();
+			Task.Run( RunJob );
 		}
 
 		public bool JobExists( StreamService service, string id ) {
@@ -127,7 +130,7 @@ namespace VodArchiver {
 			bool runNewJob = false;
 			IVideoJob job = null;
 			lock ( Lock ) {
-				if ( RunningJobs < 3 && JobQueue.TryDequeue( out job ) ) {
+				if ( RunningJobs < MaxRunningJobs && JobQueue.TryDequeue( out job ) ) {
 					++RunningJobs;
 					runNewJob = true;
 				}
@@ -153,6 +156,52 @@ namespace VodArchiver {
 
 		private void buttonFetchUser_Click( object sender, EventArgs e ) {
 			new VodList( this, TwitchAPI ).Show();
+		}
+
+		private void LoadJobs() {
+			try {
+				using ( FileStream fs = System.IO.File.OpenRead( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) ) ) {
+					System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+					int jobCount = (int)formatter.Deserialize( fs );
+					for ( int i = 0; i < jobCount; ++i ) {
+						object obj = formatter.Deserialize( fs );
+						IVideoJob job = obj as IVideoJob;
+						if ( job != null ) {
+							if ( job as TwitchVideoJob != null ) {
+								( job as TwitchVideoJob ).TwitchAPI = TwitchAPI;
+							}
+							job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
+							objectListViewDownloads.AddObject( job );
+							JobQueue.Enqueue( job );
+						}
+					}
+					fs.Close();
+				}
+			} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
+
+			for ( int i = 0; i < MaxRunningJobs; ++i ) {
+				Task.Run( RunJob );
+			}
+		}
+
+		private void SaveJobs() {
+			using ( FileStream fs = System.IO.File.Create( Path.Combine( Application.LocalUserAppDataPath, "vods.tmp" ) ) ) {
+				System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+				formatter.Serialize( fs, objectListViewDownloads.Items.Count );
+				foreach ( var item in objectListViewDownloads.Items ) {
+					IVideoJob job = ( item as BrightIdeasSoftware.OLVListItem )?.RowObject as IVideoJob;
+					formatter.Serialize( fs, job );
+				}
+				fs.Close();
+			}
+			if ( System.IO.File.Exists( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) ) ) {
+				System.IO.File.Delete( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) );
+			}
+			System.IO.File.Move( Path.Combine( Application.LocalUserAppDataPath, "vods.tmp" ), Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) );
+		}
+
+		private void DownloadForm_FormClosing( object sender, FormClosingEventArgs e ) {
+			SaveJobs();
 		}
 	}
 }

@@ -77,10 +77,10 @@ namespace VodArchiver {
 			objectListViewVideos.EndUpdate();
 		}
 
-		private async void objectListViewVideos_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
+		private void objectListViewVideos_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
 			IVideoInfo videoInfo = (IVideoInfo)e.Model;
 			DownloadWindow.CreateAndEnqueueJob( videoInfo.Service, videoInfo.VideoId );
-			await DownloadWindow.RunJob();
+			Task.Run( DownloadWindow.RunJob );
 		}
 	}
 }

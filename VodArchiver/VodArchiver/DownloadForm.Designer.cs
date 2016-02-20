@@ -35,10 +35,10 @@
 			this.columnGame = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnTimestamp = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnLength = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnRecordingState = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnStatus = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.buttonSettings = new System.Windows.Forms.Button();
 			this.buttonFetchUser = new System.Windows.Forms.Button();
-			this.columnRecordingState = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -167,6 +167,12 @@
 			this.columnLength.IsEditable = false;
 			this.columnLength.Text = "Duration";
 			// 
+			// columnRecordingState
+			// 
+			this.columnRecordingState.AspectName = "VideoInfo.VideoRecordingState";
+			this.columnRecordingState.IsEditable = false;
+			this.columnRecordingState.Text = "Recording State";
+			// 
 			// columnStatus
 			// 
 			this.columnStatus.AspectName = "Status";
@@ -196,12 +202,6 @@
 			this.buttonFetchUser.UseVisualStyleBackColor = true;
 			this.buttonFetchUser.Click += new System.EventHandler(this.buttonFetchUser_Click);
 			// 
-			// columnRecordingState
-			// 
-			this.columnRecordingState.AspectName = "VideoInfo.VideoRecordingState";
-			this.columnRecordingState.IsEditable = false;
-			this.columnRecordingState.Text = "Recording State";
-			// 
 			// DownloadForm
 			// 
 			this.AcceptButton = this.buttonDownload;
@@ -217,6 +217,7 @@
 			this.Controls.Add(this.buttonDownload);
 			this.Name = "DownloadForm";
 			this.Text = "Form1";
+			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DownloadForm_FormClosing);
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).EndInit();
 			this.ResumeLayout(false);
 			this.PerformLayout();
