@@ -23,15 +23,15 @@ namespace VodArchiver.VideoInfo {
 		Unknown
 	}
 
-	public interface IVideoInfo {
-		StreamService Service { get; set; }
-		string Username { get; set; }
-		string VideoId { get; set; }
-		string VideoTitle { get; set; }
-		string VideoGame { get; set; }
-		DateTime VideoTimestamp { get; set; }
-		TimeSpan VideoLength { get; set; }
-		RecordingState VideoRecordingState { get; set; }
-		VideoFileType VideoType { get; set; }
+	public abstract class IVideoInfo {
+		public virtual StreamService Service { get; set; }
+		public virtual string Username { get; set; }
+		public virtual string VideoId { get; set; }
+		public virtual string VideoTitle { get; set; }
+		public virtual string VideoGame { get; set; }
+		public virtual DateTime VideoTimestamp { get; set; }
+		public virtual TimeSpan VideoLength { get; set; }
+		public virtual RecordingState VideoRecordingState { get; set; }
+		public virtual VideoFileType VideoType { get; set; }
 	}
 }

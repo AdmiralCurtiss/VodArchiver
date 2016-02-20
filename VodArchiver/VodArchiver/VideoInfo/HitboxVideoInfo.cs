@@ -12,7 +12,7 @@ namespace VodArchiver.VideoInfo {
 			VideoInfo = video;
 		}
 
-		public StreamService Service {
+		public override StreamService Service {
 			get {
 				return StreamService.Hitbox;
 			}
@@ -22,7 +22,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public string Username {
+		public override string Username {
 			get {
 				return VideoInfo.MediaUserName;
 			}
@@ -32,7 +32,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public string VideoGame {
+		public override string VideoGame {
 			get {
 				return VideoInfo.MediaGame;
 			}
@@ -42,7 +42,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public string VideoId {
+		public override string VideoId {
 			get {
 				return VideoInfo.MediaId.ToString();
 			}
@@ -52,7 +52,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public TimeSpan VideoLength {
+		public override TimeSpan VideoLength {
 			get {
 				return TimeSpan.FromSeconds( VideoInfo.MediaDuration );
 			}
@@ -62,7 +62,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public RecordingState VideoRecordingState {
+		public override RecordingState VideoRecordingState {
 			get {
 				return RecordingState.Recorded;
 			}
@@ -72,7 +72,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public DateTime VideoTimestamp {
+		public override DateTime VideoTimestamp {
 			get {
 				return VideoInfo.MediaDateAdded;
 			}
@@ -82,7 +82,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public string VideoTitle {
+		public override string VideoTitle {
 			get {
 				return VideoInfo.MediaTitle;
 			}
@@ -92,7 +92,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public VideoFileType VideoType {
+		public override VideoFileType VideoType {
 			get {
 				if ( VideoInfo.MediaProfiles.First().Url.EndsWith( "m3u8" ) ) {
 					return VideoFileType.M3U;

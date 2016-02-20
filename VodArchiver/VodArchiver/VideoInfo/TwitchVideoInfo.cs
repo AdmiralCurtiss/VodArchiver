@@ -12,7 +12,7 @@ namespace VodArchiver.VideoInfo {
 			VideoInfo = video;
 		}
 
-		public StreamService Service {
+		public override StreamService Service {
 			get {
 				return StreamService.Twitch;
 			}
@@ -22,7 +22,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public string Username {
+		public override string Username {
 			get {
 				return VideoInfo.channel["name"];
 			}
@@ -32,7 +32,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public string VideoGame {
+		public override string VideoGame {
 			get {
 				return VideoInfo.game;
 			}
@@ -42,7 +42,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public string VideoId {
+		public override string VideoId {
 			get {
 				return VideoInfo.id;
 			}
@@ -52,7 +52,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public TimeSpan VideoLength {
+		public override TimeSpan VideoLength {
 			get {
 				return TimeSpan.FromSeconds( VideoInfo.length );
 			}
@@ -62,7 +62,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public RecordingState VideoRecordingState {
+		public override RecordingState VideoRecordingState {
 			get {
 				switch ( VideoInfo.status ) {
 					case "recording": return RecordingState.Live;
@@ -80,7 +80,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public DateTime VideoTimestamp {
+		public override DateTime VideoTimestamp {
 			get {
 				return VideoInfo.recordedAt;
 			}
@@ -90,7 +90,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public string VideoTitle {
+		public override string VideoTitle {
 			get {
 				return VideoInfo.title;
 			}
@@ -100,7 +100,7 @@ namespace VodArchiver.VideoInfo {
 			}
 		}
 
-		public VideoFileType VideoType {
+		public override VideoFileType VideoType {
 			get {
 				if ( VideoId.StartsWith( "v" ) ) { return VideoFileType.M3U; }
 				if ( VideoId.StartsWith( "a" ) ) { return VideoFileType.FLVs; }
