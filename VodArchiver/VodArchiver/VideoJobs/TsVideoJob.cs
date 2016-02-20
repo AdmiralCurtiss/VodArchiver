@@ -8,7 +8,7 @@ using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
 	public abstract class TsVideoJob : IVideoJob {
-		public IVideoInfo VideoInfo;
+		public IVideoInfo VideoInfo { get; set; }
 		public abstract string Status { get; set; }
 
 		public abstract StatusUpdate.IStatusUpdate StatusUpdater { get; set; }

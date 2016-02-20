@@ -90,7 +90,21 @@ namespace VodArchiver {
 			await RunJob();
 		}
 
+		public bool JobExists( StreamService service, string id ) {
+			foreach ( var item in objectListViewDownloads.Items ) {
+				IVideoJob job = ( item as BrightIdeasSoftware.OLVListItem )?.RowObject as IVideoJob;
+				if ( job != null && job.VideoInfo.Service == service && job.VideoInfo.VideoId == id ) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		public void CreateAndEnqueueJob( StreamService service, string id ) {
+			if ( JobExists( service, id ) ) {
+				return;
+			}
+
 			IVideoJob job;
 			switch ( service ) {
 				case StreamService.Twitch:

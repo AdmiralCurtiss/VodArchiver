@@ -8,6 +8,7 @@ namespace VodArchiver.VideoJobs {
 	public interface IVideoJob {
 		string Status { get; set; }
 		StatusUpdate.IStatusUpdate StatusUpdater { get; set; }
+		VideoInfo.IVideoInfo VideoInfo { get; set; }
 
 		Task Run();
 	}
