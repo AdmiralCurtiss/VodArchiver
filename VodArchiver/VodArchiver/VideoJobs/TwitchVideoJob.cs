@@ -9,19 +9,6 @@ using TwixelAPI;
 
 namespace VodArchiver.VideoJobs {
 	public class TwitchVideoJob : TsVideoJob {
-		private string _Status;
-		public override string Status {
-			get {
-				return _Status;
-			}
-			set {
-				_Status = value;
-				StatusUpdater.Update();
-			}
-		}
-
-		public override StatusUpdate.IStatusUpdate StatusUpdater { get; set; }
-
 		Twixel TwitchAPI;
 		string VideoQuality = "chunked";
 

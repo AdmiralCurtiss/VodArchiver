@@ -9,19 +9,6 @@ using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
 	public class HitboxVideoJob : TsVideoJob {
-		private string _Status;
-		public override string Status {
-			get {
-				return _Status;
-			}
-			set {
-				_Status = value;
-				StatusUpdater.Update();
-			}
-		}
-
-		public override StatusUpdate.IStatusUpdate StatusUpdater { get; set; }
-
 		public HitboxVideoJob( string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
 			VideoInfo = new GenericVideoInfo() { Service = StreamService.Hitbox, VideoId = id };

@@ -8,12 +8,7 @@ using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
 	public abstract class TsVideoJob : IVideoJob {
-		public IVideoInfo VideoInfo { get; set; }
-		public abstract string Status { get; set; }
-
-		public abstract StatusUpdate.IStatusUpdate StatusUpdater { get; set; }
-
-		public async Task Run() {
+		public override async Task Run() {
 			Status = "Retrieving video info...";
 			string[] urls = await GetFileUrlsOfVod();
 			string tempFolder = GetTempFolder();

@@ -5,11 +5,22 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace VodArchiver.VideoJobs {
-	public interface IVideoJob {
-		string Status { get; set; }
-		StatusUpdate.IStatusUpdate StatusUpdater { get; set; }
-		VideoInfo.IVideoInfo VideoInfo { get; set; }
+	public abstract class IVideoJob {
+		private string _Status;
+		public virtual string Status {
+			get {
+				return _Status;
+			}
+			set {
+				_Status = value;
+				StatusUpdater.Update();
+			}
+		}
 
-		Task Run();
+		public virtual StatusUpdate.IStatusUpdate StatusUpdater { get; set; }
+		
+		public virtual VideoInfo.IVideoInfo VideoInfo { get; set; }
+
+		public abstract Task Run();
 	}
 }
