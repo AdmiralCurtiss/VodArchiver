@@ -10,6 +10,7 @@ namespace VodArchiver.VideoJobs {
 	[Serializable]
 	public abstract class TsVideoJob : IVideoJob {
 		public override async Task Run() {
+			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
 			string[] urls = await GetFileUrlsOfVod();
 			string tempFolder = GetTempFolder();
@@ -23,6 +24,7 @@ namespace VodArchiver.VideoJobs {
 			Status = "Remuxing to MP4...";
 			await Task.Run( () => TsVideoJob.Remux( remuxedFilename, combinedFilename ) );
 			Status = "Done!";
+			JobStatus = VideoJobStatus.Finished;
 		}
 
 		public abstract Task<string[]> GetFileUrlsOfVod();

@@ -15,6 +15,7 @@ namespace VodArchiver.VideoJobs {
 		string VideoQuality = "chunked";
 
 		public TwitchVideoJob( Twixel api, string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
+			JobStatus = VideoJobStatus.NotStarted;
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
 			VideoInfo = new GenericVideoInfo() { Service = StreamService.Twitch, VideoId = id };
 			TwitchAPI = api;

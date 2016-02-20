@@ -11,6 +11,7 @@ namespace VodArchiver.VideoJobs {
 	[Serializable]
 	public class HitboxVideoJob : TsVideoJob {
 		public HitboxVideoJob( string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
+			JobStatus = VideoJobStatus.NotStarted;
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
 			VideoInfo = new GenericVideoInfo() { Service = StreamService.Hitbox, VideoId = id };
 			Status = "...";

@@ -5,6 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace VodArchiver.VideoJobs {
+	public enum VideoJobStatus {
+		NotStarted,
+		Running,
+		Finished,
+	}
+
 	[Serializable]
 	public abstract class IVideoJob {
 		private string _Status;
@@ -20,6 +26,8 @@ namespace VodArchiver.VideoJobs {
 
 		[NonSerialized]
 		public StatusUpdate.IStatusUpdate StatusUpdater;
+
+		public VideoJobStatus JobStatus;
 		
 		public virtual VideoInfo.IVideoInfo VideoInfo { get; set; }
 

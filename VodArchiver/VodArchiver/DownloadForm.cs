@@ -138,8 +138,11 @@ namespace VodArchiver {
 
 			if ( runNewJob ) {
 				try {
-					await job.Run();
+					if ( job.JobStatus != VideoJobStatus.Finished ) {
+						await job.Run();
+					}
 				} catch ( Exception ex ) {
+					job.JobStatus = VideoJobStatus.NotStarted;
 					job.Status = "ERROR: " + ex.ToString();
 				}
 
@@ -172,7 +175,9 @@ namespace VodArchiver {
 							}
 							job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
 							objectListViewDownloads.AddObject( job );
-							JobQueue.Enqueue( job );
+							if ( job.JobStatus != VideoJobStatus.Finished ) {
+								JobQueue.Enqueue( job );
+							}
 						}
 					}
 					fs.Close();
