@@ -29,6 +29,9 @@ namespace VodArchiver {
 			JobQueue = new System.Collections.Concurrent.ConcurrentQueue<IVideoJob>();
 			RunningJobs = 0;
 
+			objectListViewDownloads.SecondarySortColumn = objectListViewDownloads.GetColumn( "Video ID" );
+			objectListViewDownloads.SecondarySortOrder = SortOrder.Ascending;
+
 			LoadJobs();
 		}
 

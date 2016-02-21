@@ -21,6 +21,8 @@ namespace VodArchiver {
 			DownloadWindow = parent;
 			TwitchAPI = twixel;
 			comboBoxService.Text = "Twitch (Recordings)";
+			objectListViewVideos.SecondarySortColumn = objectListViewVideos.GetColumn( "Video ID" );
+			objectListViewVideos.SecondarySortOrder = SortOrder.Ascending;
 		}
 
 		private async void buttonFetch_Click( object sender, EventArgs e ) {
