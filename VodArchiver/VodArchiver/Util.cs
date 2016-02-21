@@ -39,5 +39,12 @@ namespace VodArchiver {
 				await DeleteFile( file );
 			}
 		}
+
+		public static void MoveFileOverwrite( string sourceName, string targetName ) {
+			if ( System.IO.File.Exists( targetName ) ) {
+				System.IO.File.Delete( targetName );
+			}
+			System.IO.File.Move( sourceName, targetName );
+		}
 	}
 }

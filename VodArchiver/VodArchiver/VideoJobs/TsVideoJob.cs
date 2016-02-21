@@ -14,15 +14,22 @@ namespace VodArchiver.VideoJobs {
 			Status = "Retrieving video info...";
 			string[] urls = await GetFileUrlsOfVod();
 			string tempFolder = GetTempFolder();
-			Status = "Downloading files...";
-			string[] files = await Download( tempFolder, urls );
 			string combinedFilename = Path.Combine( tempFolder, "combined.ts" );
-			Status = "Combining downloaded video parts...";
-			await TsVideoJob.Combine( combinedFilename, files );
-			await Util.DeleteFiles( files );
+			string remuxedTempname = Path.Combine( tempFolder, "combined.mp4" );
 			string remuxedFilename = Path.Combine( GetTargetFolder(), GetTargetFilenameWithoutExtension() + ".mp4" );
-			Status = "Remuxing to MP4...";
-			await Task.Run( () => TsVideoJob.Remux( remuxedFilename, combinedFilename ) );
+
+			if ( !await Util.FileExists( remuxedFilename ) ) {
+				if ( !await Util.FileExists( combinedFilename ) ) {
+					Status = "Downloading files...";
+					string[] files = await Download( tempFolder, urls );
+					Status = "Combining downloaded video parts...";
+					await TsVideoJob.Combine( combinedFilename, files );
+					await Util.DeleteFiles( files );
+				}
+				Status = "Remuxing to MP4...";
+				await Task.Run( () => TsVideoJob.Remux( remuxedFilename, combinedFilename, remuxedTempname ) );
+			}
+
 			Status = "Done!";
 			JobStatus = VideoJobStatus.Finished;
 		}
@@ -71,7 +78,7 @@ namespace VodArchiver.VideoJobs {
 					await Util.DeleteFile( outpath_temp );
 				}
 				if ( await Util.FileExists( outpath ) ) {
-					Console.WriteLine( "Already have " + url + "..." );
+					Status = "Already have part " + ( i + 1 ) + "/" + urls.Length + "...";
 					files.Add( outpath );
 					continue;
 				}
@@ -102,7 +109,7 @@ namespace VodArchiver.VideoJobs {
 
 		public static async Task Combine( string combinedFilename, string[] files ) {
 			Console.WriteLine( "Combining into " + combinedFilename + "..." );
-			using ( var fs = File.Create( combinedFilename ) ) {
+			using ( var fs = File.Create( combinedFilename + ".tmp" ) ) {
 				foreach ( var file in files ) {
 					using ( var part = File.OpenRead( file ) ) {
 						await part.CopyToAsync( fs );
@@ -112,18 +119,20 @@ namespace VodArchiver.VideoJobs {
 
 				fs.Close();
 			}
+			Util.MoveFileOverwrite( combinedFilename + ".tmp", combinedFilename );
 		}
 
-		public static void Remux( string targetName, string sourceName ) {
+		public static void Remux( string targetName, string sourceName, string tempName ) {
 			Directory.CreateDirectory( Path.GetDirectoryName( targetName ) );
 			Console.WriteLine( "Remuxing to " + targetName + "..." );
 			var inputFile = new MediaToolkit.Model.MediaFile( sourceName );
-			var outputFile = new MediaToolkit.Model.MediaFile( targetName );
+			var outputFile = new MediaToolkit.Model.MediaFile( tempName );
 			using ( var engine = new MediaToolkit.Engine( "ffmpeg.exe" ) ) {
 				MediaToolkit.Options.ConversionOptions options = new MediaToolkit.Options.ConversionOptions();
 				options.AdditionalOptions = "-codec copy -bsf:a aac_adtstoasc";
 				engine.Convert( inputFile, outputFile, options );
 			}
+			Util.MoveFileOverwrite( tempName, targetName );
 			Console.WriteLine( "Created " + targetName + "!" );
 		}
 	}
