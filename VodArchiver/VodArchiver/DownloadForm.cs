@@ -166,6 +166,7 @@ namespace VodArchiver {
 
 		private void LoadJobs() {
 			try {
+				objectListViewDownloads.BeginUpdate();
 				using ( FileStream fs = System.IO.File.OpenRead( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) ) ) {
 					System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
 					int jobCount = (int)formatter.Deserialize( fs );
@@ -186,6 +187,9 @@ namespace VodArchiver {
 					fs.Close();
 				}
 			} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
+			finally {
+				objectListViewDownloads.EndUpdate();
+			}
 
 			for ( int i = 0; i < MaxRunningJobs; ++i ) {
 				Task.Run( RunJob );
