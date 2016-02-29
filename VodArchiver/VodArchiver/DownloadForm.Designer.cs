@@ -40,6 +40,7 @@
 			this.columnStatus = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.buttonSettings = new System.Windows.Forms.Button();
 			this.buttonFetchUser = new System.Windows.Forms.Button();
+			this.columnActionRemove = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -96,6 +97,7 @@
 			this.objectListViewDownloads.AllColumns.Add(this.columnLength);
 			this.objectListViewDownloads.AllColumns.Add(this.columnRecordingState);
 			this.objectListViewDownloads.AllColumns.Add(this.columnAction1);
+			this.objectListViewDownloads.AllColumns.Add(this.columnActionRemove);
 			this.objectListViewDownloads.AllColumns.Add(this.columnStatus);
 			this.objectListViewDownloads.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
@@ -111,6 +113,7 @@
             this.columnLength,
             this.columnRecordingState,
             this.columnAction1,
+            this.columnActionRemove,
             this.columnStatus});
 			this.objectListViewDownloads.Cursor = System.Windows.Forms.Cursors.Default;
 			this.objectListViewDownloads.HighlightBackgroundColor = System.Drawing.Color.Empty;
@@ -214,6 +217,15 @@
 			this.buttonFetchUser.UseVisualStyleBackColor = true;
 			this.buttonFetchUser.Click += new System.EventHandler(this.buttonFetchUser_Click);
 			// 
+			// columnActionRemove
+			// 
+			this.columnActionRemove.AspectName = "VideoInfo.Service";
+			this.columnActionRemove.AspectToStringFormat = "Remove";
+			this.columnActionRemove.ButtonSizing = BrightIdeasSoftware.OLVColumn.ButtonSizingMode.CellBounds;
+			this.columnActionRemove.IsButton = true;
+			this.columnActionRemove.IsEditable = false;
+			this.columnActionRemove.Text = "Remove";
+			// 
 			// DownloadForm
 			// 
 			this.AcceptButton = this.buttonDownload;
@@ -255,5 +267,6 @@
 		private System.Windows.Forms.Button buttonFetchUser;
 		private BrightIdeasSoftware.OLVColumn columnRecordingState;
 		private BrightIdeasSoftware.OLVColumn columnAction1;
+		private BrightIdeasSoftware.OLVColumn columnActionRemove;
 	}
 }

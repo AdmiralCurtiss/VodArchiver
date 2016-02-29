@@ -221,6 +221,11 @@ namespace VodArchiver {
 
 		private void objectListViewDownloads_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
 			switch ( e.SubItem.Text ) {
+				case "Remove":
+					objectListViewDownloads.RemoveObject( e.Model );
+					// TODO: Remove from job queue too!
+					// TODO: Stop job when removed & running!
+					break;
 				case "Force Start":
 					IVideoJob job = (IVideoJob)e.Model;
 					Task.Run( () => RunJob( job, true ) );
