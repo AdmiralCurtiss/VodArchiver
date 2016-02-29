@@ -32,6 +32,10 @@ namespace VodArchiver {
 			objectListViewDownloads.SecondarySortColumn = objectListViewDownloads.GetColumn( "Video ID" );
 			objectListViewDownloads.SecondarySortOrder = SortOrder.Ascending;
 
+			columnStatus.GroupKeyGetter = delegate ( object rowObject ) {
+				return ( (IVideoJob)rowObject ).JobStatus;
+			};
+
 			LoadJobs();
 		}
 
