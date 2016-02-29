@@ -36,6 +36,7 @@
 			this.columnTimestamp = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnLength = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnRecordingState = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnAction1 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnStatus = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.buttonSettings = new System.Windows.Forms.Button();
 			this.buttonFetchUser = new System.Windows.Forms.Button();
@@ -94,6 +95,7 @@
 			this.objectListViewDownloads.AllColumns.Add(this.columnTimestamp);
 			this.objectListViewDownloads.AllColumns.Add(this.columnLength);
 			this.objectListViewDownloads.AllColumns.Add(this.columnRecordingState);
+			this.objectListViewDownloads.AllColumns.Add(this.columnAction1);
 			this.objectListViewDownloads.AllColumns.Add(this.columnStatus);
 			this.objectListViewDownloads.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
@@ -108,6 +110,7 @@
             this.columnTimestamp,
             this.columnLength,
             this.columnRecordingState,
+            this.columnAction1,
             this.columnStatus});
 			this.objectListViewDownloads.Cursor = System.Windows.Forms.Cursors.Default;
 			this.objectListViewDownloads.HighlightBackgroundColor = System.Drawing.Color.Empty;
@@ -118,6 +121,7 @@
 			this.objectListViewDownloads.TabIndex = 4;
 			this.objectListViewDownloads.UseCompatibleStateImageBehavior = false;
 			this.objectListViewDownloads.View = System.Windows.Forms.View.Details;
+			this.objectListViewDownloads.ButtonClick += new System.EventHandler<BrightIdeasSoftware.CellClickEventArgs>(this.objectListViewDownloads_ButtonClick);
 			// 
 			// columnService
 			// 
@@ -172,6 +176,14 @@
 			this.columnRecordingState.AspectName = "VideoInfo.VideoRecordingState";
 			this.columnRecordingState.IsEditable = false;
 			this.columnRecordingState.Text = "Recording State";
+			// 
+			// columnAction1
+			// 
+			this.columnAction1.AspectName = "ButtonAction";
+			this.columnAction1.ButtonSizing = BrightIdeasSoftware.OLVColumn.ButtonSizingMode.CellBounds;
+			this.columnAction1.IsButton = true;
+			this.columnAction1.IsEditable = false;
+			this.columnAction1.Text = "Action";
 			// 
 			// columnStatus
 			// 
@@ -242,5 +254,6 @@
 		private System.Windows.Forms.Button buttonSettings;
 		private System.Windows.Forms.Button buttonFetchUser;
 		private BrightIdeasSoftware.OLVColumn columnRecordingState;
+		private BrightIdeasSoftware.OLVColumn columnAction1;
 	}
 }

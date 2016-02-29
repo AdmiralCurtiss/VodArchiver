@@ -93,7 +93,7 @@ namespace VodArchiver {
 
 			CreateAndEnqueueJob( service, id );
 			textboxMediaId.Text = "";
-			Task.Run( RunJob );
+			Task.Run( () => RunJob() );
 		}
 
 		public bool JobExists( StreamService service, string id ) {
@@ -129,11 +129,11 @@ namespace VodArchiver {
 			JobQueue.Enqueue( job );
 		}
 
-		public async Task RunJob() {
+		public async Task RunJob( IVideoJob job = null, bool forceStart = false ) {
 			bool runNewJob = false;
-			IVideoJob job = null;
 			lock ( Lock ) {
-				if ( RunningJobs < MaxRunningJobs && JobQueue.TryDequeue( out job ) ) {
+				if ( ( forceStart || RunningJobs < MaxRunningJobs ) && ( job != null || JobQueue.TryDequeue( out job ) ) ) {
+					// TODO: This almost certainly has odd results if one thread tries to dequeue a job that was force-started from somewhere else!
 					++RunningJobs;
 					runNewJob = true;
 				}
@@ -186,13 +186,12 @@ namespace VodArchiver {
 					}
 					fs.Close();
 				}
-			} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
-			finally {
+			} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { } finally {
 				objectListViewDownloads.EndUpdate();
 			}
 
 			for ( int i = 0; i < MaxRunningJobs; ++i ) {
-				Task.Run( RunJob );
+				Task.Run( () => RunJob() );
 			}
 		}
 
@@ -214,6 +213,15 @@ namespace VodArchiver {
 
 		private void DownloadForm_FormClosing( object sender, FormClosingEventArgs e ) {
 			SaveJobs();
+		}
+
+		private void objectListViewDownloads_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
+			switch ( e.SubItem.Text ) {
+				case "Force Start":
+					IVideoJob job = (IVideoJob)e.Model;
+					Task.Run( () => RunJob( job, true ) );
+					break;
+			}
 		}
 	}
 }
