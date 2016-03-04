@@ -30,11 +30,20 @@ namespace VodArchiver {
 			bool hasMore = true;
 			long maxVideos = -1;
 
+			UserInfo userInfo = new UserInfo();
+			switch ( comboBoxService.Text ) {
+				case "Twitch (Recordings)": userInfo.Service = ServiceVideoCategoryType.TwitchRecordings; break;
+				case "Twitch (Highlights)": userInfo.Service = ServiceVideoCategoryType.TwitchHighlights; break;
+				case "Hitbox": userInfo.Service = ServiceVideoCategoryType.HitboxRecordings; break;
+				default: return;
+			}
+			userInfo.Username = textboxUsername.Text.Trim();
+
 			try {
-				switch ( comboBoxService.Text ) {
-					case "Twitch (Recordings)":
-					case "Twitch (Highlights)":
-						Total<List<Video>> broadcasts = await TwitchAPI.RetrieveVideos( textboxUsername.Text.Trim(), offset: Offset, limit: 25, broadcasts: comboBoxService.Text == "Twitch (Recordings)", hls: false );
+				switch ( userInfo.Service ) {
+					case ServiceVideoCategoryType.TwitchRecordings:
+					case ServiceVideoCategoryType.TwitchHighlights:
+						Total<List<Video>> broadcasts = await TwitchAPI.RetrieveVideos( userInfo.Username, offset: Offset, limit: 25, broadcasts: userInfo.Service == ServiceVideoCategoryType.TwitchRecordings, hls: false );
 						if ( broadcasts.total.HasValue ) {
 							hasMore = Offset + broadcasts.wrapped.Count < broadcasts.total;
 							maxVideos = (long)broadcasts.total;
@@ -46,8 +55,8 @@ namespace VodArchiver {
 							videosToAdd.Add( new TwitchVideoInfo( v ) );
 						}
 						break;
-					case "Hitbox":
-						List<HitboxVideo> videos = await Hitbox.RetrieveVideos( textboxUsername.Text.Trim(), offset: Offset, limit: 100 );
+					case ServiceVideoCategoryType.HitboxRecordings:
+						List<HitboxVideo> videos = await Hitbox.RetrieveVideos( userInfo.Username, offset: Offset, limit: 100 );
 						hasMore = videos.Count == 100;
 						Offset += videos.Count;
 						foreach ( var v in videos ) {
