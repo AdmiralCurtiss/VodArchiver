@@ -78,7 +78,9 @@ namespace VodArchiver.VideoJobs {
 					await Util.DeleteFile( outpath_temp );
 				}
 				if ( await Util.FileExists( outpath ) ) {
-					Status = "Already have part " + ( i + 1 ) + "/" + urls.Length + "...";
+					if ( i % 100 == 99 ) {
+						Status = "Already have part " + ( i + 1 ) + "/" + urls.Length + "...";
+					}
 					files.Add( outpath );
 					continue;
 				}
