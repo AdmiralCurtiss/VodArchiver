@@ -23,6 +23,18 @@ namespace VodArchiver {
 			comboBoxService.Text = "Twitch (Recordings)";
 			objectListViewVideos.SecondarySortColumn = objectListViewVideos.GetColumn( "Video ID" );
 			objectListViewVideos.SecondarySortOrder = SortOrder.Ascending;
+
+			if ( UserInfoPersister.KnownUsers.Count == 0 ) {
+				try {
+					UserInfoPersister.Load();
+				} catch ( Exception ex ) {
+					MessageBox.Show( "Couldn't load users." + Environment.NewLine + ex.ToString() );
+				}
+			}
+
+			comboBoxKnownUsers.Items.Add( " == No Preset == " );
+			comboBoxKnownUsers.Items.AddRange( UserInfoPersister.KnownUsers.ToArray() );
+			comboBoxKnownUsers.SelectedIndex = 0;
 		}
 
 		private async void buttonFetch_Click( object sender, EventArgs e ) {
@@ -72,8 +84,13 @@ namespace VodArchiver {
 				return;
 			}
 
+			if ( UserInfoPersister.KnownUsers.Add( userInfo ) ) {
+				UserInfoPersister.Save();
+			}
+
 			textboxUsername.Enabled = false;
 			comboBoxService.Enabled = false;
+			comboBoxKnownUsers.Enabled = false;
 			if ( hasMore && maxVideos != -1 ) {
 				buttonFetch.Text = "Fetch More (" + ( maxVideos - Offset ) + " left)";
 			} else {
@@ -92,6 +109,20 @@ namespace VodArchiver {
 			IVideoInfo videoInfo = (IVideoInfo)e.Model;
 			DownloadWindow.CreateAndEnqueueJob( videoInfo.Service, videoInfo.VideoId );
 			Task.Run( () => DownloadWindow.RunJob() );
+		}
+
+		private void comboBoxKnownUsers_SelectedIndexChanged( object sender, EventArgs e ) {
+			UserInfo u = comboBoxKnownUsers.SelectedItem as UserInfo;
+			if ( u != null ) {
+				comboBoxService.SelectedIndex = (int)u.Service;
+				textboxUsername.Text = u.Username;
+
+				comboBoxService.Enabled = false;
+				textboxUsername.Enabled = false;
+			} else {
+				comboBoxService.Enabled = true;
+				textboxUsername.Enabled = true;
+			}
 		}
 	}
 }

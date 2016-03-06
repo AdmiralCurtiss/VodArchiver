@@ -38,6 +38,7 @@
 			this.textboxUsername = new System.Windows.Forms.TextBox();
 			this.labelUsername = new System.Windows.Forms.Label();
 			this.buttonFetch = new System.Windows.Forms.Button();
+			this.comboBoxKnownUsers = new System.Windows.Forms.ComboBox();
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewVideos)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -161,7 +162,7 @@
             "Twitch (Recordings)",
             "Twitch (Highlights)",
             "Hitbox"});
-			this.comboBoxService.Location = new System.Drawing.Point(12, 12);
+			this.comboBoxService.Location = new System.Drawing.Point(250, 12);
 			this.comboBoxService.Name = "comboBoxService";
 			this.comboBoxService.Size = new System.Drawing.Size(133, 21);
 			this.comboBoxService.TabIndex = 8;
@@ -170,15 +171,15 @@
 			// 
 			this.textboxUsername.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.textboxUsername.Location = new System.Drawing.Point(212, 12);
+			this.textboxUsername.Location = new System.Drawing.Point(450, 12);
 			this.textboxUsername.Name = "textboxUsername";
-			this.textboxUsername.Size = new System.Drawing.Size(595, 20);
+			this.textboxUsername.Size = new System.Drawing.Size(357, 20);
 			this.textboxUsername.TabIndex = 7;
 			// 
 			// labelUsername
 			// 
 			this.labelUsername.AutoSize = true;
-			this.labelUsername.Location = new System.Drawing.Point(151, 15);
+			this.labelUsername.Location = new System.Drawing.Point(389, 15);
 			this.labelUsername.Name = "labelUsername";
 			this.labelUsername.Size = new System.Drawing.Size(55, 13);
 			this.labelUsername.TabIndex = 6;
@@ -195,12 +196,23 @@
 			this.buttonFetch.UseVisualStyleBackColor = true;
 			this.buttonFetch.Click += new System.EventHandler(this.buttonFetch_Click);
 			// 
+			// comboBoxKnownUsers
+			// 
+			this.comboBoxKnownUsers.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.comboBoxKnownUsers.FormattingEnabled = true;
+			this.comboBoxKnownUsers.Location = new System.Drawing.Point(12, 12);
+			this.comboBoxKnownUsers.Name = "comboBoxKnownUsers";
+			this.comboBoxKnownUsers.Size = new System.Drawing.Size(232, 21);
+			this.comboBoxKnownUsers.TabIndex = 10;
+			this.comboBoxKnownUsers.SelectedIndexChanged += new System.EventHandler(this.comboBoxKnownUsers_SelectedIndexChanged);
+			// 
 			// VodList
 			// 
 			this.AcceptButton = this.buttonFetch;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(983, 482);
+			this.Controls.Add(this.comboBoxKnownUsers);
 			this.Controls.Add(this.objectListViewVideos);
 			this.Controls.Add(this.comboBoxService);
 			this.Controls.Add(this.textboxUsername);
@@ -231,5 +243,6 @@
 		private BrightIdeasSoftware.OLVColumn downloadButton;
 		private BrightIdeasSoftware.OLVColumn columnRecordingState;
 		private BrightIdeasSoftware.OLVColumn columnType;
+		private System.Windows.Forms.ComboBox comboBoxKnownUsers;
 	}
 }

@@ -12,7 +12,7 @@ namespace VodArchiver {
 		HitboxRecordings
 	}
 
-	public class UserInfo : IEquatable<UserInfo>, IEqualityComparer<UserInfo> {
+	public class UserInfo : IEquatable<UserInfo>, IEqualityComparer<UserInfo>, IComparable<UserInfo> {
 		public ServiceVideoCategoryType Service;
 		public string Username;
 
@@ -29,11 +29,58 @@ namespace VodArchiver {
 		}
 
 		public override string ToString() {
-			return Service + "|" + Username;
+			return Service + ": " + Username;
+		}
+
+		public string ToSerializableString() {
+			return Service + "/" + Username;
+		}
+
+		public static UserInfo FromSerializableString( string s ) {
+			UserInfo u = new UserInfo();
+
+			string[] parts = s.Split( new char[] { '/' }, 2 );
+			if ( !Enum.TryParse( parts[0], out u.Service ) ) {
+				throw new Exception( "Parsing ServiceVideoCategoryType from '" + parts[0] + "' failed." );
+			}
+			u.Username = parts[1];
+			return u;
 		}
 
 		public override int GetHashCode() {
-			return this.ToString().GetHashCode();
+			return this.ToSerializableString().GetHashCode();
+		}
+
+		public int CompareTo( UserInfo other ) {
+			if ( this.Service != other.Service ) {
+				return this.Service.CompareTo( other.Service );
+			}
+
+			return this.Username.CompareTo( other.Username );
+		}
+	}
+
+	public class UserInfoPersister {
+		public static SortedSet<UserInfo> KnownUsers = new SortedSet<UserInfo>();
+
+		public static string SerializationPath { get { return System.IO.Path.Combine( System.Windows.Forms.Application.LocalUserAppDataPath, "users.txt" ); } }
+
+		public static void Load() {
+			if ( System.IO.File.Exists( SerializationPath ) ) {
+				string[] userList = System.IO.File.ReadAllLines( SerializationPath );
+				KnownUsers.Clear();
+				foreach ( var s in userList ) {
+					KnownUsers.Add( UserInfo.FromSerializableString( s ) );
+				}
+			}
+		}
+
+		public static void Save() {
+			List<string> userList = new List<string>( KnownUsers.Count );
+			foreach ( var u in KnownUsers ) {
+				userList.Add( u.ToSerializableString() );
+			}
+			System.IO.File.WriteAllLines( SerializationPath, userList );
 		}
 	}
 }
