@@ -13,18 +13,18 @@ namespace VodArchiver.VideoJobs {
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
 			string[] urls = await GetFileUrlsOfVod();
-			string tempFolder = GetTempFolder();
-			string combinedFilename = Path.Combine( tempFolder, "combined.ts" );
-			string remuxedTempname = Path.Combine( tempFolder, "combined.mp4" );
+			string combinedFilename = Path.Combine( GetTempFolder(), GetTargetFilenameWithoutExtension() + "_combined.ts" );
+			string remuxedTempname = Path.Combine( GetTempFolder(), GetTargetFilenameWithoutExtension() + "_combined.mp4" );
 			string remuxedFilename = Path.Combine( GetTargetFolder(), GetTargetFilenameWithoutExtension() + ".mp4" );
 
 			if ( !await Util.FileExists( remuxedFilename ) ) {
 				if ( !await Util.FileExists( combinedFilename ) ) {
 					Status = "Downloading files...";
-					string[] files = await Download( tempFolder, urls );
+					string[] files = await Download( GetTempFolderForParts(), urls );
 					Status = "Combining downloaded video parts...";
 					await TsVideoJob.Combine( combinedFilename, files );
 					await Util.DeleteFiles( files );
+					System.IO.Directory.Delete( GetTempFolderForParts() );
 				}
 				Status = "Remuxing to MP4...";
 				await Task.Run( () => TsVideoJob.Remux( remuxedFilename, combinedFilename, remuxedTempname ) );
@@ -37,6 +37,10 @@ namespace VodArchiver.VideoJobs {
 		public abstract Task<string[]> GetFileUrlsOfVod();
 
 		public virtual string GetTempFolder() {
+			return Util.TempFolderPath;
+		}
+
+		public virtual string GetTempFolderForParts() {
 			return System.IO.Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() );
 		}
 
