@@ -169,8 +169,9 @@ namespace VodArchiver {
 		}
 
 		private void LoadJobs() {
+			List<IVideoJob> jobs = new List<IVideoJob>();
+
 			try {
-				objectListViewDownloads.BeginUpdate();
 				using ( FileStream fs = System.IO.File.OpenRead( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) ) ) {
 					System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
 					int jobCount = (int)formatter.Deserialize( fs );
@@ -182,17 +183,17 @@ namespace VodArchiver {
 								( job as TwitchVideoJob ).TwitchAPI = TwitchAPI;
 							}
 							job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
-							objectListViewDownloads.AddObject( job );
 							if ( job.JobStatus != VideoJobStatus.Finished ) {
 								JobQueue.Enqueue( job );
 							}
+							jobs.Add( job );
 						}
 					}
 					fs.Close();
 				}
-			} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { } finally {
-				objectListViewDownloads.EndUpdate();
-			}
+			} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
+
+			objectListViewDownloads.AddObjects( jobs );
 
 			for ( int i = 0; i < MaxRunningJobs; ++i ) {
 				Task.Run( () => RunJob() );
