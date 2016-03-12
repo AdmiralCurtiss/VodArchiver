@@ -179,6 +179,9 @@ namespace VodArchiver {
 						object obj = formatter.Deserialize( fs );
 						IVideoJob job = obj as IVideoJob;
 						if ( job != null ) {
+							if ( job.JobStatus == VideoJobStatus.Running ) {
+								job.JobStatus = VideoJobStatus.NotStarted;
+							}
 							if ( job as TwitchVideoJob != null ) {
 								( job as TwitchVideoJob ).TwitchAPI = TwitchAPI;
 							}
