@@ -35,6 +35,14 @@ namespace VodArchiver {
 			comboBoxKnownUsers.Items.Add( " == No Preset == " );
 			comboBoxKnownUsers.Items.AddRange( UserInfoPersister.KnownUsers.ToArray() );
 			comboBoxKnownUsers.SelectedIndex = 0;
+
+			if ( !Util.ShowDownloadFetched ) {
+				buttonDownloadFetched.Enabled = false;
+				buttonDownloadFetched.Hide();
+			}
+			if ( !Util.ShowAnySpecialButton ) {
+				objectListViewVideos.Size = new Size( objectListViewVideos.Size.Width, objectListViewVideos.Size.Height + 29 );
+			}
 		}
 
 		private async void buttonFetch_Click( object sender, EventArgs e ) {
@@ -122,6 +130,18 @@ namespace VodArchiver {
 			} else {
 				comboBoxService.Enabled = true;
 				textboxUsername.Enabled = true;
+			}
+		}
+
+		private void buttonDownloadFetched_Click( object sender, EventArgs e ) {
+			foreach ( var o in objectListViewVideos.Objects ) {
+				IVideoInfo videoInfo = o as IVideoInfo;
+				if ( videoInfo.VideoRecordingState == RecordingState.Recorded && videoInfo.VideoType == VideoFileType.M3U ) {
+					DownloadWindow.CreateAndEnqueueJob( videoInfo.Service, videoInfo.VideoId );
+				}
+				for ( int i = 0; i < DownloadForm.MaxRunningJobs; ++i ) {
+					Task.Run( () => DownloadWindow.RunJob() );
+				}
 			}
 		}
 	}

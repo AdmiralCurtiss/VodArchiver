@@ -20,7 +20,7 @@ namespace VodArchiver {
 		System.Collections.Concurrent.ConcurrentQueue<IVideoJob> JobQueue;
 		private int RunningJobs;
 		private object Lock = new object();
-		const int MaxRunningJobs = 3;
+		public const int MaxRunningJobs = 3;
 
 		public DownloadForm() {
 			InitializeComponent();

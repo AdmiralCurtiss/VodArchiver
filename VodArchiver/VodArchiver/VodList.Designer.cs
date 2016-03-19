@@ -39,6 +39,7 @@
 			this.labelUsername = new System.Windows.Forms.Label();
 			this.buttonFetch = new System.Windows.Forms.Button();
 			this.comboBoxKnownUsers = new System.Windows.Forms.ComboBox();
+			this.buttonDownloadFetched = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewVideos)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -74,7 +75,7 @@
 			this.objectListViewVideos.HighlightForegroundColor = System.Drawing.Color.Empty;
 			this.objectListViewVideos.Location = new System.Drawing.Point(12, 38);
 			this.objectListViewVideos.Name = "objectListViewVideos";
-			this.objectListViewVideos.Size = new System.Drawing.Size(959, 432);
+			this.objectListViewVideos.Size = new System.Drawing.Size(959, 403);
 			this.objectListViewVideos.TabIndex = 9;
 			this.objectListViewVideos.UseCompatibleStateImageBehavior = false;
 			this.objectListViewVideos.View = System.Windows.Forms.View.Details;
@@ -206,12 +207,24 @@
 			this.comboBoxKnownUsers.TabIndex = 10;
 			this.comboBoxKnownUsers.SelectedIndexChanged += new System.EventHandler(this.comboBoxKnownUsers_SelectedIndexChanged);
 			// 
+			// buttonDownloadFetched
+			// 
+			this.buttonDownloadFetched.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.buttonDownloadFetched.Location = new System.Drawing.Point(813, 447);
+			this.buttonDownloadFetched.Name = "buttonDownloadFetched";
+			this.buttonDownloadFetched.Size = new System.Drawing.Size(158, 23);
+			this.buttonDownloadFetched.TabIndex = 11;
+			this.buttonDownloadFetched.Text = "Download Fetched";
+			this.buttonDownloadFetched.UseVisualStyleBackColor = true;
+			this.buttonDownloadFetched.Click += new System.EventHandler(this.buttonDownloadFetched_Click);
+			// 
 			// VodList
 			// 
 			this.AcceptButton = this.buttonFetch;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(983, 482);
+			this.Controls.Add(this.buttonDownloadFetched);
 			this.Controls.Add(this.comboBoxKnownUsers);
 			this.Controls.Add(this.objectListViewVideos);
 			this.Controls.Add(this.comboBoxService);
@@ -244,5 +257,6 @@
 		private BrightIdeasSoftware.OLVColumn columnRecordingState;
 		private BrightIdeasSoftware.OLVColumn columnType;
 		private System.Windows.Forms.ComboBox comboBoxKnownUsers;
+		private System.Windows.Forms.Button buttonDownloadFetched;
 	}
 }

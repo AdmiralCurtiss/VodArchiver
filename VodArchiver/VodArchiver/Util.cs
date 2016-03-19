@@ -26,6 +26,18 @@ namespace VodArchiver {
 			}
 		}
 
+		public static bool ShowDownloadFetched {
+			get {
+				return Properties.Settings.Default.ShowDownloadFetched;
+			}
+		}
+
+		public static bool ShowAnySpecialButton {
+			get {
+				return ShowDownloadFetched;
+			}
+		}
+
 		public static async Task<bool> FileExists( string file ) {
 			return await Task.Run( () => System.IO.File.Exists( file ) );
 		}
