@@ -36,6 +36,8 @@ namespace VodArchiver {
 			comboBoxKnownUsers.Items.AddRange( UserInfoPersister.KnownUsers.ToArray() );
 			comboBoxKnownUsers.SelectedIndex = 0;
 
+			buttonClear.Enabled = false;
+
 			if ( !Util.ShowDownloadFetched ) {
 				buttonDownloadFetched.Enabled = false;
 				buttonDownloadFetched.Hide();
@@ -105,6 +107,7 @@ namespace VodArchiver {
 				buttonFetch.Text = "Fetch More";
 			}
 			buttonFetch.Enabled = hasMore;
+			buttonClear.Enabled = true;
 
 			objectListViewVideos.BeginUpdate();
 			foreach ( var v in videosToAdd ) {
@@ -120,6 +123,10 @@ namespace VodArchiver {
 		}
 
 		private void comboBoxKnownUsers_SelectedIndexChanged( object sender, EventArgs e ) {
+			ProcessSelectedPreset();
+		}
+
+		private void ProcessSelectedPreset() {
 			UserInfo u = comboBoxKnownUsers.SelectedItem as UserInfo;
 			if ( u != null ) {
 				comboBoxService.SelectedIndex = (int)u.Service;
@@ -143,6 +150,18 @@ namespace VodArchiver {
 					Task.Run( () => DownloadWindow.RunJob() );
 				}
 			}
+		}
+
+		private void buttonClear_Click( object sender, EventArgs e ) {
+			objectListViewVideos.ClearObjects();
+			textboxUsername.Enabled = true;
+			comboBoxService.Enabled = true;
+			comboBoxKnownUsers.Enabled = true;
+			buttonFetch.Enabled = true;
+			buttonFetch.Text = "Fetch";
+			buttonClear.Enabled = false;
+			Offset = 0;
+			ProcessSelectedPreset();
 		}
 	}
 }

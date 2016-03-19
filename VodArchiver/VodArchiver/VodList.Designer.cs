@@ -40,6 +40,7 @@
 			this.buttonFetch = new System.Windows.Forms.Button();
 			this.comboBoxKnownUsers = new System.Windows.Forms.ComboBox();
 			this.buttonDownloadFetched = new System.Windows.Forms.Button();
+			this.buttonClear = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewVideos)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -174,7 +175,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.textboxUsername.Location = new System.Drawing.Point(450, 12);
 			this.textboxUsername.Name = "textboxUsername";
-			this.textboxUsername.Size = new System.Drawing.Size(357, 20);
+			this.textboxUsername.Size = new System.Drawing.Size(254, 20);
 			this.textboxUsername.TabIndex = 7;
 			// 
 			// labelUsername
@@ -189,7 +190,7 @@
 			// buttonFetch
 			// 
 			this.buttonFetch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonFetch.Location = new System.Drawing.Point(813, 12);
+			this.buttonFetch.Location = new System.Drawing.Point(710, 12);
 			this.buttonFetch.Name = "buttonFetch";
 			this.buttonFetch.Size = new System.Drawing.Size(158, 20);
 			this.buttonFetch.TabIndex = 5;
@@ -218,12 +219,24 @@
 			this.buttonDownloadFetched.UseVisualStyleBackColor = true;
 			this.buttonDownloadFetched.Click += new System.EventHandler(this.buttonDownloadFetched_Click);
 			// 
+			// buttonClear
+			// 
+			this.buttonClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.buttonClear.Location = new System.Drawing.Point(874, 12);
+			this.buttonClear.Name = "buttonClear";
+			this.buttonClear.Size = new System.Drawing.Size(97, 20);
+			this.buttonClear.TabIndex = 12;
+			this.buttonClear.Text = "Clear";
+			this.buttonClear.UseVisualStyleBackColor = true;
+			this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
+			// 
 			// VodList
 			// 
 			this.AcceptButton = this.buttonFetch;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(983, 482);
+			this.Controls.Add(this.buttonClear);
 			this.Controls.Add(this.buttonDownloadFetched);
 			this.Controls.Add(this.comboBoxKnownUsers);
 			this.Controls.Add(this.objectListViewVideos);
@@ -258,5 +271,6 @@
 		private BrightIdeasSoftware.OLVColumn columnType;
 		private System.Windows.Forms.ComboBox comboBoxKnownUsers;
 		private System.Windows.Forms.Button buttonDownloadFetched;
+		private System.Windows.Forms.Button buttonClear;
 	}
 }
