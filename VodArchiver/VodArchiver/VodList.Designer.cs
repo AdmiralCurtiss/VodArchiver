@@ -41,6 +41,7 @@
 			this.comboBoxKnownUsers = new System.Windows.Forms.ComboBox();
 			this.buttonDownloadFetched = new System.Windows.Forms.Button();
 			this.buttonClear = new System.Windows.Forms.Button();
+			this.buttonDownloadAllKnown = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewVideos)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -230,12 +231,24 @@
 			this.buttonClear.UseVisualStyleBackColor = true;
 			this.buttonClear.Click += new System.EventHandler(this.buttonClear_Click);
 			// 
+			// buttonDownloadAllKnown
+			// 
+			this.buttonDownloadAllKnown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.buttonDownloadAllKnown.Location = new System.Drawing.Point(649, 447);
+			this.buttonDownloadAllKnown.Name = "buttonDownloadAllKnown";
+			this.buttonDownloadAllKnown.Size = new System.Drawing.Size(158, 23);
+			this.buttonDownloadAllKnown.TabIndex = 13;
+			this.buttonDownloadAllKnown.Text = "Download All Known";
+			this.buttonDownloadAllKnown.UseVisualStyleBackColor = true;
+			this.buttonDownloadAllKnown.Click += new System.EventHandler(this.buttonDownloadAllKnown_Click);
+			// 
 			// VodList
 			// 
 			this.AcceptButton = this.buttonFetch;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(983, 482);
+			this.Controls.Add(this.buttonDownloadAllKnown);
 			this.Controls.Add(this.buttonClear);
 			this.Controls.Add(this.buttonDownloadFetched);
 			this.Controls.Add(this.comboBoxKnownUsers);
@@ -272,5 +285,6 @@
 		private System.Windows.Forms.ComboBox comboBoxKnownUsers;
 		private System.Windows.Forms.Button buttonDownloadFetched;
 		private System.Windows.Forms.Button buttonClear;
+		private System.Windows.Forms.Button buttonDownloadAllKnown;
 	}
 }

@@ -41,6 +41,8 @@ namespace VodArchiver {
 			if ( !Util.ShowDownloadFetched ) {
 				buttonDownloadFetched.Enabled = false;
 				buttonDownloadFetched.Hide();
+				buttonDownloadAllKnown.Enabled = false;
+				buttonDownloadAllKnown.Hide();
 			}
 			if ( !Util.ShowAnySpecialButton ) {
 				objectListViewVideos.Size = new Size( objectListViewVideos.Size.Width, objectListViewVideos.Size.Height + 29 );
@@ -48,6 +50,14 @@ namespace VodArchiver {
 		}
 
 		private async void buttonFetch_Click( object sender, EventArgs e ) {
+			try {
+				await Fetch();
+			} catch ( Exception ex ) {
+				MessageBox.Show( ex.ToString() );
+			}
+		}
+
+		private async Task<bool> Fetch() {
 			List<IVideoInfo> videosToAdd = new List<IVideoInfo>();
 			bool hasMore = true;
 			long maxVideos = -1;
@@ -57,41 +67,37 @@ namespace VodArchiver {
 				case "Twitch (Recordings)": userInfo.Service = ServiceVideoCategoryType.TwitchRecordings; break;
 				case "Twitch (Highlights)": userInfo.Service = ServiceVideoCategoryType.TwitchHighlights; break;
 				case "Hitbox": userInfo.Service = ServiceVideoCategoryType.HitboxRecordings; break;
-				default: return;
+				default: return false;
 			}
 			userInfo.Username = textboxUsername.Text.Trim();
 
-			try {
-				switch ( userInfo.Service ) {
-					case ServiceVideoCategoryType.TwitchRecordings:
-					case ServiceVideoCategoryType.TwitchHighlights:
-						Total<List<Video>> broadcasts = await TwitchAPI.RetrieveVideos( userInfo.Username, offset: Offset, limit: 25, broadcasts: userInfo.Service == ServiceVideoCategoryType.TwitchRecordings, hls: false );
-						if ( broadcasts.total.HasValue ) {
-							hasMore = Offset + broadcasts.wrapped.Count < broadcasts.total;
-							maxVideos = (long)broadcasts.total;
-						} else {
-							hasMore = broadcasts.wrapped.Count == 25;
-						}
-						Offset += broadcasts.wrapped.Count;
-						foreach ( var v in broadcasts.wrapped ) {
-							videosToAdd.Add( new TwitchVideoInfo( v ) );
-						}
-						break;
-					case ServiceVideoCategoryType.HitboxRecordings:
-						List<HitboxVideo> videos = await Hitbox.RetrieveVideos( userInfo.Username, offset: Offset, limit: 100 );
-						hasMore = videos.Count == 100;
-						Offset += videos.Count;
-						foreach ( var v in videos ) {
-							videosToAdd.Add( new HitboxVideoInfo( v ) );
-						}
-						break;
-				}
-			} catch ( Exception ex ) {
-				MessageBox.Show( ex.ToString() );
+			switch ( userInfo.Service ) {
+				case ServiceVideoCategoryType.TwitchRecordings:
+				case ServiceVideoCategoryType.TwitchHighlights:
+					Total<List<Video>> broadcasts = await TwitchAPI.RetrieveVideos( userInfo.Username, offset: Offset, limit: 25, broadcasts: userInfo.Service == ServiceVideoCategoryType.TwitchRecordings, hls: false );
+					if ( broadcasts.total.HasValue ) {
+						hasMore = Offset + broadcasts.wrapped.Count < broadcasts.total;
+						maxVideos = (long)broadcasts.total;
+					} else {
+						hasMore = broadcasts.wrapped.Count == 25;
+					}
+					Offset += broadcasts.wrapped.Count;
+					foreach ( var v in broadcasts.wrapped ) {
+						videosToAdd.Add( new TwitchVideoInfo( v ) );
+					}
+					break;
+				case ServiceVideoCategoryType.HitboxRecordings:
+					List<HitboxVideo> videos = await Hitbox.RetrieveVideos( userInfo.Username, offset: Offset, limit: 100 );
+					hasMore = videos.Count == 100;
+					Offset += videos.Count;
+					foreach ( var v in videos ) {
+						videosToAdd.Add( new HitboxVideoInfo( v ) );
+					}
+					break;
 			}
 
 			if ( videosToAdd.Count <= 0 ) {
-				return;
+				return true;
 			}
 
 			if ( UserInfoPersister.KnownUsers.Add( userInfo ) ) {
@@ -114,6 +120,8 @@ namespace VodArchiver {
 				objectListViewVideos.AddObject( v );
 			}
 			objectListViewVideos.EndUpdate();
+
+			return true;
 		}
 
 		private void objectListViewVideos_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
@@ -141,6 +149,14 @@ namespace VodArchiver {
 		}
 
 		private void buttonDownloadFetched_Click( object sender, EventArgs e ) {
+			DownloadFetched();
+		}
+
+		private void DownloadFetched() {
+			if ( objectListViewVideos.GetItemCount() <= 0 ) {
+				return;
+			}
+
 			foreach ( var o in objectListViewVideos.Objects ) {
 				IVideoInfo videoInfo = o as IVideoInfo;
 				if ( videoInfo.VideoRecordingState == RecordingState.Recorded && videoInfo.VideoType == VideoFileType.M3U ) {
@@ -153,6 +169,10 @@ namespace VodArchiver {
 		}
 
 		private void buttonClear_Click( object sender, EventArgs e ) {
+			Clear();
+		}
+
+		private void Clear() {
 			objectListViewVideos.ClearObjects();
 			textboxUsername.Enabled = true;
 			comboBoxService.Enabled = true;
@@ -162,6 +182,32 @@ namespace VodArchiver {
 			buttonClear.Enabled = false;
 			Offset = 0;
 			ProcessSelectedPreset();
+		}
+
+		private async void buttonDownloadAllKnown_Click( object sender, EventArgs e ) {
+			for ( int i = 1; i < comboBoxKnownUsers.Items.Count; ++i ) {
+				comboBoxKnownUsers.SelectedIndex = i;
+				if ( comboBoxKnownUsers.SelectedItem as UserInfo != null ) {
+					ProcessSelectedPreset();
+					// TODO: Fetch multipage
+					while ( true ) {
+						try {
+							await Task.Delay( 15000 );
+							await Fetch();
+							break;
+						} catch ( Exception ex ) {
+							// TODO: Better errorhandling?
+							var result = MessageBox.Show( ex.ToString(), "Exception", MessageBoxButtons.RetryCancel );
+							if ( result == DialogResult.Cancel ) {
+								break;
+							}
+						}
+					}
+
+					DownloadFetched();
+					Clear();
+				}
+			}
 		}
 	}
 }
