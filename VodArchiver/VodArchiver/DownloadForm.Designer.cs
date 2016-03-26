@@ -28,6 +28,7 @@
 			this.textboxMediaId = new System.Windows.Forms.TextBox();
 			this.comboBoxService = new System.Windows.Forms.ComboBox();
 			this.objectListViewDownloads = new BrightIdeasSoftware.ObjectListView();
+			this.columnIndex = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnService = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnVideoId = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnUsername = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
@@ -41,7 +42,7 @@
 			this.columnStatus = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.buttonSettings = new System.Windows.Forms.Button();
 			this.buttonFetchUser = new System.Windows.Forms.Button();
-			this.columnIndex = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnValidated = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -90,6 +91,7 @@
 			// objectListViewDownloads
 			// 
 			this.objectListViewDownloads.AllColumns.Add(this.columnIndex);
+			this.objectListViewDownloads.AllColumns.Add(this.columnValidated);
 			this.objectListViewDownloads.AllColumns.Add(this.columnService);
 			this.objectListViewDownloads.AllColumns.Add(this.columnVideoId);
 			this.objectListViewDownloads.AllColumns.Add(this.columnUsername);
@@ -107,6 +109,7 @@
 			this.objectListViewDownloads.CellEditUseWholeCell = false;
 			this.objectListViewDownloads.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnIndex,
+            this.columnValidated,
             this.columnService,
             this.columnVideoId,
             this.columnUsername,
@@ -128,6 +131,11 @@
 			this.objectListViewDownloads.UseCompatibleStateImageBehavior = false;
 			this.objectListViewDownloads.View = System.Windows.Forms.View.Details;
 			this.objectListViewDownloads.ButtonClick += new System.EventHandler<BrightIdeasSoftware.CellClickEventArgs>(this.objectListViewDownloads_ButtonClick);
+			// 
+			// columnIndex
+			// 
+			this.columnIndex.Groupable = false;
+			this.columnIndex.Text = "Index";
 			// 
 			// columnService
 			// 
@@ -229,10 +237,11 @@
 			this.buttonFetchUser.UseVisualStyleBackColor = true;
 			this.buttonFetchUser.Click += new System.EventHandler(this.buttonFetchUser_Click);
 			// 
-			// columnIndex
+			// columnValidated
 			// 
-			this.columnIndex.Groupable = false;
-			this.columnIndex.Text = "Index";
+			this.columnValidated.AspectName = "HasBeenValidated";
+			this.columnValidated.CheckBoxes = true;
+			this.columnValidated.Text = "Valid";
 			// 
 			// DownloadForm
 			// 
@@ -277,5 +286,6 @@
 		private BrightIdeasSoftware.OLVColumn columnAction1;
 		private BrightIdeasSoftware.OLVColumn columnActionRemove;
 		private BrightIdeasSoftware.OLVColumn columnIndex;
+		private BrightIdeasSoftware.OLVColumn columnValidated;
 	}
 }

@@ -40,6 +40,9 @@ namespace VodArchiver.VideoJobs {
 		
 		public virtual VideoInfo.IVideoInfo VideoInfo { get; set; }
 
+		[System.Runtime.Serialization.OptionalField( VersionAdded = 2 )]
+		public bool HasBeenValidated;
+
 		public abstract Task Run();
 	}
 }
