@@ -36,7 +36,13 @@ namespace VodArchiver {
 				return ( (IVideoJob)rowObject ).JobStatus;
 			};
 
+			objectListViewDownloads.FormatRow += ObjectListViewDownloads_FormatRow;
+
 			LoadJobs();
+		}
+
+		private void ObjectListViewDownloads_FormatRow( object sender, BrightIdeasSoftware.FormatRowEventArgs e ) {
+			e.Item.Text = ( e.RowIndex + 1 ).ToString();
 		}
 
 		public static string ParseId( string url, out StreamService service ) {
@@ -197,6 +203,9 @@ namespace VodArchiver {
 			} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
 
 			objectListViewDownloads.AddObjects( jobs );
+			for ( int i = 0; i < objectListViewDownloads.Items.Count; ++i ) {
+				objectListViewDownloads.Items[i].Text = ( i + 1 ).ToString();
+			}
 
 			for ( int i = 0; i < MaxRunningJobs; ++i ) {
 				Task.Run( () => RunJob() );

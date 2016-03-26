@@ -37,17 +37,18 @@
 			this.columnLength = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnRecordingState = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnAction1 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnActionRemove = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnStatus = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.buttonSettings = new System.Windows.Forms.Button();
 			this.buttonFetchUser = new System.Windows.Forms.Button();
-			this.columnActionRemove = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnIndex = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// buttonDownload
 			// 
 			this.buttonDownload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonDownload.Location = new System.Drawing.Point(948, 12);
+			this.buttonDownload.Location = new System.Drawing.Point(1291, 12);
 			this.buttonDownload.Name = "buttonDownload";
 			this.buttonDownload.Size = new System.Drawing.Size(75, 20);
 			this.buttonDownload.TabIndex = 0;
@@ -70,7 +71,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.textboxMediaId.Location = new System.Drawing.Point(359, 12);
 			this.textboxMediaId.Name = "textboxMediaId";
-			this.textboxMediaId.Size = new System.Drawing.Size(583, 20);
+			this.textboxMediaId.Size = new System.Drawing.Size(926, 20);
 			this.textboxMediaId.TabIndex = 2;
 			// 
 			// comboBoxService
@@ -88,6 +89,7 @@
 			// 
 			// objectListViewDownloads
 			// 
+			this.objectListViewDownloads.AllColumns.Add(this.columnIndex);
 			this.objectListViewDownloads.AllColumns.Add(this.columnService);
 			this.objectListViewDownloads.AllColumns.Add(this.columnVideoId);
 			this.objectListViewDownloads.AllColumns.Add(this.columnUsername);
@@ -104,6 +106,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.objectListViewDownloads.CellEditUseWholeCell = false;
 			this.objectListViewDownloads.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnIndex,
             this.columnService,
             this.columnVideoId,
             this.columnUsername,
@@ -120,7 +123,7 @@
 			this.objectListViewDownloads.HighlightForegroundColor = System.Drawing.Color.Empty;
 			this.objectListViewDownloads.Location = new System.Drawing.Point(12, 41);
 			this.objectListViewDownloads.Name = "objectListViewDownloads";
-			this.objectListViewDownloads.Size = new System.Drawing.Size(1011, 420);
+			this.objectListViewDownloads.Size = new System.Drawing.Size(1354, 420);
 			this.objectListViewDownloads.TabIndex = 4;
 			this.objectListViewDownloads.UseCompatibleStateImageBehavior = false;
 			this.objectListViewDownloads.View = System.Windows.Forms.View.Details;
@@ -188,6 +191,15 @@
 			this.columnAction1.IsEditable = false;
 			this.columnAction1.Text = "Action";
 			// 
+			// columnActionRemove
+			// 
+			this.columnActionRemove.AspectName = "VideoInfo.Service";
+			this.columnActionRemove.AspectToStringFormat = "Remove";
+			this.columnActionRemove.ButtonSizing = BrightIdeasSoftware.OLVColumn.ButtonSizingMode.CellBounds;
+			this.columnActionRemove.IsButton = true;
+			this.columnActionRemove.IsEditable = false;
+			this.columnActionRemove.Text = "Remove";
+			// 
 			// columnStatus
 			// 
 			this.columnStatus.AspectName = "Status";
@@ -217,21 +229,17 @@
 			this.buttonFetchUser.UseVisualStyleBackColor = true;
 			this.buttonFetchUser.Click += new System.EventHandler(this.buttonFetchUser_Click);
 			// 
-			// columnActionRemove
+			// columnIndex
 			// 
-			this.columnActionRemove.AspectName = "VideoInfo.Service";
-			this.columnActionRemove.AspectToStringFormat = "Remove";
-			this.columnActionRemove.ButtonSizing = BrightIdeasSoftware.OLVColumn.ButtonSizingMode.CellBounds;
-			this.columnActionRemove.IsButton = true;
-			this.columnActionRemove.IsEditable = false;
-			this.columnActionRemove.Text = "Remove";
+			this.columnIndex.Groupable = false;
+			this.columnIndex.Text = "Index";
 			// 
 			// DownloadForm
 			// 
 			this.AcceptButton = this.buttonDownload;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(1035, 473);
+			this.ClientSize = new System.Drawing.Size(1378, 473);
 			this.Controls.Add(this.buttonFetchUser);
 			this.Controls.Add(this.buttonSettings);
 			this.Controls.Add(this.objectListViewDownloads);
@@ -268,5 +276,6 @@
 		private BrightIdeasSoftware.OLVColumn columnRecordingState;
 		private BrightIdeasSoftware.OLVColumn columnAction1;
 		private BrightIdeasSoftware.OLVColumn columnActionRemove;
+		private BrightIdeasSoftware.OLVColumn columnIndex;
 	}
 }
