@@ -29,6 +29,7 @@
 			this.comboBoxService = new System.Windows.Forms.ComboBox();
 			this.objectListViewDownloads = new BrightIdeasSoftware.ObjectListView();
 			this.columnIndex = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnValidated = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnService = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnVideoId = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnUsername = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
@@ -42,7 +43,6 @@
 			this.columnStatus = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.buttonSettings = new System.Windows.Forms.Button();
 			this.buttonFetchUser = new System.Windows.Forms.Button();
-			this.columnValidated = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -103,6 +103,7 @@
 			this.objectListViewDownloads.AllColumns.Add(this.columnAction1);
 			this.objectListViewDownloads.AllColumns.Add(this.columnActionRemove);
 			this.objectListViewDownloads.AllColumns.Add(this.columnStatus);
+			this.objectListViewDownloads.AlternateRowBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(240)))));
 			this.objectListViewDownloads.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -122,12 +123,16 @@
             this.columnActionRemove,
             this.columnStatus});
 			this.objectListViewDownloads.Cursor = System.Windows.Forms.Cursors.Default;
-			this.objectListViewDownloads.HighlightBackgroundColor = System.Drawing.Color.Empty;
+			this.objectListViewDownloads.HighlightBackgroundColor = System.Drawing.SystemColors.Highlight;
 			this.objectListViewDownloads.HighlightForegroundColor = System.Drawing.Color.Empty;
 			this.objectListViewDownloads.Location = new System.Drawing.Point(12, 41);
 			this.objectListViewDownloads.Name = "objectListViewDownloads";
+			this.objectListViewDownloads.SelectedBackColor = System.Drawing.SystemColors.Highlight;
+			this.objectListViewDownloads.ShowItemCountOnGroups = true;
 			this.objectListViewDownloads.Size = new System.Drawing.Size(1354, 420);
 			this.objectListViewDownloads.TabIndex = 4;
+			this.objectListViewDownloads.TintSortColumn = true;
+			this.objectListViewDownloads.UseAlternatingBackColors = true;
 			this.objectListViewDownloads.UseCompatibleStateImageBehavior = false;
 			this.objectListViewDownloads.View = System.Windows.Forms.View.Details;
 			this.objectListViewDownloads.ButtonClick += new System.EventHandler<BrightIdeasSoftware.CellClickEventArgs>(this.objectListViewDownloads_ButtonClick);
@@ -135,7 +140,14 @@
 			// columnIndex
 			// 
 			this.columnIndex.Groupable = false;
+			this.columnIndex.IsEditable = false;
 			this.columnIndex.Text = "Index";
+			// 
+			// columnValidated
+			// 
+			this.columnValidated.AspectName = "HasBeenValidated";
+			this.columnValidated.CheckBoxes = true;
+			this.columnValidated.Text = "Valid";
 			// 
 			// columnService
 			// 
@@ -236,12 +248,6 @@
 			this.buttonFetchUser.Text = "Fetch User\'s Videos";
 			this.buttonFetchUser.UseVisualStyleBackColor = true;
 			this.buttonFetchUser.Click += new System.EventHandler(this.buttonFetchUser_Click);
-			// 
-			// columnValidated
-			// 
-			this.columnValidated.AspectName = "HasBeenValidated";
-			this.columnValidated.CheckBoxes = true;
-			this.columnValidated.Text = "Valid";
 			// 
 			// DownloadForm
 			// 

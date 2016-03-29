@@ -35,6 +35,9 @@ namespace VodArchiver {
 			columnStatus.GroupKeyGetter = delegate ( object rowObject ) {
 				return ( (IVideoJob)rowObject ).JobStatus;
 			};
+			columnIndex.GroupKeyGetter = delegate ( object rowObject ) {
+				return 0;
+			};
 
 			objectListViewDownloads.FormatRow += ObjectListViewDownloads_FormatRow;
 
@@ -205,6 +208,9 @@ namespace VodArchiver {
 			objectListViewDownloads.AddObjects( jobs );
 			for ( int i = 0; i < objectListViewDownloads.Items.Count; ++i ) {
 				objectListViewDownloads.Items[i].Text = ( i + 1 ).ToString();
+				if ( i % 2 == 1 ) {
+					objectListViewDownloads.Items[i].BackColor = objectListViewDownloads.AlternateRowBackColorOrDefault;
+				}
 			}
 
 			for ( int i = 0; i < MaxRunningJobs; ++i ) {
