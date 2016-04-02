@@ -15,6 +15,7 @@ namespace VodArchiver {
 	public class UserInfo : IEquatable<UserInfo>, IEqualityComparer<UserInfo>, IComparable<UserInfo> {
 		public ServiceVideoCategoryType Service;
 		public string Username;
+		public bool AutoDownload;
 
 		public bool Equals( UserInfo other ) {
 			return this.Service == other.Service && this.Username == other.Username;
@@ -33,22 +34,26 @@ namespace VodArchiver {
 		}
 
 		public string ToSerializableString() {
-			return Service + "/" + Username;
+			return Service + "/" + AutoDownload + "/" + Username;
 		}
 
 		public static UserInfo FromSerializableString( string s ) {
 			UserInfo u = new UserInfo();
 
-			string[] parts = s.Split( new char[] { '/' }, 2 );
-			if ( !Enum.TryParse( parts[0], out u.Service ) ) {
+			string[] parts = s.Split( new char[] { '/' }, 3 );
+			int partnum = 0;
+			if ( !Enum.TryParse( parts[partnum++], out u.Service ) ) {
 				throw new Exception( "Parsing ServiceVideoCategoryType from '" + parts[0] + "' failed." );
 			}
-			u.Username = parts[1];
+			if ( parts.Length > 2 ) {
+				u.AutoDownload = bool.Parse( parts[partnum++] );
+			}
+			u.Username = parts[partnum];
 			return u;
 		}
 
 		public override int GetHashCode() {
-			return this.ToSerializableString().GetHashCode();
+			return this.Username.GetHashCode() ^ this.Service.GetHashCode();
 		}
 
 		public int CompareTo( UserInfo other ) {
