@@ -37,12 +37,14 @@ namespace VodArchiver {
 			comboBoxKnownUsers.SelectedIndex = 0;
 
 			buttonClear.Enabled = false;
+			checkBoxAutoDownload.Enabled = false;
 
 			if ( !Util.ShowDownloadFetched ) {
 				buttonDownloadFetched.Enabled = false;
 				buttonDownloadFetched.Hide();
 				buttonDownloadAllKnown.Enabled = false;
 				buttonDownloadAllKnown.Hide();
+				checkBoxAutoDownload.Hide();
 			}
 			if ( !Util.ShowAnySpecialButton ) {
 				objectListViewVideos.Size = new Size( objectListViewVideos.Size.Width, objectListViewVideos.Size.Height + 29 );
@@ -142,9 +144,17 @@ namespace VodArchiver {
 
 				comboBoxService.Enabled = false;
 				textboxUsername.Enabled = false;
+				if ( Util.ShowDownloadFetched ) {
+					checkBoxAutoDownload.Enabled = true;
+					checkBoxAutoDownload.Checked = u.AutoDownload;
+				}
 			} else {
 				comboBoxService.Enabled = true;
 				textboxUsername.Enabled = true;
+				if ( Util.ShowDownloadFetched ) {
+					checkBoxAutoDownload.Enabled = false;
+					checkBoxAutoDownload.Checked = false;
+				}
 			}
 		}
 
@@ -188,6 +198,10 @@ namespace VodArchiver {
 			for ( int i = 1; i < comboBoxKnownUsers.Items.Count; ++i ) {
 				comboBoxKnownUsers.SelectedIndex = i;
 				if ( comboBoxKnownUsers.SelectedItem as UserInfo != null ) {
+					if ( !( comboBoxKnownUsers.SelectedItem as UserInfo ).AutoDownload ) {
+						continue;
+					}
+
 					ProcessSelectedPreset();
 					// TODO: Fetch multipage
 					while ( true ) {
@@ -206,6 +220,16 @@ namespace VodArchiver {
 
 					DownloadFetched();
 					Clear();
+				}
+			}
+		}
+
+		private void checkBoxAutoDownload_CheckedChanged( object sender, EventArgs e ) {
+			UserInfo u = comboBoxKnownUsers.SelectedItem as UserInfo;
+			if ( u != null ) {
+				u.AutoDownload = checkBoxAutoDownload.Checked;
+				if ( UserInfoPersister.KnownUsers.AddOrUpdate( u ) ) {
+					UserInfoPersister.Save();
 				}
 			}
 		}

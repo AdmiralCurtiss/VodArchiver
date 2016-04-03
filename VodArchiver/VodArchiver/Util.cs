@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace VodArchiver {
-	public class Util {
+	public static class Util {
 		public static string TargetFolderPath {
 			get {
 				if ( String.IsNullOrWhiteSpace( Properties.Settings.Default.TargetFolder ) ) {
@@ -57,6 +57,13 @@ namespace VodArchiver {
 				System.IO.File.Delete( targetName );
 			}
 			System.IO.File.Move( sourceName, targetName );
+		}
+
+		public static bool AddOrUpdate<T>( this SortedSet<T> set, T item ) {
+			if ( set.Contains( item ) ) {
+				set.Remove( item );
+			}
+			return set.Add( item );
 		}
 	}
 }

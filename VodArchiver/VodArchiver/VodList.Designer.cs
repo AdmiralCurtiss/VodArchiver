@@ -42,6 +42,7 @@
 			this.buttonDownloadFetched = new System.Windows.Forms.Button();
 			this.buttonClear = new System.Windows.Forms.Button();
 			this.buttonDownloadAllKnown = new System.Windows.Forms.Button();
+			this.checkBoxAutoDownload = new System.Windows.Forms.CheckBox();
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewVideos)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -242,12 +243,24 @@
 			this.buttonDownloadAllKnown.UseVisualStyleBackColor = true;
 			this.buttonDownloadAllKnown.Click += new System.EventHandler(this.buttonDownloadAllKnown_Click);
 			// 
+			// checkBoxAutoDownload
+			// 
+			this.checkBoxAutoDownload.AutoSize = true;
+			this.checkBoxAutoDownload.Location = new System.Drawing.Point(13, 453);
+			this.checkBoxAutoDownload.Name = "checkBoxAutoDownload";
+			this.checkBoxAutoDownload.Size = new System.Drawing.Size(151, 17);
+			this.checkBoxAutoDownload.TabIndex = 14;
+			this.checkBoxAutoDownload.Text = "Auto Download this Preset";
+			this.checkBoxAutoDownload.UseVisualStyleBackColor = true;
+			this.checkBoxAutoDownload.CheckedChanged += new System.EventHandler(this.checkBoxAutoDownload_CheckedChanged);
+			// 
 			// VodList
 			// 
 			this.AcceptButton = this.buttonFetch;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(983, 482);
+			this.Controls.Add(this.checkBoxAutoDownload);
 			this.Controls.Add(this.buttonDownloadAllKnown);
 			this.Controls.Add(this.buttonClear);
 			this.Controls.Add(this.buttonDownloadFetched);
@@ -286,5 +299,6 @@
 		private System.Windows.Forms.Button buttonDownloadFetched;
 		private System.Windows.Forms.Button buttonClear;
 		private System.Windows.Forms.Button buttonDownloadAllKnown;
+		private System.Windows.Forms.CheckBox checkBoxAutoDownload;
 	}
 }
