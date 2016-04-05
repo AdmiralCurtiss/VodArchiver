@@ -21,13 +21,27 @@ namespace VodArchiver.VideoJobs {
 				if ( !await Util.FileExists( combinedFilename ) ) {
 					Status = "Downloading files...";
 					string[] files = await Download( GetTempFolderForParts(), urls );
-					Status = "Combining downloaded video parts...";
-					await TsVideoJob.Combine( combinedFilename, files );
-					await Util.DeleteFiles( files );
-					System.IO.Directory.Delete( GetTempFolderForParts() );
+
+					Status = "Waiting for free disk IO slot to combine...";
+					await Util.ExpensiveDiskIOSemaphore.WaitAsync();
+					try {
+						Status = "Combining downloaded video parts...";
+						await TsVideoJob.Combine( combinedFilename, files );
+						await Util.DeleteFiles( files );
+						System.IO.Directory.Delete( GetTempFolderForParts() );
+					} finally {
+						Util.ExpensiveDiskIOSemaphore.Release();
+					}
 				}
-				Status = "Remuxing to MP4...";
-				await Task.Run( () => TsVideoJob.Remux( remuxedFilename, combinedFilename, remuxedTempname ) );
+
+				Status = "Waiting for free disk IO slot to remux...";
+				await Util.ExpensiveDiskIOSemaphore.WaitAsync();
+				try {
+					Status = "Remuxing to MP4...";
+					await Task.Run( () => TsVideoJob.Remux( remuxedFilename, combinedFilename, remuxedTempname ) );
+				} finally {
+					Util.ExpensiveDiskIOSemaphore.Release();
+				}
 			}
 
 			Status = "Done!";
