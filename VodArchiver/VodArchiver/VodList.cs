@@ -128,7 +128,7 @@ namespace VodArchiver {
 
 		private void objectListViewVideos_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
 			IVideoInfo videoInfo = (IVideoInfo)e.Model;
-			DownloadWindow.CreateAndEnqueueJob( videoInfo.Service, videoInfo.VideoId );
+			DownloadWindow.CreateAndEnqueueJob( videoInfo );
 			Task.Run( () => DownloadWindow.RunJob() );
 		}
 
@@ -170,7 +170,7 @@ namespace VodArchiver {
 			foreach ( var o in objectListViewVideos.Objects ) {
 				IVideoInfo videoInfo = o as IVideoInfo;
 				if ( videoInfo.VideoRecordingState == RecordingState.Recorded && videoInfo.VideoType == VideoFileType.M3U ) {
-					DownloadWindow.CreateAndEnqueueJob( videoInfo.Service, videoInfo.VideoId );
+					DownloadWindow.CreateAndEnqueueJob( videoInfo );
 				}
 				for ( int i = 0; i < DownloadForm.MaxRunningJobs; ++i ) {
 					Task.Run( () => DownloadWindow.RunJob() );

@@ -119,11 +119,7 @@ namespace VodArchiver {
 			return false;
 		}
 
-		public void CreateAndEnqueueJob( StreamService service, string id ) {
-			if ( JobExists( service, id ) ) {
-				return;
-			}
-
+		public void CreateAndEnqueueJob( StreamService service, string id, IVideoInfo info = null ) {
 			IVideoJob job;
 			switch ( service ) {
 				case StreamService.Twitch:
@@ -134,6 +130,22 @@ namespace VodArchiver {
 					break;
 				default:
 					throw new Exception( service.ToString() + " isn't a known service." );
+			}
+
+			if ( info != null ) {
+				job.VideoInfo = info;
+			}
+
+			EnqueueJob( job );
+		}
+
+		public void CreateAndEnqueueJob( IVideoInfo info ) {
+			CreateAndEnqueueJob( info.Service, info.VideoId, info );
+		}
+
+		public void EnqueueJob( IVideoJob job ) {
+			if ( JobExists( job.VideoInfo.Service, job.VideoInfo.VideoId ) ) {
+				return;
 			}
 
 			job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
