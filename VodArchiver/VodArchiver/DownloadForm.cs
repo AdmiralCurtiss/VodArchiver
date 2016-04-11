@@ -190,6 +190,8 @@ namespace VodArchiver {
 						if ( job != null ) {
 							if ( job.JobStatus == VideoJobStatus.Running ) {
 								job.JobStatus = VideoJobStatus.NotStarted;
+								job.StatusUpdater = new StatusUpdate.NullStatusUpdate();
+								job.Status = "Interrupted during: " + job.Status;
 							}
 							if ( job as TwitchVideoJob != null ) {
 								( job as TwitchVideoJob ).TwitchAPI = TwitchAPI;
