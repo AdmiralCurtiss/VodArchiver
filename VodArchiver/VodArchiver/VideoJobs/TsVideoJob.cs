@@ -103,7 +103,7 @@ namespace VodArchiver.VideoJobs {
 					continue;
 				}
 
-				using ( var client = new System.Net.WebClient() ) {
+				using ( var client = new KeepAliveWebClient() ) {
 					bool success = false;
 					while ( !success ) {
 						try {
