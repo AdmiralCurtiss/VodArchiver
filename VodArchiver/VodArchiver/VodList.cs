@@ -53,13 +53,17 @@ namespace VodArchiver {
 
 		private async void buttonFetch_Click( object sender, EventArgs e ) {
 			try {
-				await Fetch();
+				var retVal = await Fetch();
+				if ( !retVal.Success ) {
+					MessageBox.Show( "Fetch failed!" );
+				}
 			} catch ( Exception ex ) {
 				MessageBox.Show( ex.ToString() );
 			}
 		}
 
-		private async Task<bool> Fetch() {
+		struct FetchReturnValue { public bool Success; public bool HasMore; }
+		private async Task<FetchReturnValue> Fetch() {
 			List<IVideoInfo> videosToAdd = new List<IVideoInfo>();
 			bool hasMore = true;
 			long maxVideos = -1;
@@ -69,7 +73,7 @@ namespace VodArchiver {
 				case "Twitch (Recordings)": userInfo.Service = ServiceVideoCategoryType.TwitchRecordings; break;
 				case "Twitch (Highlights)": userInfo.Service = ServiceVideoCategoryType.TwitchHighlights; break;
 				case "Hitbox": userInfo.Service = ServiceVideoCategoryType.HitboxRecordings; break;
-				default: return false;
+				default: return new FetchReturnValue { Success = false, HasMore = false };
 			}
 			userInfo.Username = textboxUsername.Text.Trim();
 
@@ -96,10 +100,12 @@ namespace VodArchiver {
 						videosToAdd.Add( new HitboxVideoInfo( v ) );
 					}
 					break;
+				default:
+					return new FetchReturnValue { Success = false, HasMore = false };
 			}
 
 			if ( videosToAdd.Count <= 0 ) {
-				return true;
+				return new FetchReturnValue { Success = true, HasMore = false };
 			}
 
 			if ( UserInfoPersister.KnownUsers.Add( userInfo ) ) {
@@ -123,7 +129,7 @@ namespace VodArchiver {
 			}
 			objectListViewVideos.EndUpdate();
 
-			return true;
+			return new FetchReturnValue { Success = false, HasMore = hasMore };
 		}
 
 		private void objectListViewVideos_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
@@ -203,11 +209,13 @@ namespace VodArchiver {
 					}
 
 					ProcessSelectedPreset();
-					// TODO: Fetch multipage
 					while ( true ) {
 						try {
-							await Task.Delay( 15000 );
-							await Fetch();
+							FetchReturnValue fetchReturnValue;
+							do {
+								await Task.Delay( 15000 );
+								fetchReturnValue = await Fetch();
+							} while ( fetchReturnValue.HasMore );
 							break;
 						} catch ( Exception ex ) {
 							// TODO: Better errorhandling?
