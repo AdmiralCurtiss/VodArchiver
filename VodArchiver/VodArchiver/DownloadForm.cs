@@ -169,14 +169,14 @@ namespace VodArchiver {
 					if ( job.JobStatus != VideoJobStatus.Finished ) {
 						await job.Run();
 						if ( Util.ShowToastNotifications ) {
-							ToastUtil.ShowToast( "Downloaded " + job.VideoInfo.Username + "/" + job.VideoInfo.VideoId + " (" + job.VideoInfo.Service + ")!" );
+							ToastUtil.ShowToast( "Downloaded " + job.HumanReadableJobName + "!" );
 						}
 					}
 				} catch ( Exception ex ) {
 					job.JobStatus = VideoJobStatus.NotStarted;
 					job.Status = "ERROR: " + ex.ToString();
 					if ( Util.ShowToastNotifications ) {
-						ToastUtil.ShowToast( "Failed to download " + job.VideoInfo.Username + "/" + job.VideoInfo.VideoId + " (" + job.VideoInfo.Service + "): " + ex.ToString() );
+						ToastUtil.ShowToast( "Failed to download " + job.HumanReadableJobName + ": " + ex.ToString() );
 					}
 				}
 

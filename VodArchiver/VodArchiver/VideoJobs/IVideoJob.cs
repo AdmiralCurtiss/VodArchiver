@@ -24,6 +24,20 @@ namespace VodArchiver.VideoJobs {
 			}
 		}
 
+		public virtual string HumanReadableJobName {
+			get {
+				if ( VideoInfo != null ) {
+					if ( !String.IsNullOrEmpty( VideoInfo.Username ) ) {
+						return VideoInfo.Username + "/" + VideoInfo.VideoId + " (" + VideoInfo.Service + ")";
+					} else {
+						return VideoInfo.VideoId + " (" + VideoInfo.Service + ")";
+					}
+				} else {
+					return "Unknown Video";
+				}
+			}
+		}
+
 		[NonSerialized]
 		public StatusUpdate.IStatusUpdate StatusUpdater;
 
