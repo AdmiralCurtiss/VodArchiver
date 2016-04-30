@@ -245,6 +245,7 @@
 			// 
 			// checkBoxAutoDownload
 			// 
+			this.checkBoxAutoDownload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.checkBoxAutoDownload.AutoSize = true;
 			this.checkBoxAutoDownload.Location = new System.Drawing.Point(13, 453);
 			this.checkBoxAutoDownload.Name = "checkBoxAutoDownload";
