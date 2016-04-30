@@ -263,7 +263,7 @@
 			this.Controls.Add(this.labelMediaId);
 			this.Controls.Add(this.buttonDownload);
 			this.Name = "DownloadForm";
-			this.Text = "Form1";
+			this.Text = "VodArchiver";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DownloadForm_FormClosing);
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).EndInit();
 			this.ResumeLayout(false);
