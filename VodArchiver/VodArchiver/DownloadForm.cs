@@ -119,7 +119,7 @@ namespace VodArchiver {
 			return false;
 		}
 
-		public void CreateAndEnqueueJob( StreamService service, string id, IVideoInfo info = null ) {
+		public bool CreateAndEnqueueJob( StreamService service, string id, IVideoInfo info = null ) {
 			IVideoJob job;
 			switch ( service ) {
 				case StreamService.Twitch:
@@ -136,16 +136,16 @@ namespace VodArchiver {
 				job.VideoInfo = info;
 			}
 
-			EnqueueJob( job );
+			return EnqueueJob( job );
 		}
 
-		public void CreateAndEnqueueJob( IVideoInfo info ) {
-			CreateAndEnqueueJob( info.Service, info.VideoId, info );
+		public bool CreateAndEnqueueJob( IVideoInfo info ) {
+			return CreateAndEnqueueJob( info.Service, info.VideoId, info );
 		}
 
-		public void EnqueueJob( IVideoJob job ) {
+		public bool EnqueueJob( IVideoJob job ) {
 			if ( JobExists( job.VideoInfo.Service, job.VideoInfo.VideoId ) ) {
-				return;
+				return false;
 			}
 
 			job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
@@ -156,6 +156,8 @@ namespace VodArchiver {
 			if ( Util.ShowToastNotifications ) {
 				ToastUtil.ShowToast( "Enqueued " + job.HumanReadableJobName + "!" );
 			}
+
+			return true;
 		}
 
 		public async Task RunJob( IVideoJob job = null, bool forceStart = false ) {
