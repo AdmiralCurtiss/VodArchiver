@@ -168,10 +168,16 @@ namespace VodArchiver {
 				try {
 					if ( job.JobStatus != VideoJobStatus.Finished ) {
 						await job.Run();
+						if ( Util.ShowToastNotifications ) {
+							ToastUtil.ShowToast( "Downloaded " + job.VideoInfo.Username + "/" + job.VideoInfo.VideoId + " (" + job.VideoInfo.Service + ")!" );
+						}
 					}
 				} catch ( Exception ex ) {
 					job.JobStatus = VideoJobStatus.NotStarted;
 					job.Status = "ERROR: " + ex.ToString();
+					if ( Util.ShowToastNotifications ) {
+						ToastUtil.ShowToast( "Failed to download " + job.VideoInfo.Username + "/" + job.VideoInfo.VideoId + " (" + job.VideoInfo.Service + "): " + ex.ToString() );
+					}
 				}
 
 				lock ( Lock ) {

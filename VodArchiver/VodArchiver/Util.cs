@@ -39,6 +39,17 @@ namespace VodArchiver {
 			}
 		}
 
+		public static string AppUserModelId {
+			get {
+				return "AdmiralCurtiss.VodArchiver";
+			}
+		}
+		public static bool ShowToastNotifications {
+			get {
+				return true;
+			}
+		}
+
 		public static async Task<bool> FileExists( string file ) {
 			return await Task.Run( () => System.IO.File.Exists( file ) );
 		}
