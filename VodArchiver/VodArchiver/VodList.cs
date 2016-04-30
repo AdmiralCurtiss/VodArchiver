@@ -129,7 +129,7 @@ namespace VodArchiver {
 			}
 			objectListViewVideos.EndUpdate();
 
-			return new FetchReturnValue { Success = false, HasMore = hasMore };
+			return new FetchReturnValue { Success = true, HasMore = hasMore };
 		}
 
 		private void objectListViewVideos_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
