@@ -152,6 +152,10 @@ namespace VodArchiver {
 			objectListViewDownloads.AddObject( job );
 			job.Status = "Waiting...";
 			JobQueue.Enqueue( job );
+
+			if ( Util.ShowToastNotifications ) {
+				ToastUtil.ShowToast( "Enqueued " + job.HumanReadableJobName + "!" );
+			}
 		}
 
 		public async Task RunJob( IVideoJob job = null, bool forceStart = false ) {
