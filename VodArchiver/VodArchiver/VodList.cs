@@ -62,12 +62,8 @@ namespace VodArchiver {
 			}
 		}
 
-		struct FetchReturnValue { public bool Success; public bool HasMore; }
+		struct FetchReturnValue { public bool Success; public bool HasMore; public long TotalVideos; public List<IVideoInfo> Videos; }
 		private async Task<FetchReturnValue> Fetch() {
-			List<IVideoInfo> videosToAdd = new List<IVideoInfo>();
-			bool hasMore = true;
-			long maxVideos = -1;
-
 			UserInfo userInfo = new UserInfo();
 			switch ( comboBoxService.Text ) {
 				case "Twitch (Recordings)": userInfo.Service = ServiceVideoCategoryType.TwitchRecordings; break;
@@ -77,59 +73,70 @@ namespace VodArchiver {
 			}
 			userInfo.Username = textboxUsername.Text.Trim();
 
+			var rv = await Fetch( TwitchAPI, userInfo, Offset );
+
+			if ( rv.Success && rv.Videos.Count > 0 ) {
+				Offset += rv.Videos.Count;
+				textboxUsername.Enabled = false;
+				comboBoxService.Enabled = false;
+				comboBoxKnownUsers.Enabled = false;
+				if ( rv.HasMore && rv.TotalVideos != -1 ) {
+					buttonFetch.Text = "Fetch More (" + ( rv.TotalVideos - Offset ) + " left)";
+				} else {
+					buttonFetch.Text = "Fetch More";
+				}
+				buttonFetch.Enabled = rv.HasMore;
+				buttonClear.Enabled = true;
+
+				objectListViewVideos.BeginUpdate();
+				foreach ( var v in rv.Videos ) {
+					objectListViewVideos.AddObject( v );
+				}
+				objectListViewVideos.EndUpdate();
+			}
+
+			return rv;
+		}
+
+		private static async Task<FetchReturnValue> Fetch( Twixel twitchApi, UserInfo userInfo, int offset ) {
+			List<IVideoInfo> videosToAdd = new List<IVideoInfo>();
+			bool hasMore = true;
+			long maxVideos = -1;
+
 			switch ( userInfo.Service ) {
 				case ServiceVideoCategoryType.TwitchRecordings:
 				case ServiceVideoCategoryType.TwitchHighlights:
-					Total<List<Video>> broadcasts = await TwitchAPI.RetrieveVideos( userInfo.Username, offset: Offset, limit: 25, broadcasts: userInfo.Service == ServiceVideoCategoryType.TwitchRecordings, hls: false );
+					Total<List<Video>> broadcasts = await twitchApi.RetrieveVideos( userInfo.Username, offset: offset, limit: 25, broadcasts: userInfo.Service == ServiceVideoCategoryType.TwitchRecordings, hls: false );
 					if ( broadcasts.total.HasValue ) {
-						hasMore = Offset + broadcasts.wrapped.Count < broadcasts.total;
+						hasMore = offset + broadcasts.wrapped.Count < broadcasts.total;
 						maxVideos = (long)broadcasts.total;
 					} else {
 						hasMore = broadcasts.wrapped.Count == 25;
 					}
-					Offset += broadcasts.wrapped.Count;
 					foreach ( var v in broadcasts.wrapped ) {
 						videosToAdd.Add( new TwitchVideoInfo( v ) );
 					}
 					break;
 				case ServiceVideoCategoryType.HitboxRecordings:
-					List<HitboxVideo> videos = await Hitbox.RetrieveVideos( userInfo.Username, offset: Offset, limit: 100 );
+					List<HitboxVideo> videos = await Hitbox.RetrieveVideos( userInfo.Username, offset: offset, limit: 100 );
 					hasMore = videos.Count == 100;
-					Offset += videos.Count;
 					foreach ( var v in videos ) {
 						videosToAdd.Add( new HitboxVideoInfo( v ) );
 					}
 					break;
 				default:
-					return new FetchReturnValue { Success = false, HasMore = false };
+					return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = maxVideos, Videos = videosToAdd };
 			}
 
 			if ( videosToAdd.Count <= 0 ) {
-				return new FetchReturnValue { Success = true, HasMore = false };
+				return new FetchReturnValue { Success = true, HasMore = false, TotalVideos = maxVideos, Videos = videosToAdd };
 			}
 
 			if ( UserInfoPersister.KnownUsers.Add( userInfo ) ) {
 				UserInfoPersister.Save();
 			}
 
-			textboxUsername.Enabled = false;
-			comboBoxService.Enabled = false;
-			comboBoxKnownUsers.Enabled = false;
-			if ( hasMore && maxVideos != -1 ) {
-				buttonFetch.Text = "Fetch More (" + ( maxVideos - Offset ) + " left)";
-			} else {
-				buttonFetch.Text = "Fetch More";
-			}
-			buttonFetch.Enabled = hasMore;
-			buttonClear.Enabled = true;
-
-			objectListViewVideos.BeginUpdate();
-			foreach ( var v in videosToAdd ) {
-				objectListViewVideos.AddObject( v );
-			}
-			objectListViewVideos.EndUpdate();
-
-			return new FetchReturnValue { Success = true, HasMore = hasMore };
+			return new FetchReturnValue { Success = true, HasMore = hasMore, TotalVideos = maxVideos, Videos = videosToAdd };
 		}
 
 		private void objectListViewVideos_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
@@ -143,7 +150,10 @@ namespace VodArchiver {
 		}
 
 		private void ProcessSelectedPreset() {
-			UserInfo u = comboBoxKnownUsers.SelectedItem as UserInfo;
+			ProcessPreset( comboBoxKnownUsers.SelectedItem as UserInfo );
+		}
+
+		private void ProcessPreset( UserInfo u ) {
 			if ( u != null ) {
 				comboBoxService.SelectedIndex = (int)u.Service;
 				textboxUsername.Text = u.Username;
@@ -201,14 +211,25 @@ namespace VodArchiver {
 		}
 
 		private async void buttonDownloadAllKnown_Click( object sender, EventArgs e ) {
+			List<UserInfo> users = new List<UserInfo>( comboBoxKnownUsers.Items.Count - 1 );
 			for ( int i = 1; i < comboBoxKnownUsers.Items.Count; ++i ) {
 				comboBoxKnownUsers.SelectedIndex = i;
-				if ( comboBoxKnownUsers.SelectedItem as UserInfo != null ) {
-					if ( !( comboBoxKnownUsers.SelectedItem as UserInfo ).AutoDownload ) {
+				var userInfo = comboBoxKnownUsers.SelectedItem as UserInfo;
+				if ( userInfo != null ) {
+					users.Add( userInfo );
+				}
+			}
+			await AutoDownload( users );
+		}
+
+		private async Task AutoDownload( IEnumerable<UserInfo> users ) {
+			foreach ( var userInfo in users ) {
+				if ( userInfo != null ) {
+					if ( !userInfo.AutoDownload ) {
 						continue;
 					}
 
-					ProcessSelectedPreset();
+					ProcessPreset( userInfo );
 					while ( true ) {
 						try {
 							FetchReturnValue fetchReturnValue;
