@@ -183,13 +183,22 @@ namespace VodArchiver {
 				return;
 			}
 
+			List<IVideoInfo> videos = new List<IVideoInfo>();
 			foreach ( var o in objectListViewVideos.Objects ) {
-				IVideoInfo videoInfo = o as IVideoInfo;
+				videos.Add( o as IVideoInfo );
+			}
+			DownloadFetched( videos, DownloadWindow );
+		}
+
+		public static void DownloadFetched( IEnumerable<IVideoInfo> videos, DownloadForm downloadWindow ) {
+			Console.WriteLine( "Enqueueing " + videos.Count() + " videos..." );
+			foreach ( IVideoInfo videoInfo in videos ) {
+				Console.WriteLine( "Enqueueing " + videoInfo.Username + "/" + videoInfo.VideoId );
 				if ( videoInfo.VideoRecordingState == RecordingState.Recorded && videoInfo.VideoType == VideoFileType.M3U ) {
-					DownloadWindow.CreateAndEnqueueJob( videoInfo );
+					downloadWindow.CreateAndEnqueueJob( videoInfo );
 				}
 				for ( int i = 0; i < DownloadForm.MaxRunningJobs; ++i ) {
-					Task.Run( () => DownloadWindow.RunJob() );
+					Task.Run( () => downloadWindow.RunJob() );
 				}
 			}
 		}
@@ -219,24 +228,28 @@ namespace VodArchiver {
 					users.Add( userInfo );
 				}
 			}
-			await AutoDownload( users );
+			await AutoDownload( users, TwitchAPI, DownloadWindow );
 		}
 
-		private async Task AutoDownload( IEnumerable<UserInfo> users ) {
+		public static async Task AutoDownload( IEnumerable<UserInfo> users, Twixel twitchApi, DownloadForm downloadWindow ) {
 			foreach ( var userInfo in users ) {
 				if ( userInfo != null ) {
 					if ( !userInfo.AutoDownload ) {
 						continue;
 					}
 
-					ProcessPreset( userInfo );
+					List<IVideoInfo> videos = new List<IVideoInfo>();
+
 					while ( true ) {
 						try {
 							FetchReturnValue fetchReturnValue;
 							do {
 								await Task.Delay( 15000 );
-								fetchReturnValue = await Fetch();
-							} while ( fetchReturnValue.HasMore );
+								fetchReturnValue = await Fetch( twitchApi, userInfo, videos.Count );
+								if ( fetchReturnValue.Success ) {
+									videos.AddRange( fetchReturnValue.Videos );
+								}
+							} while ( fetchReturnValue.Success && fetchReturnValue.HasMore );
 							break;
 						} catch ( Exception ex ) {
 							// TODO: Better errorhandling?
@@ -247,8 +260,7 @@ namespace VodArchiver {
 						}
 					}
 
-					DownloadFetched();
-					Clear();
+					DownloadFetched( videos, downloadWindow );
 				}
 			}
 		}
