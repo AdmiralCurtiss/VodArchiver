@@ -79,5 +79,7 @@ namespace VodArchiver {
 		}
 
 		public static SemaphoreSlim ExpensiveDiskIOSemaphore = new SemaphoreSlim( 1 );
+
+		public static object JobFileLock = new object();
 	}
 }

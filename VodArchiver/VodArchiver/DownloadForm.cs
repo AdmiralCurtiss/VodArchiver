@@ -157,6 +157,8 @@ namespace VodArchiver {
 				ToastUtil.ShowToast( "Enqueued " + job.HumanReadableJobName + "!" );
 			}
 
+			SaveJobs();
+
 			return true;
 		}
 
@@ -186,6 +188,8 @@ namespace VodArchiver {
 					}
 				}
 
+				SaveJobs();
+
 				lock ( Lock ) {
 					--RunningJobs;
 				}
@@ -202,40 +206,42 @@ namespace VodArchiver {
 		}
 
 		private void LoadJobs() {
-			List<IVideoJob> jobs = new List<IVideoJob>();
+			lock ( Util.JobFileLock ) {
+				List<IVideoJob> jobs = new List<IVideoJob>();
 
-			try {
-				using ( FileStream fs = System.IO.File.OpenRead( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) ) ) {
-					System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-					int jobCount = (int)formatter.Deserialize( fs );
-					for ( int i = 0; i < jobCount; ++i ) {
-						object obj = formatter.Deserialize( fs );
-						IVideoJob job = obj as IVideoJob;
-						if ( job != null ) {
-							if ( job.JobStatus == VideoJobStatus.Running ) {
-								job.JobStatus = VideoJobStatus.NotStarted;
-								job.StatusUpdater = new StatusUpdate.NullStatusUpdate();
-								job.Status = "Interrupted during: " + job.Status;
+				try {
+					using ( FileStream fs = System.IO.File.OpenRead( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) ) ) {
+						System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+						int jobCount = (int)formatter.Deserialize( fs );
+						for ( int i = 0; i < jobCount; ++i ) {
+							object obj = formatter.Deserialize( fs );
+							IVideoJob job = obj as IVideoJob;
+							if ( job != null ) {
+								if ( job.JobStatus == VideoJobStatus.Running ) {
+									job.JobStatus = VideoJobStatus.NotStarted;
+									job.StatusUpdater = new StatusUpdate.NullStatusUpdate();
+									job.Status = "Interrupted during: " + job.Status;
+								}
+								if ( job as TwitchVideoJob != null ) {
+									( job as TwitchVideoJob ).TwitchAPI = TwitchAPI;
+								}
+								job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
+								if ( job.JobStatus != VideoJobStatus.Finished ) {
+									JobQueue.Enqueue( job );
+								}
+								jobs.Add( job );
 							}
-							if ( job as TwitchVideoJob != null ) {
-								( job as TwitchVideoJob ).TwitchAPI = TwitchAPI;
-							}
-							job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
-							if ( job.JobStatus != VideoJobStatus.Finished ) {
-								JobQueue.Enqueue( job );
-							}
-							jobs.Add( job );
 						}
+						fs.Close();
 					}
-					fs.Close();
-				}
-			} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
+				} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
 
-			objectListViewDownloads.AddObjects( jobs );
-			for ( int i = 0; i < objectListViewDownloads.Items.Count; ++i ) {
-				objectListViewDownloads.Items[i].Text = ( i + 1 ).ToString();
-				if ( i % 2 == 1 ) {
-					objectListViewDownloads.Items[i].BackColor = objectListViewDownloads.AlternateRowBackColorOrDefault;
+				objectListViewDownloads.AddObjects( jobs );
+				for ( int i = 0; i < objectListViewDownloads.Items.Count; ++i ) {
+					objectListViewDownloads.Items[i].Text = ( i + 1 ).ToString();
+					if ( i % 2 == 1 ) {
+						objectListViewDownloads.Items[i].BackColor = objectListViewDownloads.AlternateRowBackColorOrDefault;
+					}
 				}
 			}
 
@@ -245,19 +251,21 @@ namespace VodArchiver {
 		}
 
 		private void SaveJobs() {
-			using ( FileStream fs = System.IO.File.Create( Path.Combine( Application.LocalUserAppDataPath, "vods.tmp" ) ) ) {
-				System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-				formatter.Serialize( fs, objectListViewDownloads.Items.Count );
-				foreach ( var item in objectListViewDownloads.Items ) {
-					IVideoJob job = ( item as BrightIdeasSoftware.OLVListItem )?.RowObject as IVideoJob;
-					formatter.Serialize( fs, job );
+			lock ( Util.JobFileLock ) {
+				using ( FileStream fs = System.IO.File.Create( Path.Combine( Application.LocalUserAppDataPath, "vods.tmp" ) ) ) {
+					System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+					formatter.Serialize( fs, objectListViewDownloads.Items.Count );
+					foreach ( var item in objectListViewDownloads.Items ) {
+						IVideoJob job = ( item as BrightIdeasSoftware.OLVListItem )?.RowObject as IVideoJob;
+						formatter.Serialize( fs, job );
+					}
+					fs.Close();
 				}
-				fs.Close();
+				if ( System.IO.File.Exists( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) ) ) {
+					System.IO.File.Delete( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) );
+				}
+				System.IO.File.Move( Path.Combine( Application.LocalUserAppDataPath, "vods.tmp" ), Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) );
 			}
-			if ( System.IO.File.Exists( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) ) ) {
-				System.IO.File.Delete( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) );
-			}
-			System.IO.File.Move( Path.Combine( Application.LocalUserAppDataPath, "vods.tmp" ), Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) );
 		}
 
 		private void DownloadForm_FormClosing( object sender, FormClosingEventArgs e ) {
