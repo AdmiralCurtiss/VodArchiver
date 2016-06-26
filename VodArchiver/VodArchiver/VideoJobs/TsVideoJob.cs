@@ -22,10 +22,20 @@ namespace VodArchiver.VideoJobs {
 					Status = "Downloading files...";
 					string[] files;
 					while ( true ) {
+						System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+						timer.Start();
 						files = await Download( GetTempFolderForParts(), urls );
 						if ( this.VideoInfo.VideoRecordingState != RecordingState.Live ) {
 							break;
 						} else {
+							// we're downloading a stream that is still streaming
+							timer.Stop();
+							// if too little time has passed wait a bit to allow the stream to provide new data
+							if ( timer.Elapsed.TotalMinutes < 2.5 ) {
+								TimeSpan ts = TimeSpan.FromMinutes( 2.5 ) - timer.Elapsed;
+								Status = "Waiting " + ts.TotalSeconds + " seconds for stream to update...";
+								await Task.Delay( ts );
+							}
 							urls = await GetFileUrlsOfVod();
 						}
 					}

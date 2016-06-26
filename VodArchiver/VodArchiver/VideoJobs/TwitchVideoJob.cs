@@ -24,11 +24,27 @@ namespace VodArchiver.VideoJobs {
 		public override async Task<string[]> GetFileUrlsOfVod() {
 			VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ) );
 
-			string m3u = await TwitchAPI.RetrieveVodM3U( VideoInfo.VideoId );
-			string m3u8path = GetM3U8PathFromM3U( m3u, VideoQuality );
-			string folderpath = TsVideoJob.GetFolder( m3u8path );
-			string m3u8 = await Twixel.GetWebData( new Uri( m3u8path ) );
-			string[] filenames = TsVideoJob.GetFilenamesFromM3U8( m3u8 );
+			string folderpath;
+			string[] filenames;
+			while ( true ) {
+				try {
+					string m3u = await TwitchAPI.RetrieveVodM3U( VideoInfo.VideoId );
+					string m3u8path = GetM3U8PathFromM3U( m3u, VideoQuality );
+					folderpath = TsVideoJob.GetFolder( m3u8path );
+					string m3u8 = await Twixel.GetWebData( new Uri( m3u8path ) );
+					filenames = TsVideoJob.GetFilenamesFromM3U8( m3u8 );
+				} catch ( TwitchException e ) {
+					if ( e.Status == 404 && VideoInfo.VideoRecordingState == RecordingState.Live ) {
+						// this can happen on streams that have just started, in this just wait a bit and retry
+						await Task.Delay( 20000 );
+						VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ) );
+						continue;
+					} else {
+						throw;
+					}
+				}
+				break;
+			}
 
 			List<string> urls = new List<string>( filenames.Length );
 			foreach ( var filename in filenames ) {
@@ -53,7 +69,7 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public override string GetTargetFilenameWithoutExtension() {
-			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoId + "_" + VideoQuality + ( VideoInfo.VideoRecordingState == RecordingState.Recorded ? "" : "_" + VideoInfo.VideoRecordingState.ToString() );
+			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoId + "_" + VideoQuality;
 		}
 	}
 }
