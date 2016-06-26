@@ -96,7 +96,12 @@ namespace VodArchiver.VideoJobs {
 			Directory.CreateDirectory( targetFolder );
 
 			List<string> files = new List<string>( urls.Length );
+			const int MaxTries = 5;
+			int triesLeft = MaxTries;
 			while ( files.Count < urls.Length ) {
+				if ( triesLeft <= 0 ) {
+					throw new Exception( "Failed to download individual parts after " + MaxTries + " tries, aborting." );
+				}
 				files.Clear();
 				for ( int i = 0; i < urls.Length; ++i ) {
 					string url = urls[i];
@@ -133,6 +138,7 @@ namespace VodArchiver.VideoJobs {
 						files.Add( outpath );
 					}
 				}
+				--triesLeft;
 			}
 
 			return files.ToArray();
