@@ -20,7 +20,15 @@ namespace VodArchiver.VideoJobs {
 			if ( !await Util.FileExists( remuxedFilename ) ) {
 				if ( !await Util.FileExists( combinedFilename ) ) {
 					Status = "Downloading files...";
-					string[] files = await Download( GetTempFolderForParts(), urls );
+					string[] files;
+					while ( true ) {
+						files = await Download( GetTempFolderForParts(), urls );
+						if ( this.VideoInfo.VideoRecordingState != RecordingState.Live ) {
+							break;
+						} else {
+							urls = await GetFileUrlsOfVod();
+						}
+					}
 
 					Status = "Waiting for free disk IO slot to combine...";
 					await Util.ExpensiveDiskIOSemaphore.WaitAsync();
