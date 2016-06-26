@@ -253,10 +253,7 @@ namespace VodArchiver {
 							break;
 						} catch ( Exception ex ) {
 							// TODO: Better errorhandling?
-							var result = MessageBox.Show( ex.ToString(), "Exception", MessageBoxButtons.RetryCancel );
-							if ( result == DialogResult.Cancel ) {
-								break;
-							}
+							break;
 						}
 					}
 
