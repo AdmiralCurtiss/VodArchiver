@@ -88,26 +88,27 @@ namespace VodArchiver.VideoJobs {
 			Directory.CreateDirectory( targetFolder );
 
 			List<string> files = new List<string>( urls.Length );
-			for ( int i = 0; i < urls.Length; ++i ) {
-				string url = urls[i];
-				string outpath = Path.Combine( targetFolder, "part" + i.ToString( "D8" ) + ".ts" );
-				string outpath_temp = outpath + ".tmp";
-				if ( await Util.FileExists( outpath_temp ) ) {
-					await Util.DeleteFile( outpath_temp );
-				}
-				if ( await Util.FileExists( outpath ) ) {
-					if ( i % 100 == 99 ) {
-						Status = "Already have part " + ( i + 1 ) + "/" + urls.Length + "...";
+			while ( files.Count < urls.Length ) {
+				files.Clear();
+				for ( int i = 0; i < urls.Length; ++i ) {
+					string url = urls[i];
+					string outpath = Path.Combine( targetFolder, "part" + i.ToString( "D8" ) + ".ts" );
+					string outpath_temp = outpath + ".tmp";
+					if ( await Util.FileExists( outpath_temp ) ) {
+						await Util.DeleteFile( outpath_temp );
 					}
-					files.Add( outpath );
-					continue;
-				}
+					if ( await Util.FileExists( outpath ) ) {
+						if ( i % 100 == 99 ) {
+							Status = "Already have part " + ( i + 1 ) + "/" + urls.Length + "...";
+						}
+						files.Add( outpath );
+						continue;
+					}
 
-				using ( var client = new KeepAliveWebClient() ) {
 					bool success = false;
-					while ( !success ) {
+					using ( var client = new KeepAliveWebClient() ) {
 						try {
-							Status = "Downloading files... (" + ( i + 1 ) + "/" + urls.Length + ")";
+							Status = "Downloading files... (" + ( files.Count + 1 ) + "/" + urls.Length + ")";
 							byte[] data = await client.DownloadDataTaskAsync( url );
 							using ( FileStream fs = File.Create( outpath_temp ) ) {
 								await fs.WriteAsync( data, 0, data.Length );
@@ -118,10 +119,12 @@ namespace VodArchiver.VideoJobs {
 							continue;
 						}
 					}
-				}
 
-				File.Move( outpath_temp, outpath );
-				files.Add( outpath );
+					if ( success ) {
+						File.Move( outpath_temp, outpath );
+						files.Add( outpath );
+					}
+				}
 			}
 
 			return files.ToArray();
