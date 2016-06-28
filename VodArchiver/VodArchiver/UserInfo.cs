@@ -66,26 +66,39 @@ namespace VodArchiver {
 	}
 
 	public class UserInfoPersister {
-		public static SortedSet<UserInfo> KnownUsers = new SortedSet<UserInfo>();
+		private static object _KnownUsersLock = new object();
+		private static SortedSet<UserInfo> _KnownUsers = null;
+		public static SortedSet<UserInfo> KnownUsers {
+			get {
+				if ( _KnownUsers == null ) {
+					Load();
+				}
+				return _KnownUsers;
+			}
+		}
 
 		public static string SerializationPath { get { return System.IO.Path.Combine( System.Windows.Forms.Application.LocalUserAppDataPath, "users.txt" ); } }
 
 		public static void Load() {
-			if ( System.IO.File.Exists( SerializationPath ) ) {
-				string[] userList = System.IO.File.ReadAllLines( SerializationPath );
-				KnownUsers.Clear();
-				foreach ( var s in userList ) {
-					KnownUsers.Add( UserInfo.FromSerializableString( s ) );
+			lock ( _KnownUsersLock ) {
+				_KnownUsers = new SortedSet<UserInfo>();
+				if ( System.IO.File.Exists( SerializationPath ) ) {
+					string[] userList = System.IO.File.ReadAllLines( SerializationPath );
+					foreach ( var s in userList ) {
+						_KnownUsers.Add( UserInfo.FromSerializableString( s ) );
+					}
 				}
 			}
 		}
 
 		public static void Save() {
-			List<string> userList = new List<string>( KnownUsers.Count );
-			foreach ( var u in KnownUsers ) {
-				userList.Add( u.ToSerializableString() );
+			lock ( _KnownUsersLock ) {
+				List<string> userList = new List<string>( KnownUsers.Count );
+				foreach ( var u in KnownUsers ) {
+					userList.Add( u.ToSerializableString() );
+				}
+				System.IO.File.WriteAllLines( SerializationPath, userList );
 			}
-			System.IO.File.WriteAllLines( SerializationPath, userList );
 		}
 	}
 }

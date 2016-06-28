@@ -24,14 +24,6 @@ namespace VodArchiver {
 			objectListViewVideos.SecondarySortColumn = objectListViewVideos.GetColumn( "Video ID" );
 			objectListViewVideos.SecondarySortOrder = SortOrder.Ascending;
 
-			if ( UserInfoPersister.KnownUsers.Count == 0 ) {
-				try {
-					UserInfoPersister.Load();
-				} catch ( Exception ex ) {
-					MessageBox.Show( "Couldn't load users." + Environment.NewLine + ex.ToString() );
-				}
-			}
-
 			comboBoxKnownUsers.Items.Add( " == No Preset == " );
 			comboBoxKnownUsers.Items.AddRange( UserInfoPersister.KnownUsers.ToArray() );
 			comboBoxKnownUsers.SelectedIndex = 0;
