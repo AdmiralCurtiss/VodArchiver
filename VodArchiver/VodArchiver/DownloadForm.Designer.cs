@@ -43,6 +43,7 @@
 			this.columnStatus = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.buttonSettings = new System.Windows.Forms.Button();
 			this.buttonFetchUser = new System.Windows.Forms.Button();
+			this.labelStatusBar = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -129,7 +130,7 @@
 			this.objectListViewDownloads.Name = "objectListViewDownloads";
 			this.objectListViewDownloads.SelectedBackColor = System.Drawing.SystemColors.Highlight;
 			this.objectListViewDownloads.ShowItemCountOnGroups = true;
-			this.objectListViewDownloads.Size = new System.Drawing.Size(1354, 420);
+			this.objectListViewDownloads.Size = new System.Drawing.Size(1354, 404);
 			this.objectListViewDownloads.TabIndex = 4;
 			this.objectListViewDownloads.TintSortColumn = true;
 			this.objectListViewDownloads.UseAlternatingBackColors = true;
@@ -249,12 +250,22 @@
 			this.buttonFetchUser.UseVisualStyleBackColor = true;
 			this.buttonFetchUser.Click += new System.EventHandler(this.buttonFetchUser_Click);
 			// 
+			// labelStatusBar
+			// 
+			this.labelStatusBar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.labelStatusBar.AutoSize = true;
+			this.labelStatusBar.Location = new System.Drawing.Point(12, 452);
+			this.labelStatusBar.Name = "labelStatusBar";
+			this.labelStatusBar.Size = new System.Drawing.Size(0, 13);
+			this.labelStatusBar.TabIndex = 7;
+			// 
 			// DownloadForm
 			// 
 			this.AcceptButton = this.buttonDownload;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(1378, 473);
+			this.Controls.Add(this.labelStatusBar);
 			this.Controls.Add(this.buttonFetchUser);
 			this.Controls.Add(this.buttonSettings);
 			this.Controls.Add(this.objectListViewDownloads);
@@ -293,5 +304,6 @@
 		private BrightIdeasSoftware.OLVColumn columnActionRemove;
 		private BrightIdeasSoftware.OLVColumn columnIndex;
 		private BrightIdeasSoftware.OLVColumn columnValidated;
+		private System.Windows.Forms.Label labelStatusBar;
 	}
 }

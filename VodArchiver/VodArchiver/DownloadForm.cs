@@ -22,12 +22,19 @@ namespace VodArchiver {
 		private object Lock = new object();
 		public const int MaxRunningJobs = 3;
 
+		Task TimedAutoFetchTask;
+
 		public DownloadForm() {
 			InitializeComponent();
 			comboBoxService.SelectedIndex = 0;
 			TwitchAPI = new Twixel( "", "", Twixel.APIVersion.v3 );
 			JobQueue = new System.Collections.Concurrent.ConcurrentQueue<IVideoJob>();
 			RunningJobs = 0;
+
+			if ( !Util.AllowTimedAutoFetch ) {
+				labelStatusBar.Hide();
+				objectListViewDownloads.Size = new Size( objectListViewDownloads.Size.Width, objectListViewDownloads.Size.Height + 16 );
+			}
 
 			objectListViewDownloads.SecondarySortColumn = objectListViewDownloads.GetColumn( "Video ID" );
 			objectListViewDownloads.SecondarySortOrder = SortOrder.Ascending;
@@ -42,6 +49,39 @@ namespace VodArchiver {
 			objectListViewDownloads.FormatRow += ObjectListViewDownloads_FormatRow;
 
 			LoadJobs();
+
+			if ( Util.AllowTimedAutoFetch ) {
+				StartTimedAutoFetch();
+			}
+		}
+
+		private void StartTimedAutoFetch() {
+			TimedAutoFetchTask = RunTimedAutoFetch();
+		}
+
+		private async Task RunTimedAutoFetch() {
+			SetAutoDownloadStatus( "Auto-fetching " + UserInfoPersister.KnownUsers.Count.ToString() + " users." );
+			try {
+				await VodList.AutoDownload( UserInfoPersister.KnownUsers.ToArray(), TwitchAPI, this );
+			} catch ( Exception ex ) {
+				SetAutoDownloadStatus( ex.ToString() );
+				return;
+			}
+
+			System.Timers.Timer timer = new System.Timers.Timer( TimeSpan.FromHours( 7 ).TotalMilliseconds );
+			SetAutoDownloadStatus( "Waiting for 7 hours to fetch again -- this will be roughly at " + ( DateTime.Now + TimeSpan.FromHours( 7 ) ).ToString() + "." );
+			timer.Elapsed += delegate ( object sender, System.Timers.ElapsedEventArgs e ) {
+				StartTimedAutoFetch();
+			};
+			timer.Enabled = true;
+			timer.AutoReset = false;
+			timer.Start();
+		}
+
+		public void SetAutoDownloadStatus( string s ) {
+			if ( Util.AllowTimedAutoFetch ) {
+				labelStatusBar.Text = "[" + DateTime.Now.ToString() + "] " + s;
+			}
 		}
 
 		private void ObjectListViewDownloads_FormatRow( object sender, BrightIdeasSoftware.FormatRowEventArgs e ) {

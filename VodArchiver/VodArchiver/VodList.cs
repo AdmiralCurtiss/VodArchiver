@@ -220,11 +220,12 @@ namespace VodArchiver {
 					users.Add( userInfo );
 				}
 			}
-			await AutoDownload( users, TwitchAPI, DownloadWindow );
+			await AutoDownload( users.ToArray(), TwitchAPI, DownloadWindow );
 		}
 
-		public static async Task AutoDownload( IEnumerable<UserInfo> users, Twixel twitchApi, DownloadForm downloadWindow ) {
-			foreach ( var userInfo in users ) {
+		public static async Task AutoDownload( UserInfo[] users, Twixel twitchApi, DownloadForm downloadWindow ) {
+			for ( int i = 0; i < users.Length; ++i ) {
+				var userInfo = users[i];
 				if ( userInfo != null ) {
 					if ( !userInfo.AutoDownload ) {
 						continue;
@@ -233,6 +234,8 @@ namespace VodArchiver {
 					List<IVideoInfo> videos = new List<IVideoInfo>();
 
 					while ( true ) {
+						downloadWindow.SetAutoDownloadStatus( "[" + ( i + 1 ).ToString() + "/" + users.Length.ToString() + "] Fetching " + userInfo.ToString() + "..." );
+
 						try {
 							FetchReturnValue fetchReturnValue;
 							do {

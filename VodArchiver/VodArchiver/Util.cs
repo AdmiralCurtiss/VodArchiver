@@ -39,6 +39,12 @@ namespace VodArchiver {
 			}
 		}
 
+		public static bool AllowTimedAutoFetch {
+			get {
+				return ShowDownloadFetched;
+			}
+		}
+
 		public static string AppUserModelId {
 			get {
 				return "AdmiralCurtiss.VodArchiver";
