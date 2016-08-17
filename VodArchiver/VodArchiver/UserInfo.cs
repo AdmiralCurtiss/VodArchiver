@@ -77,13 +77,11 @@ namespace VodArchiver {
 			}
 		}
 
-		public static string SerializationPath { get { return System.IO.Path.Combine( System.Windows.Forms.Application.LocalUserAppDataPath, "users.txt" ); } }
-
 		public static void Load() {
 			lock ( _KnownUsersLock ) {
 				_KnownUsers = new SortedSet<UserInfo>();
-				if ( System.IO.File.Exists( SerializationPath ) ) {
-					string[] userList = System.IO.File.ReadAllLines( SerializationPath );
+				if ( System.IO.File.Exists( Util.UserSerializationPath ) ) {
+					string[] userList = System.IO.File.ReadAllLines( Util.UserSerializationPath );
 					foreach ( var s in userList ) {
 						_KnownUsers.Add( UserInfo.FromSerializableString( s ) );
 					}
@@ -97,7 +95,7 @@ namespace VodArchiver {
 				foreach ( var u in KnownUsers ) {
 					userList.Add( u.ToSerializableString() );
 				}
-				System.IO.File.WriteAllLines( SerializationPath, userList );
+				System.IO.File.WriteAllLines( Util.UserSerializationPath, userList );
 			}
 		}
 	}

@@ -252,7 +252,7 @@ namespace VodArchiver {
 				List<IVideoJob> jobs = new List<IVideoJob>();
 
 				try {
-					using ( FileStream fs = System.IO.File.OpenRead( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) ) ) {
+					using ( FileStream fs = System.IO.File.OpenRead( Util.VodBinaryPath ) ) {
 						System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
 						int jobCount = (int)formatter.Deserialize( fs );
 						for ( int i = 0; i < jobCount; ++i ) {
@@ -294,7 +294,7 @@ namespace VodArchiver {
 
 		private void SaveJobs() {
 			lock ( Util.JobFileLock ) {
-				using ( FileStream fs = System.IO.File.Create( Path.Combine( Application.LocalUserAppDataPath, "vods.tmp" ) ) ) {
+				using ( FileStream fs = System.IO.File.Create( Util.VodBinaryTempPath ) ) {
 					System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
 					formatter.Serialize( fs, objectListViewDownloads.Items.Count );
 					foreach ( var item in objectListViewDownloads.Items ) {
@@ -303,10 +303,10 @@ namespace VodArchiver {
 					}
 					fs.Close();
 				}
-				if ( System.IO.File.Exists( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) ) ) {
-					System.IO.File.Delete( Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) );
+				if ( System.IO.File.Exists( Util.VodBinaryPath ) ) {
+					System.IO.File.Delete( Util.VodBinaryPath );
 				}
-				System.IO.File.Move( Path.Combine( Application.LocalUserAppDataPath, "vods.tmp" ), Path.Combine( Application.LocalUserAppDataPath, "vods.bin" ) );
+				System.IO.File.Move( Util.VodBinaryTempPath, Util.VodBinaryPath );
 			}
 		}
 

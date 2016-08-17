@@ -27,6 +27,10 @@ namespace VodArchiver {
 			}
 		}
 
+		public static string VodBinaryPath { get { return System.IO.Path.Combine( System.Windows.Forms.Application.LocalUserAppDataPath, "vods.bin" ); } }
+		public static string VodBinaryTempPath { get { return System.IO.Path.Combine( System.Windows.Forms.Application.LocalUserAppDataPath, "vods.tmp" ); } }
+		public static string UserSerializationPath { get { return System.IO.Path.Combine( System.Windows.Forms.Application.LocalUserAppDataPath, "users.txt" ); } }
+
 		public static bool ShowDownloadFetched {
 			get {
 				return Properties.Settings.Default.ShowDownloadFetched;
