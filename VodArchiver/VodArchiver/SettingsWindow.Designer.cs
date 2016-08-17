@@ -29,6 +29,9 @@
 			this.label2 = new System.Windows.Forms.Label();
 			this.buttonSave = new System.Windows.Forms.Button();
 			this.buttonCancel = new System.Windows.Forms.Button();
+			this.checkBoxCustomLocationPersistentData = new System.Windows.Forms.CheckBox();
+			this.textBoxCustomLocationPersistentData = new System.Windows.Forms.TextBox();
+			this.label3 = new System.Windows.Forms.Label();
 			this.SuspendLayout();
 			// 
 			// label1
@@ -89,11 +92,45 @@
 			this.buttonCancel.UseVisualStyleBackColor = true;
 			this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
 			// 
+			// checkBoxCustomLocationPersistentData
+			// 
+			this.checkBoxCustomLocationPersistentData.AutoSize = true;
+			this.checkBoxCustomLocationPersistentData.Location = new System.Drawing.Point(15, 74);
+			this.checkBoxCustomLocationPersistentData.Name = "checkBoxCustomLocationPersistentData";
+			this.checkBoxCustomLocationPersistentData.Size = new System.Drawing.Size(278, 17);
+			this.checkBoxCustomLocationPersistentData.TabIndex = 6;
+			this.checkBoxCustomLocationPersistentData.Text = "Custom Location for Persistent Download && User Lists";
+			this.checkBoxCustomLocationPersistentData.UseVisualStyleBackColor = true;
+			this.checkBoxCustomLocationPersistentData.CheckedChanged += new System.EventHandler(this.checkBoxCustomLocationPersistentData_CheckedChanged);
+			// 
+			// textBoxCustomLocationPersistentData
+			// 
+			this.textBoxCustomLocationPersistentData.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.textBoxCustomLocationPersistentData.Enabled = false;
+			this.textBoxCustomLocationPersistentData.Location = new System.Drawing.Point(131, 94);
+			this.textBoxCustomLocationPersistentData.Name = "textBoxCustomLocationPersistentData";
+			this.textBoxCustomLocationPersistentData.Size = new System.Drawing.Size(360, 20);
+			this.textBoxCustomLocationPersistentData.TabIndex = 8;
+			// 
+			// label3
+			// 
+			this.label3.AutoSize = true;
+			this.label3.Enabled = false;
+			this.label3.Location = new System.Drawing.Point(12, 97);
+			this.label3.Name = "label3";
+			this.label3.Size = new System.Drawing.Size(86, 13);
+			this.label3.TabIndex = 7;
+			this.label3.Text = "Custom Location";
+			// 
 			// SettingsWindow
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(503, 319);
+			this.Controls.Add(this.textBoxCustomLocationPersistentData);
+			this.Controls.Add(this.label3);
+			this.Controls.Add(this.checkBoxCustomLocationPersistentData);
 			this.Controls.Add(this.buttonCancel);
 			this.Controls.Add(this.buttonSave);
 			this.Controls.Add(this.textBoxTempFolder);
@@ -115,5 +152,8 @@
 		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.Button buttonSave;
 		private System.Windows.Forms.Button buttonCancel;
+		private System.Windows.Forms.CheckBox checkBoxCustomLocationPersistentData;
+		private System.Windows.Forms.TextBox textBoxCustomLocationPersistentData;
+		private System.Windows.Forms.Label label3;
 	}
 }

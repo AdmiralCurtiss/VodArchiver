@@ -59,5 +59,29 @@ namespace VodArchiver.Properties {
                 this["ShowDownloadFetched"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool EnableCustomDataPath {
+            get {
+                return ((bool)(this["EnableCustomDataPath"]));
+            }
+            set {
+                this["EnableCustomDataPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string CustomDataPath {
+            get {
+                return ((string)(this["CustomDataPath"]));
+            }
+            set {
+                this["CustomDataPath"] = value;
+            }
+        }
     }
 }
