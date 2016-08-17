@@ -26,6 +26,8 @@ namespace VodArchiver {
 
 		public DownloadForm() {
 			InitializeComponent();
+			objectListViewDownloads.CellEditActivation = BrightIdeasSoftware.ObjectListView.CellEditActivateMode.DoubleClick;
+
 			comboBoxService.SelectedIndex = 0;
 			TwitchAPI = new Twixel( "", "", Twixel.APIVersion.v3 );
 			JobQueue = new System.Collections.Concurrent.ConcurrentQueue<IVideoJob>();
@@ -324,6 +326,10 @@ namespace VodArchiver {
 					Task.Run( () => RunJob( job, true ) );
 					break;
 			}
+		}
+
+		private void objectListViewDownloads_CellEditStarting( object sender, BrightIdeasSoftware.CellEditEventArgs e ) {
+			return;
 		}
 	}
 }

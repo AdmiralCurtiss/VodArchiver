@@ -38,6 +38,7 @@
 			this.columnTimestamp = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnLength = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnRecordingState = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+			this.columnNotes = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnAction1 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnActionRemove = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnStatus = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
@@ -101,6 +102,7 @@
 			this.objectListViewDownloads.AllColumns.Add(this.columnTimestamp);
 			this.objectListViewDownloads.AllColumns.Add(this.columnLength);
 			this.objectListViewDownloads.AllColumns.Add(this.columnRecordingState);
+			this.objectListViewDownloads.AllColumns.Add(this.columnNotes);
 			this.objectListViewDownloads.AllColumns.Add(this.columnAction1);
 			this.objectListViewDownloads.AllColumns.Add(this.columnActionRemove);
 			this.objectListViewDownloads.AllColumns.Add(this.columnStatus);
@@ -120,6 +122,7 @@
             this.columnTimestamp,
             this.columnLength,
             this.columnRecordingState,
+            this.columnNotes,
             this.columnAction1,
             this.columnActionRemove,
             this.columnStatus});
@@ -137,6 +140,7 @@
 			this.objectListViewDownloads.UseCompatibleStateImageBehavior = false;
 			this.objectListViewDownloads.View = System.Windows.Forms.View.Details;
 			this.objectListViewDownloads.ButtonClick += new System.EventHandler<BrightIdeasSoftware.CellClickEventArgs>(this.objectListViewDownloads_ButtonClick);
+			this.objectListViewDownloads.CellEditStarting += new BrightIdeasSoftware.CellEditEventHandler(this.objectListViewDownloads_CellEditStarting);
 			// 
 			// columnIndex
 			// 
@@ -203,6 +207,12 @@
 			this.columnRecordingState.AspectName = "VideoInfo.VideoRecordingState";
 			this.columnRecordingState.IsEditable = false;
 			this.columnRecordingState.Text = "Recording State";
+			// 
+			// columnNotes
+			// 
+			this.columnNotes.AspectName = "Notes";
+			this.columnNotes.Text = "Notes";
+			this.columnNotes.Width = 221;
 			// 
 			// columnAction1
 			// 
@@ -305,5 +315,6 @@
 		private BrightIdeasSoftware.OLVColumn columnIndex;
 		private BrightIdeasSoftware.OLVColumn columnValidated;
 		private System.Windows.Forms.Label labelStatusBar;
+		private BrightIdeasSoftware.OLVColumn columnNotes;
 	}
 }

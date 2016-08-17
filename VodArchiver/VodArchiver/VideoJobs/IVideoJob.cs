@@ -57,6 +57,9 @@ namespace VodArchiver.VideoJobs {
 		[System.Runtime.Serialization.OptionalField( VersionAdded = 2 )]
 		public bool HasBeenValidated;
 
+		[System.Runtime.Serialization.OptionalField( VersionAdded = 3 )]
+		public string Notes;
+
 		public abstract Task Run();
 	}
 }
