@@ -199,7 +199,7 @@ namespace VodArchiver {
 				ToastUtil.ShowToast( "Enqueued " + job.HumanReadableJobName + "!" );
 			}
 
-			SaveJobs();
+			InvokeSaveJobs();
 
 			return true;
 		}
@@ -230,7 +230,7 @@ namespace VodArchiver {
 					}
 				}
 
-				SaveJobs();
+				InvokeSaveJobs();
 
 				lock ( Lock ) {
 					--RunningJobs;
@@ -292,8 +292,30 @@ namespace VodArchiver {
 			}
 		}
 
+		private System.Timers.Timer SaveJobTimer = null;
+		private static object SaveJobTimerLock = new object();
+		private void InvokeSaveJobs() {
+			lock ( SaveJobTimerLock ) {
+				if ( SaveJobTimer == null ) {
+					SaveJobTimer = new System.Timers.Timer( TimeSpan.FromMinutes( 1 ).TotalMilliseconds );
+					SaveJobTimer.Elapsed += delegate ( object sender, System.Timers.ElapsedEventArgs e ) {
+						SaveJobs();
+					};
+					SaveJobTimer.AutoReset = false;
+				}
+				SaveJobTimer.Stop();
+				SaveJobTimer.Start();
+			}
+		}
+
 		private void SaveJobs() {
+			lock ( SaveJobTimerLock ) {
+				SaveJobTimer.Stop();
+			}
 			lock ( Util.JobFileLock ) {
+				if ( Util.ShowToastNotifications ) {
+					ToastUtil.ShowToast( DateTime.Now + ": Saving jobs." );
+				}
 				using ( FileStream fs = System.IO.File.Create( Util.VodBinaryTempPath ) ) {
 					System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
 					formatter.Serialize( fs, objectListViewDownloads.Items.Count );
