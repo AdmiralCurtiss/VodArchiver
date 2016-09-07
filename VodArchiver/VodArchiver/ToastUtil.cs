@@ -12,6 +12,11 @@ namespace VodArchiver {
 			stringElements[0].AppendChild( toastXml.CreateTextNode( "VodArchiver" ) );
 			stringElements[1].AppendChild( toastXml.CreateTextNode( text ) );
 
+			IXmlNode data = toastXml.GetElementsByTagName( "toast" )[0];
+			var audioElement = toastXml.CreateElement( "audio" );
+			audioElement.SetAttribute( "silent", "true" );
+			data.AppendChild( audioElement );
+
 			ToastNotification toast = new ToastNotification( toastXml );
 			ToastNotificationManager.CreateToastNotifier( Util.AppUserModelId ).Show( toast );
 		}
