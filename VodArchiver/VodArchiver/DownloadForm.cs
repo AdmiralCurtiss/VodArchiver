@@ -29,13 +29,13 @@ namespace VodArchiver {
 			objectListViewDownloads.CellEditActivation = BrightIdeasSoftware.ObjectListView.CellEditActivateMode.DoubleClick;
 
 			comboBoxService.SelectedIndex = 0;
+			comboBoxPowerStateWhenDone.SelectedIndex = 0;
 			TwitchAPI = new Twixel( "", "", Twixel.APIVersion.v3 );
 			JobQueue = new System.Collections.Concurrent.ConcurrentQueue<IVideoJob>();
 			RunningJobs = 0;
 
 			if ( !Util.AllowTimedAutoFetch ) {
 				labelStatusBar.Hide();
-				objectListViewDownloads.Size = new Size( objectListViewDownloads.Size.Width, objectListViewDownloads.Size.Height + 16 );
 			}
 
 			objectListViewDownloads.SecondarySortColumn = objectListViewDownloads.GetColumn( "Video ID" );
@@ -235,6 +235,9 @@ namespace VodArchiver {
 				lock ( Lock ) {
 					--RunningJobs;
 				}
+
+				InvokePowerEvent();
+
 				await RunJob();
 			}
 		}
@@ -354,6 +357,35 @@ namespace VodArchiver {
 
 		private void objectListViewDownloads_CellEditStarting( object sender, BrightIdeasSoftware.CellEditEventArgs e ) {
 			return;
+		}
+
+		private void InvokePowerEvent() {
+			lock ( Lock ) {
+				if ( RunningJobs == 0 && JobQueue.IsEmpty ) {
+					PowerEvent();
+				}
+			}
+		}
+
+		private void PowerEvent() {
+			switch ( SelectedPowerStateOption ) {
+				case "Close VodArchiver":
+					Invoke( (MethodInvoker)( () => { Close(); } ) );
+					break;
+				case "Sleep":
+					SaveJobs();
+					Application.SetSuspendState( PowerState.Suspend, false, false );
+					break;
+				case "Hibernate":
+					SaveJobs();
+					Application.SetSuspendState( PowerState.Hibernate, false, false );
+					break;
+			}
+		}
+
+		private string SelectedPowerStateOption = "";
+		private void comboBoxPowerStateWhenDone_SelectedIndexChanged( object sender, EventArgs e ) {
+			SelectedPowerStateOption = comboBoxPowerStateWhenDone.Text;
 		}
 	}
 }

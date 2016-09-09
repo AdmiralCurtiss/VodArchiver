@@ -45,6 +45,8 @@
 			this.buttonSettings = new System.Windows.Forms.Button();
 			this.buttonFetchUser = new System.Windows.Forms.Button();
 			this.labelStatusBar = new System.Windows.Forms.Label();
+			this.labelPowerStateWhenDone = new System.Windows.Forms.Label();
+			this.comboBoxPowerStateWhenDone = new System.Windows.Forms.ComboBox();
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -269,12 +271,40 @@
 			this.labelStatusBar.Size = new System.Drawing.Size(0, 13);
 			this.labelStatusBar.TabIndex = 7;
 			// 
+			// labelPowerStateWhenDone
+			// 
+			this.labelPowerStateWhenDone.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.labelPowerStateWhenDone.AutoSize = true;
+			this.labelPowerStateWhenDone.Location = new System.Drawing.Point(1222, 452);
+			this.labelPowerStateWhenDone.Name = "labelPowerStateWhenDone";
+			this.labelPowerStateWhenDone.Size = new System.Drawing.Size(144, 13);
+			this.labelPowerStateWhenDone.TabIndex = 9;
+			this.labelPowerStateWhenDone.Text = "when downloads are finished";
+			// 
+			// comboBoxPowerStateWhenDone
+			// 
+			this.comboBoxPowerStateWhenDone.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.comboBoxPowerStateWhenDone.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.comboBoxPowerStateWhenDone.FormattingEnabled = true;
+			this.comboBoxPowerStateWhenDone.Items.AddRange(new object[] {
+            "Do nothing",
+            "Close VodArchiver",
+            "Sleep",
+            "Hibernate"});
+			this.comboBoxPowerStateWhenDone.Location = new System.Drawing.Point(1099, 449);
+			this.comboBoxPowerStateWhenDone.Name = "comboBoxPowerStateWhenDone";
+			this.comboBoxPowerStateWhenDone.Size = new System.Drawing.Size(117, 21);
+			this.comboBoxPowerStateWhenDone.TabIndex = 10;
+			this.comboBoxPowerStateWhenDone.SelectedIndexChanged += new System.EventHandler(this.comboBoxPowerStateWhenDone_SelectedIndexChanged);
+			// 
 			// DownloadForm
 			// 
 			this.AcceptButton = this.buttonDownload;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(1378, 473);
+			this.Controls.Add(this.comboBoxPowerStateWhenDone);
+			this.Controls.Add(this.labelPowerStateWhenDone);
 			this.Controls.Add(this.labelStatusBar);
 			this.Controls.Add(this.buttonFetchUser);
 			this.Controls.Add(this.buttonSettings);
@@ -316,5 +346,7 @@
 		private BrightIdeasSoftware.OLVColumn columnValidated;
 		private System.Windows.Forms.Label labelStatusBar;
 		private BrightIdeasSoftware.OLVColumn columnNotes;
+		private System.Windows.Forms.Label labelPowerStateWhenDone;
+		private System.Windows.Forms.ComboBox comboBoxPowerStateWhenDone;
 	}
 }
