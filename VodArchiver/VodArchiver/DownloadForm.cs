@@ -309,6 +309,7 @@ namespace VodArchiver {
 		}
 
 		private void SaveJobs() {
+			Invoke( (MethodInvoker)( () => { 
 			lock ( SaveJobTimerLock ) {
 				SaveJobTimer.Stop();
 			}
@@ -330,6 +331,7 @@ namespace VodArchiver {
 				}
 				System.IO.File.Move( Util.VodBinaryTempPath, Util.VodBinaryPath );
 			}
+			} ) );
 		}
 
 		private void DownloadForm_FormClosing( object sender, FormClosingEventArgs e ) {
