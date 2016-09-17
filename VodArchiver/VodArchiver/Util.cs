@@ -42,6 +42,9 @@ namespace VodArchiver {
 		public static string VodBinaryTempPath { get { return System.IO.Path.Combine( PersistentDataPath, "vods.tmp" ); } }
 		public static string UserSerializationPath { get { return System.IO.Path.Combine( PersistentDataPath, "users.txt" ); } }
 
+		public static string TwitchClientId { get { return Properties.Settings.Default.TwitchClientID; } }
+		public static string TwitchRedirectURI { get { return Properties.Settings.Default.TwitchRedirectURI; } }
+
 		public static bool ShowDownloadFetched {
 			get {
 				return Properties.Settings.Default.ShowDownloadFetched;

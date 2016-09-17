@@ -30,7 +30,7 @@ namespace VodArchiver {
 
 			comboBoxService.SelectedIndex = 0;
 			comboBoxPowerStateWhenDone.SelectedIndex = 0;
-			TwitchAPI = new Twixel( "", "", Twixel.APIVersion.v3 );
+			TwitchAPI = new Twixel( Util.TwitchClientId, Util.TwitchRedirectURI, Twixel.APIVersion.v3 );
 			JobQueue = new System.Collections.Concurrent.ConcurrentQueue<IVideoJob>();
 			RunningJobs = 0;
 

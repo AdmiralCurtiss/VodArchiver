@@ -32,6 +32,10 @@
 			this.checkBoxCustomLocationPersistentData = new System.Windows.Forms.CheckBox();
 			this.textBoxCustomLocationPersistentData = new System.Windows.Forms.TextBox();
 			this.label3 = new System.Windows.Forms.Label();
+			this.textBoxTwitchRedirectURI = new System.Windows.Forms.TextBox();
+			this.label4 = new System.Windows.Forms.Label();
+			this.textBoxTwitchClientID = new System.Windows.Forms.TextBox();
+			this.label5 = new System.Windows.Forms.Label();
 			this.SuspendLayout();
 			// 
 			// label1
@@ -123,11 +127,51 @@
 			this.label3.TabIndex = 7;
 			this.label3.Text = "Custom Location";
 			// 
+			// textBoxTwitchRedirectURI
+			// 
+			this.textBoxTwitchRedirectURI.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.textBoxTwitchRedirectURI.Location = new System.Drawing.Point(131, 156);
+			this.textBoxTwitchRedirectURI.Name = "textBoxTwitchRedirectURI";
+			this.textBoxTwitchRedirectURI.Size = new System.Drawing.Size(360, 20);
+			this.textBoxTwitchRedirectURI.TabIndex = 12;
+			// 
+			// label4
+			// 
+			this.label4.AutoSize = true;
+			this.label4.Location = new System.Drawing.Point(12, 159);
+			this.label4.Name = "label4";
+			this.label4.Size = new System.Drawing.Size(104, 13);
+			this.label4.TabIndex = 11;
+			this.label4.Text = "Twitch Redirect URI";
+			// 
+			// textBoxTwitchClientID
+			// 
+			this.textBoxTwitchClientID.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.textBoxTwitchClientID.Location = new System.Drawing.Point(131, 130);
+			this.textBoxTwitchClientID.Name = "textBoxTwitchClientID";
+			this.textBoxTwitchClientID.Size = new System.Drawing.Size(360, 20);
+			this.textBoxTwitchClientID.TabIndex = 10;
+			// 
+			// label5
+			// 
+			this.label5.AutoSize = true;
+			this.label5.Location = new System.Drawing.Point(12, 133);
+			this.label5.Name = "label5";
+			this.label5.Size = new System.Drawing.Size(82, 13);
+			this.label5.TabIndex = 9;
+			this.label5.Text = "Twitch Client ID";
+			// 
 			// SettingsWindow
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(503, 319);
+			this.Controls.Add(this.textBoxTwitchRedirectURI);
+			this.Controls.Add(this.label4);
+			this.Controls.Add(this.textBoxTwitchClientID);
+			this.Controls.Add(this.label5);
 			this.Controls.Add(this.textBoxCustomLocationPersistentData);
 			this.Controls.Add(this.label3);
 			this.Controls.Add(this.checkBoxCustomLocationPersistentData);
@@ -155,5 +199,9 @@
 		private System.Windows.Forms.CheckBox checkBoxCustomLocationPersistentData;
 		private System.Windows.Forms.TextBox textBoxCustomLocationPersistentData;
 		private System.Windows.Forms.Label label3;
+		private System.Windows.Forms.TextBox textBoxTwitchRedirectURI;
+		private System.Windows.Forms.Label label4;
+		private System.Windows.Forms.TextBox textBoxTwitchClientID;
+		private System.Windows.Forms.Label label5;
 	}
 }

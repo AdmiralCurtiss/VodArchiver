@@ -16,6 +16,8 @@ namespace VodArchiver {
 			textBoxTempFolder.Text = Util.TempFolderPath;
 			checkBoxCustomLocationPersistentData.Checked = Util.EnableCustomDataPath;
 			textBoxCustomLocationPersistentData.Text = Util.PersistentDataPath;
+			textBoxTwitchClientID.Text = Util.TwitchClientId;
+			textBoxTwitchRedirectURI.Text = Util.TwitchRedirectURI;
 		}
 
 		private void buttonSave_Click( object sender, EventArgs e ) {
@@ -23,6 +25,8 @@ namespace VodArchiver {
 			Properties.Settings.Default.TempFolder = textBoxTempFolder.Text;
 			Properties.Settings.Default.EnableCustomDataPath = checkBoxCustomLocationPersistentData.Checked;
 			Properties.Settings.Default.CustomDataPath = Properties.Settings.Default.EnableCustomDataPath ? textBoxCustomLocationPersistentData.Text : "";
+			Properties.Settings.Default.TwitchClientID = textBoxTwitchClientID.Text;
+			Properties.Settings.Default.TwitchRedirectURI = textBoxTwitchRedirectURI.Text;
 			Properties.Settings.Default.Save();
 			this.Close();
 		}

@@ -83,5 +83,29 @@ namespace VodArchiver.Properties {
                 this["CustomDataPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string TwitchClientID {
+            get {
+                return ((string)(this["TwitchClientID"]));
+            }
+            set {
+                this["TwitchClientID"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string TwitchRedirectURI {
+            get {
+                return ((string)(this["TwitchRedirectURI"]));
+            }
+            set {
+                this["TwitchRedirectURI"] = value;
+            }
+        }
     }
 }
