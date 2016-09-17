@@ -9,6 +9,7 @@ namespace VodArchiver.VideoJobs {
 		NotStarted,
 		Running,
 		Finished,
+		Dead,
 	}
 
 	[Serializable]

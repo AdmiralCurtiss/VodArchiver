@@ -216,7 +216,7 @@ namespace VodArchiver {
 
 			if ( runNewJob ) {
 				try {
-					if ( job.JobStatus != VideoJobStatus.Finished ) {
+					if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
 						await job.Run();
 						if ( Util.ShowToastNotifications ) {
 							ToastUtil.ShowToast( "Downloaded " + job.HumanReadableJobName + "!" );
@@ -271,7 +271,7 @@ namespace VodArchiver {
 									( job as TwitchVideoJob ).TwitchAPI = TwitchAPI;
 								}
 								job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
-								if ( job.JobStatus != VideoJobStatus.Finished ) {
+								if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
 									JobQueue.Enqueue( job );
 								}
 								jobs.Add( job );
