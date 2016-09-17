@@ -224,6 +224,7 @@ namespace VodArchiver {
 		}
 
 		public static async Task AutoDownload( UserInfo[] users, Twixel twitchApi, DownloadForm downloadWindow ) {
+			Random rng = new Random();
 			for ( int i = 0; i < users.Length; ++i ) {
 				var userInfo = users[i];
 				if ( userInfo != null ) {
@@ -239,7 +240,7 @@ namespace VodArchiver {
 						try {
 							FetchReturnValue fetchReturnValue;
 							do {
-								await Task.Delay( 15000 );
+								await Task.Delay( rng.Next( 55000, 95000 ) );
 								fetchReturnValue = await Fetch( twitchApi, userInfo, videos.Count );
 								if ( fetchReturnValue.Success ) {
 									videos.AddRange( fetchReturnValue.Videos );
@@ -252,6 +253,7 @@ namespace VodArchiver {
 						}
 					}
 
+					await Task.Delay( rng.Next( 55000, 95000 ) );
 					DownloadFetched( videos, downloadWindow );
 				}
 			}
