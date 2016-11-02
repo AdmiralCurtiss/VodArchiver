@@ -314,7 +314,9 @@ namespace VodArchiver {
 		private void SaveJobs() {
 			Invoke( (MethodInvoker)( () => { 
 			lock ( SaveJobTimerLock ) {
-				SaveJobTimer.Stop();
+				if ( SaveJobTimer != null ) {
+					SaveJobTimer.Stop();
+				}
 			}
 			lock ( Util.JobFileLock ) {
 				if ( Util.ShowToastNotifications ) {
