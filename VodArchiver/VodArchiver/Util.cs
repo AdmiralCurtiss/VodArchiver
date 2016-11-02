@@ -102,6 +102,10 @@ namespace VodArchiver {
 			return set.Add( item );
 		}
 
+		public static ulong DateTimeToUnixTime( this DateTime time ) {
+			return (ulong)( time - new DateTime( 1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc ) ).TotalSeconds;
+		}
+
 		public static SemaphoreSlim ExpensiveDiskIOSemaphore = new SemaphoreSlim( 1 );
 
 		public static object JobFileLock = new object();
