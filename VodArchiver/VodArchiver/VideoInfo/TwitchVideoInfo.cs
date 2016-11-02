@@ -9,17 +9,21 @@ namespace VodArchiver.VideoInfo {
 	public class TwitchVideoInfo : IVideoInfo {
 		TwixelAPI.Video VideoInfo;
 
-		public TwitchVideoInfo( TwixelAPI.Video video ) {
+		[System.Runtime.Serialization.OptionalField( VersionAdded = 2 )]
+		StreamService _Service;
+
+		public TwitchVideoInfo( TwixelAPI.Video video, StreamService service = StreamService.Twitch ) {
 			VideoInfo = video;
+			_Service = service;
 		}
 
 		public override StreamService Service {
 			get {
-				return StreamService.Twitch;
+				return _Service;
 			}
 
 			set {
-				throw new InvalidOperationException();
+				_Service = value;
 			}
 		}
 
@@ -111,6 +115,11 @@ namespace VodArchiver.VideoInfo {
 			set {
 				throw new InvalidOperationException();
 			}
+		}
+
+		[System.Runtime.Serialization.OnDeserializing]
+		private void SetCountryRegionDefault( System.Runtime.Serialization.StreamingContext sc ) {
+			_Service = StreamService.Twitch;
 		}
 	}
 }
