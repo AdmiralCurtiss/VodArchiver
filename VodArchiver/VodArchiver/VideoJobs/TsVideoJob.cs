@@ -24,7 +24,7 @@ namespace VodArchiver.VideoJobs {
 					while ( true ) {
 						System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
 						timer.Start();
-						files = await Download( GetTempFolderForParts(), urls );
+						files = await Download( this, GetTempFolderForParts(), urls );
 						if ( this.VideoInfo.VideoRecordingState != RecordingState.Live ) {
 							break;
 						} else {
@@ -102,7 +102,7 @@ namespace VodArchiver.VideoJobs {
 			return filenames.ToArray();
 		}
 
-		public async Task<string[]> Download( string targetFolder, string[] urls ) {
+		public static async Task<string[]> Download( IVideoJob job, string targetFolder, string[] urls ) {
 			Directory.CreateDirectory( targetFolder );
 
 			List<string> files = new List<string>( urls.Length );
@@ -122,7 +122,7 @@ namespace VodArchiver.VideoJobs {
 					}
 					if ( await Util.FileExists( outpath ) ) {
 						if ( i % 100 == 99 ) {
-							Status = "Already have part " + ( i + 1 ) + "/" + urls.Length + "...";
+							job.Status = "Already have part " + ( i + 1 ) + "/" + urls.Length + "...";
 						}
 						files.Add( outpath );
 						continue;
@@ -131,7 +131,7 @@ namespace VodArchiver.VideoJobs {
 					bool success = false;
 					using ( var client = new KeepAliveWebClient() ) {
 						try {
-							Status = "Downloading files... (" + ( files.Count + 1 ) + "/" + urls.Length + ")";
+							job.Status = "Downloading files... (" + ( files.Count + 1 ) + "/" + urls.Length + ")";
 							byte[] data = await client.DownloadDataTaskAsync( url );
 							using ( FileStream fs = File.Create( outpath_temp ) ) {
 								await fs.WriteAsync( data, 0, data.Length );
