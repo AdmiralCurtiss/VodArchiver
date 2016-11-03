@@ -102,7 +102,7 @@ namespace VodArchiver.VideoJobs {
 			return filenames.ToArray();
 		}
 
-		public static async Task<string[]> Download( IVideoJob job, string targetFolder, string[] urls ) {
+		public static async Task<string[]> Download( IVideoJob job, string targetFolder, string[] urls, int delayPerDownload = 0 ) {
 			Directory.CreateDirectory( targetFolder );
 
 			List<string> files = new List<string>( urls.Length );
@@ -146,6 +146,10 @@ namespace VodArchiver.VideoJobs {
 					if ( success ) {
 						File.Move( outpath_temp, outpath );
 						files.Add( outpath );
+					}
+
+					if ( delayPerDownload > 0 ) {
+						await Task.Delay( delayPerDownload );
 					}
 				}
 				--triesLeft;
