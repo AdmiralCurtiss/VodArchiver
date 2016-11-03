@@ -106,7 +106,8 @@ namespace VodArchiver {
 						hasMore = broadcasts.wrapped.Count == 25;
 					}
 					foreach ( var v in broadcasts.wrapped ) {
-						videosToAdd.Add( new TwitchVideoInfo( v ) );
+						videosToAdd.Add( new TwitchVideoInfo( v, StreamService.Twitch ) );
+						videosToAdd.Add( new TwitchVideoInfo( v, StreamService.TwitchChatReplay ) );
 					}
 					break;
 				case ServiceVideoCategoryType.HitboxRecordings:

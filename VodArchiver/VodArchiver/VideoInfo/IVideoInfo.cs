@@ -8,7 +8,8 @@ namespace VodArchiver.VideoInfo {
 	public enum StreamService {
 		Unknown,
 		Twitch,
-		Hitbox
+		Hitbox,
+		TwitchChatReplay,
 	}
 
 	public enum RecordingState {

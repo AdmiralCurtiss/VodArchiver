@@ -167,6 +167,9 @@ namespace VodArchiver {
 				case StreamService.Twitch:
 					job = new TwitchVideoJob( TwitchAPI, id );
 					break;
+				case StreamService.TwitchChatReplay:
+					job = new TwitchChatReplayJob( TwitchAPI, id );
+					break;
 				case StreamService.Hitbox:
 					job = new HitboxVideoJob( id );
 					break;
@@ -269,6 +272,8 @@ namespace VodArchiver {
 								}
 								if ( job as TwitchVideoJob != null ) {
 									( job as TwitchVideoJob ).TwitchAPI = TwitchAPI;
+								} else if ( job as TwitchChatReplayJob != null ) {
+									( job as TwitchChatReplayJob ).TwitchAPI = TwitchAPI;
 								}
 								job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
 								if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
