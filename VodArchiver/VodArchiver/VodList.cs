@@ -54,7 +54,7 @@ namespace VodArchiver {
 			}
 		}
 
-		struct FetchReturnValue { public bool Success; public bool HasMore; public long TotalVideos; public List<IVideoInfo> Videos; }
+		struct FetchReturnValue { public bool Success; public bool HasMore; public long TotalVideos; public int VideoCountThisFetch; public List<IVideoInfo> Videos; }
 		private async Task<FetchReturnValue> Fetch() {
 			UserInfo userInfo = new UserInfo();
 			switch ( comboBoxService.Text ) {
@@ -68,7 +68,7 @@ namespace VodArchiver {
 			var rv = await Fetch( TwitchAPI, userInfo, Offset );
 
 			if ( rv.Success && rv.Videos.Count > 0 ) {
-				Offset += rv.Videos.Count;
+				Offset += rv.VideoCountThisFetch;
 				textboxUsername.Enabled = false;
 				comboBoxService.Enabled = false;
 				comboBoxKnownUsers.Enabled = false;
@@ -94,6 +94,7 @@ namespace VodArchiver {
 			List<IVideoInfo> videosToAdd = new List<IVideoInfo>();
 			bool hasMore = true;
 			long maxVideos = -1;
+			int currentVideos = -1;
 
 			switch ( userInfo.Service ) {
 				case ServiceVideoCategoryType.TwitchRecordings:
@@ -109,6 +110,7 @@ namespace VodArchiver {
 						videosToAdd.Add( new TwitchVideoInfo( v, StreamService.Twitch ) );
 						videosToAdd.Add( new TwitchVideoInfo( v, StreamService.TwitchChatReplay ) );
 					}
+					currentVideos = broadcasts.wrapped.Count;
 					break;
 				case ServiceVideoCategoryType.HitboxRecordings:
 					List<HitboxVideo> videos = await Hitbox.RetrieveVideos( userInfo.Username, offset: offset, limit: 100 );
@@ -116,20 +118,21 @@ namespace VodArchiver {
 					foreach ( var v in videos ) {
 						videosToAdd.Add( new HitboxVideoInfo( v ) );
 					}
+					currentVideos = videos.Count;
 					break;
 				default:
-					return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = maxVideos, Videos = videosToAdd };
+					return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };
 			}
 
 			if ( videosToAdd.Count <= 0 ) {
-				return new FetchReturnValue { Success = true, HasMore = false, TotalVideos = maxVideos, Videos = videosToAdd };
+				return new FetchReturnValue { Success = true, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };
 			}
 
 			if ( UserInfoPersister.KnownUsers.Add( userInfo ) ) {
 				UserInfoPersister.Save();
 			}
 
-			return new FetchReturnValue { Success = true, HasMore = hasMore, TotalVideos = maxVideos, Videos = videosToAdd };
+			return new FetchReturnValue { Success = true, HasMore = hasMore, TotalVideos = maxVideos, VideoCountThisFetch = currentVideos, Videos = videosToAdd };
 		}
 
 		private void objectListViewVideos_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
@@ -240,9 +243,11 @@ namespace VodArchiver {
 
 						try {
 							FetchReturnValue fetchReturnValue;
+							int Offset = 0;
 							do {
 								await Task.Delay( rng.Next( 55000, 95000 ) );
-								fetchReturnValue = await Fetch( twitchApi, userInfo, videos.Count );
+								fetchReturnValue = await Fetch( twitchApi, userInfo, Offset );
+								Offset += fetchReturnValue.VideoCountThisFetch;
 								if ( fetchReturnValue.Success ) {
 									videos.AddRange( fetchReturnValue.Videos );
 								}
