@@ -138,7 +138,23 @@ namespace VodArchiver.VideoJobs {
 							}
 							success = true;
 						} catch ( System.Net.WebException ex ) {
-							Console.WriteLine( ex.ToString() );
+							System.Net.HttpWebResponse httpWebResponse = ex.Response as System.Net.HttpWebResponse;
+							if ( httpWebResponse != null ) {
+								switch ( httpWebResponse.StatusCode ) {
+									case System.Net.HttpStatusCode.NotFound:
+										Newtonsoft.Json.Linq.JObject reply = Newtonsoft.Json.Linq.JObject.Parse( new StreamReader( httpWebResponse.GetResponseStream() ).ReadToEnd() );
+										string detail = reply["errors"][0]["detail"].ToObject<string>();
+										if ( detail == "No chats for this Video" ) {
+											throw new VideoDeadException( detail );
+										}
+										break;
+									default:
+										Console.WriteLine( "Server returned unhandled error code: " + httpWebResponse.StatusCode );
+										break;
+								}
+							} else {
+								Console.WriteLine( ex.ToString() );
+							}
 							continue;
 						}
 					}

@@ -225,6 +225,9 @@ namespace VodArchiver {
 							ToastUtil.ShowToast( "Downloaded " + job.HumanReadableJobName + "!" );
 						}
 					}
+				} catch ( VideoDeadException ex ) {
+					job.JobStatus = VideoJobStatus.Dead;
+					job.Status = ex.Message;
 				} catch ( Exception ex ) {
 					job.JobStatus = VideoJobStatus.NotStarted;
 					job.Status = "ERROR: " + ex.ToString();
