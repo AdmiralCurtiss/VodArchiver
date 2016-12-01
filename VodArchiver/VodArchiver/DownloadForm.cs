@@ -161,7 +161,8 @@ namespace VodArchiver {
 			return false;
 		}
 
-		public bool CreateAndEnqueueJob( StreamService service, string id, IVideoInfo info = null ) {
+		public struct CreateAndEnqueueJobReturnValue { public bool Success; public IVideoJob Job; }
+		public CreateAndEnqueueJobReturnValue CreateAndEnqueueJob( StreamService service, string id, IVideoInfo info = null ) {
 			IVideoJob job;
 			switch ( service ) {
 				case StreamService.Twitch:
@@ -181,10 +182,12 @@ namespace VodArchiver {
 				job.VideoInfo = info;
 			}
 
-			return EnqueueJob( job );
+			bool success = EnqueueJob( job );
+
+			return new CreateAndEnqueueJobReturnValue { Success = success, Job = job };
 		}
 
-		public bool CreateAndEnqueueJob( IVideoInfo info ) {
+		public CreateAndEnqueueJobReturnValue CreateAndEnqueueJob( IVideoInfo info ) {
 			return CreateAndEnqueueJob( info.Service, info.VideoId, info );
 		}
 
