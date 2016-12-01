@@ -190,12 +190,10 @@ namespace VodArchiver {
 			Console.WriteLine( "Enqueueing " + videos.Count() + " videos..." );
 			foreach ( IVideoInfo videoInfo in videos ) {
 				Console.WriteLine( "Enqueueing " + videoInfo.Username + "/" + videoInfo.VideoId );
-				if ( videoInfo.VideoType == VideoFileType.M3U ) {
-					downloadWindow.CreateAndEnqueueJob( videoInfo );
-				}
-				for ( int i = 0; i < DownloadForm.MaxRunningJobs; ++i ) {
-					Task.Run( () => downloadWindow.RunJob() );
-				}
+				downloadWindow.CreateAndEnqueueJob( videoInfo );
+			}
+			for ( int i = 0; i < DownloadForm.MaxRunningJobs; ++i ) {
+				Task.Run( () => downloadWindow.RunJob() );
 			}
 		}
 
