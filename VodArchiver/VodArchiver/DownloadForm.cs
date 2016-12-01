@@ -340,9 +340,12 @@ namespace VodArchiver {
 					fs.Close();
 				}
 				if ( System.IO.File.Exists( Util.VodBinaryPath ) ) {
+					Thread.Sleep( 100 );
 					System.IO.File.Delete( Util.VodBinaryPath );
+					Thread.Sleep( 100 );
 				}
 				System.IO.File.Move( Util.VodBinaryTempPath, Util.VodBinaryPath );
+				Thread.Sleep( 100 );
 			}
 			} ) );
 		}
