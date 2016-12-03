@@ -114,17 +114,7 @@ namespace VodArchiver {
 				case StreamService.Hitbox:
 					return uri.Segments.Last();
 				case StreamService.Youtube:
-					foreach ( string q in uri.Query.Substring( 1 ).Split( '&' ) ) {
-						var kvp = q.Split( new char[] { '=' }, 2 );
-						if ( kvp.Length == 2 ) {
-							string param = kvp[0];
-							string value = kvp[1];
-							if ( param == "v" ) {
-								return value;
-							}
-						}
-					}
-					break;
+					return Util.GetParameterFromUri( uri, "v" );
 			}
 
 			throw new FormatException();

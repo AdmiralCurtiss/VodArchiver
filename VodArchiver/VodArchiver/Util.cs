@@ -106,6 +106,21 @@ namespace VodArchiver {
 			return (ulong)( time - new DateTime( 1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc ) ).TotalSeconds;
 		}
 
+		public static string GetParameterFromUri( Uri uri, string parameter ) {
+			foreach ( string q in uri.Query.Substring( 1 ).Split( '&' ) ) {
+				var kvp = q.Split( new char[] { '=' }, 2 );
+				if ( kvp.Length == 2 ) {
+					string param = kvp[0];
+					string value = kvp[1];
+					if ( param == parameter ) {
+						return value;
+					}
+				}
+			}
+
+			throw new Exception( "Uri '" + uri.ToString() + "' does not contain parameter '" + parameter + "'!" );
+		}
+
 		public static SemaphoreSlim ExpensiveDiskIOSemaphore = new SemaphoreSlim( 1 );
 
 		public static object JobFileLock = new object();
