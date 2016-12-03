@@ -8,8 +8,8 @@ using VodArchiver.VideoInfo;
 
 namespace VodArchiver {
 	public class Youtube {
-		public static YoutubeVideoInfo RetrieveVideo( string id ) {
-			var data = Util.RunProgramSynchronous( @"youtube-dl", "-j \"https://www.youtube.com/watch?v=" + id + "\"" );
+		public static async Task<YoutubeVideoInfo> RetrieveVideo( string id ) {
+			var data = await Util.RunProgram( @"youtube-dl", "-j \"https://www.youtube.com/watch?v=" + id + "\"" );
 			var json = JObject.Parse( data.StdOut );
 
 			YoutubeVideoInfo y = new YoutubeVideoInfo();

@@ -20,7 +20,7 @@ namespace VodArchiver.VideoJobs {
 			JobStatus = VideoJobStatus.Running;
 			if ( ( VideoInfo as YoutubeVideoInfo ) == null ) {
 				Status = "Retrieving video info...";
-				VideoInfo = Youtube.RetrieveVideo( VideoInfo.VideoId );
+				VideoInfo = await Youtube.RetrieveVideo( VideoInfo.VideoId );
 			}
 
 			string filenameWithoutExtension = "youtube_" + VideoInfo.Username + "_" + VideoInfo.VideoTimestamp.ToString( "yyyy-MM-dd" ) + "_" + VideoInfo.VideoId;
