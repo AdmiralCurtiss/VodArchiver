@@ -8,10 +8,7 @@ using VodArchiver.VideoInfo;
 
 namespace VodArchiver {
 	public class Youtube {
-		public static async Task<YoutubeVideoInfo> RetrieveVideo( string id ) {
-			var data = await Util.RunProgram( @"youtube-dl", "-j \"https://www.youtube.com/watch?v=" + id + "\"" );
-			var json = JObject.Parse( data.StdOut );
-
+		public static YoutubeVideoInfo ParseFromJson( JToken json ) {
 			YoutubeVideoInfo y = new YoutubeVideoInfo();
 			y.Username = json["uploader_id"].ToString();
 			y.VideoId = json["id"].ToString();
@@ -43,6 +40,12 @@ namespace VodArchiver {
 			y.VideoDescription = json["description"].ToString();
 
 			return y;
+		}
+
+		public static async Task<YoutubeVideoInfo> RetrieveVideo( string id ) {
+			var data = await Util.RunProgram( @"youtube-dl", "-j \"https://www.youtube.com/watch?v=" + id + "\"" );
+			var json = JObject.Parse( data.StdOut );
+			return ParseFromJson( json );
 		}
 	}
 }
