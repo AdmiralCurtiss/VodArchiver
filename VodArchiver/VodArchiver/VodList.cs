@@ -61,9 +61,14 @@ namespace VodArchiver {
 				case "Twitch (Recordings)": userInfo.Service = ServiceVideoCategoryType.TwitchRecordings; userInfo.Persistable = true; break;
 				case "Twitch (Highlights)": userInfo.Service = ServiceVideoCategoryType.TwitchHighlights; userInfo.Persistable = true; break;
 				case "Hitbox": userInfo.Service = ServiceVideoCategoryType.HitboxRecordings; userInfo.Persistable = true; break;
+				case "Youtube (Playlist)": userInfo.Service = ServiceVideoCategoryType.YoutubePlaylist; userInfo.Persistable = false; break;
 				default: return new FetchReturnValue { Success = false, HasMore = false };
 			}
 			userInfo.Username = textboxUsername.Text.Trim();
+			
+			if ( userInfo.Service == ServiceVideoCategoryType.YoutubePlaylist && ( userInfo.Username.StartsWith( "http://" ) || userInfo.Username.StartsWith( "https://" ) ) ) {
+				userInfo.Username = Util.GetParameterFromUri( new Uri( userInfo.Username ), "list" );
+			}
 
 			var rv = await Fetch( TwitchAPI, userInfo, Offset );
 
@@ -119,6 +124,14 @@ namespace VodArchiver {
 						videosToAdd.Add( new HitboxVideoInfo( v ) );
 					}
 					currentVideos = videos.Count;
+					break;
+				case ServiceVideoCategoryType.YoutubePlaylist:
+					List<YoutubeVideoInfo> playlistVideos = await Youtube.RetrieveVideosFromPlaylist( userInfo.Username );
+					hasMore = false;
+					foreach ( var v in playlistVideos ) {
+						videosToAdd.Add( v );
+					}
+					currentVideos = playlistVideos.Count;
 					break;
 				default:
 					return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };

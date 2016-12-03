@@ -9,7 +9,8 @@ namespace VodArchiver {
 	public enum ServiceVideoCategoryType {
 		TwitchRecordings,
 		TwitchHighlights,
-		HitboxRecordings
+		HitboxRecordings,
+		YoutubePlaylist,
 	}
 
 	public class UserInfo : IEquatable<UserInfo>, IEqualityComparer<UserInfo>, IComparable<UserInfo> {

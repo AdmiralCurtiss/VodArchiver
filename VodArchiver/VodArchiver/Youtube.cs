@@ -47,5 +47,16 @@ namespace VodArchiver {
 			var json = JObject.Parse( data.StdOut );
 			return ParseFromJson( json );
 		}
+
+		public static async Task<List<YoutubeVideoInfo>> RetrieveVideosFromPlaylist( string playlist ) {
+			var data = await Util.RunProgram( @"youtube-dl", "-J \"https://www.youtube.com/playlist?list=" + playlist + "\"" );
+			var json = JObject.Parse( data.StdOut );
+			var entries = json["entries"];
+			List<YoutubeVideoInfo> list = new List<YoutubeVideoInfo>();
+			foreach ( var entry in entries ) {
+				list.Add( ParseFromJson( entry ) );
+			}
+			return list;
+		}
 	}
 }
