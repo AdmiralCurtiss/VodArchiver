@@ -24,7 +24,7 @@ namespace VodArchiver.VideoJobs {
 			}
 
 			string filenameWithoutExtension = "youtube_" + VideoInfo.Username + "_" + VideoInfo.VideoTimestamp.ToString( "yyyy-MM-dd" ) + "_" + VideoInfo.VideoId;
-			string filename = filenameWithoutExtension + ".mp4";
+			string filename = filenameWithoutExtension + ".mkv";
 			string tempFolder = Path.Combine( Util.TempFolderPath, filenameWithoutExtension );
 			string tempFilepath = Path.Combine( tempFolder, filename );
 			string finalFilepath = Path.Combine( Util.TargetFolderPath, filename );
@@ -33,7 +33,7 @@ namespace VodArchiver.VideoJobs {
 				if ( !await Util.FileExists( tempFilepath ) ) {
 					Directory.CreateDirectory( tempFolder );
 					Status = "Running youtube-dl...";
-					var data = Util.RunProgram( @"youtube-dl", "-f \"bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio\" -o \"" + tempFilepath + "\" \"https://www.youtube.com/watch?v=" + VideoInfo.VideoId + "\"" );
+					var data = Util.RunProgram( @"youtube-dl", "-f \"bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio\" -o \"" + tempFilepath + "\" --merge-output-format mkv --no-color --abort-on-error --abort-on-unavailable-fragment \"https://www.youtube.com/watch?v=" + VideoInfo.VideoId + "\"" );
 				}
 
 				Status = "Waiting for free disk IO slot to move...";
