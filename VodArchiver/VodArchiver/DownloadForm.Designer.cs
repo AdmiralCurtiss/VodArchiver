@@ -86,7 +86,8 @@
 			this.comboBoxService.Items.AddRange(new object[] {
             "Autodetect",
             "Twitch",
-            "Hitbox"});
+            "Hitbox",
+            "Youtube"});
 			this.comboBoxService.Location = new System.Drawing.Point(165, 13);
 			this.comboBoxService.Name = "comboBoxService";
 			this.comboBoxService.Size = new System.Drawing.Size(89, 21);

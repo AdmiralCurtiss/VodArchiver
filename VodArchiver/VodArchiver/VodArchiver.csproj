@@ -92,17 +92,20 @@
     <Compile Include="VideoInfo\HitboxVideoInfo.cs" />
     <Compile Include="VideoInfo\IVideoInfo.cs" />
     <Compile Include="VideoInfo\TwitchVideoInfo.cs" />
+    <Compile Include="VideoInfo\YoutubeVideoInfo.cs" />
     <Compile Include="VideoJobs\HitboxVideoJob.cs" />
     <Compile Include="VideoJobs\IVideoJob.cs" />
     <Compile Include="VideoJobs\TsVideoJob.cs" />
     <Compile Include="VideoJobs\TwitchChatReplayJob.cs" />
     <Compile Include="VideoJobs\TwitchVideoJob.cs" />
+    <Compile Include="VideoJobs\YoutubeVideoJob.cs" />
     <Compile Include="VodList.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="VodList.Designer.cs">
       <DependentUpon>VodList.cs</DependentUpon>
     </Compile>
+    <Compile Include="Youtube.cs" />
     <EmbeddedResource Include="DownloadForm.resx">
       <DependentUpon>DownloadForm.cs</DependentUpon>
     </EmbeddedResource>

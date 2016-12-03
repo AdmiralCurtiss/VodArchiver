@@ -97,6 +97,8 @@ namespace VodArchiver {
 				service = StreamService.Twitch;
 			} else if ( uri.Host.Contains( "hitbox.tv" ) ) {
 				service = StreamService.Hitbox;
+			} else if ( uri.Host.Contains( "youtube.com" ) ) {
+				service = StreamService.Youtube;
 			} else {
 				throw new FormatException();
 			}
@@ -106,6 +108,18 @@ namespace VodArchiver {
 					return uri.Segments[uri.Segments.Length - 2].Trim( '/' ) + uri.Segments.Last();
 				case StreamService.Hitbox:
 					return uri.Segments.Last();
+				case StreamService.Youtube:
+					foreach ( string q in uri.Query.Substring( 1 ).Split( '&' ) ) {
+						var kvp = q.Split( new char[] { '=' }, 2 );
+						if ( kvp.Length == 2 ) {
+							string param = kvp[0];
+							string value = kvp[1];
+							if ( param == "v" ) {
+								return value;
+							}
+						}
+					}
+					break;
 			}
 
 			throw new FormatException();
@@ -117,6 +131,8 @@ namespace VodArchiver {
 					return StreamService.Twitch;
 				case "Hitbox":
 					return StreamService.Hitbox;
+				case "Youtube":
+					return StreamService.Youtube;
 				default:
 					throw new Exception( s + " is not a valid service." );
 			}
@@ -173,6 +189,9 @@ namespace VodArchiver {
 					break;
 				case StreamService.Hitbox:
 					job = new HitboxVideoJob( id );
+					break;
+				case StreamService.Youtube:
+					job = new YoutubeVideoJob( id );
 					break;
 				default:
 					throw new Exception( service.ToString() + " isn't a known service." );
