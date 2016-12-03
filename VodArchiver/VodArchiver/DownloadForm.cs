@@ -17,10 +17,10 @@ using VodArchiver.VideoJobs;
 namespace VodArchiver {
 	public partial class DownloadForm : Form {
 		Twixel TwitchAPI;
-		System.Collections.Concurrent.ConcurrentQueue<IVideoJob> JobQueue;
-		private int RunningJobs;
-		private object Lock = new object();
-		public const int MaxRunningJobs = 3;
+
+		Dictionary<StreamService, List<IVideoJob>> WaitingJobs;
+		Dictionary<StreamService, int> JobsRunningPerType;
+		private object JobQueueLock = new object();
 
 		Task TimedAutoFetchTask;
 
@@ -31,8 +31,13 @@ namespace VodArchiver {
 			comboBoxService.SelectedIndex = 0;
 			comboBoxPowerStateWhenDone.SelectedIndex = 0;
 			TwitchAPI = new Twixel( Util.TwitchClientId, Util.TwitchRedirectURI, Twixel.APIVersion.v3 );
-			JobQueue = new System.Collections.Concurrent.ConcurrentQueue<IVideoJob>();
-			RunningJobs = 0;
+
+			WaitingJobs = new Dictionary<StreamService, List<IVideoJob>>();
+			JobsRunningPerType = new Dictionary<StreamService, int>();
+			foreach ( StreamService s in Enum.GetValues( typeof( StreamService ) ) ) {
+				WaitingJobs.Add( s, new List<IVideoJob>() );
+				JobsRunningPerType.Add( s, 0 );
+			}
 
 			if ( !Util.AllowTimedAutoFetch ) {
 				labelStatusBar.Hide();
@@ -164,7 +169,7 @@ namespace VodArchiver {
 
 			CreateAndEnqueueJob( service, id );
 			textboxMediaId.Text = "";
-			Task.Run( () => RunJob() );
+			Task.Run( () => RunJob( service ) );
 		}
 
 		public bool JobExists( StreamService service, string id ) {
@@ -218,7 +223,9 @@ namespace VodArchiver {
 			job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
 			objectListViewDownloads.AddObject( job );
 			job.Status = "Waiting...";
-			JobQueue.Enqueue( job );
+			lock ( JobQueueLock ) {
+				WaitingJobs[job.VideoInfo.Service].Add( job );
+			}
 
 			if ( Util.ShowToastNotifications ) {
 				ToastUtil.ShowToast( "Enqueued " + job.HumanReadableJobName + "!" );
@@ -229,13 +236,22 @@ namespace VodArchiver {
 			return true;
 		}
 
-		public async Task RunJob( IVideoJob job = null, bool forceStart = false ) {
+		public async Task RunJob( StreamService service, IVideoJob job = null, bool forceStart = false ) {
 			bool runNewJob = false;
-			lock ( Lock ) {
-				if ( ( forceStart || RunningJobs < MaxRunningJobs ) && ( job != null || JobQueue.TryDequeue( out job ) ) ) {
-					// TODO: This almost certainly has odd results if one thread tries to dequeue a job that was force-started from somewhere else!
-					++RunningJobs;
-					runNewJob = true;
+			lock ( JobQueueLock ) {
+				// TODO: This almost certainly has odd results if one thread tries to dequeue a job that was force-started from somewhere else!
+				if ( forceStart || JobsRunningPerType[service] < 1 ) {
+					if ( job != null ) {
+						runNewJob = true;
+						JobsRunningPerType[service] += 1;
+					} else {
+						if ( WaitingJobs[service].Count != 0 ) {
+							job = WaitingJobs[service].First();
+							WaitingJobs[service].Remove( job );
+							runNewJob = true;
+							JobsRunningPerType[service] += 1;
+						}
+					}
 				}
 			}
 
@@ -256,17 +272,16 @@ namespace VodArchiver {
 					if ( Util.ShowToastNotifications ) {
 						ToastUtil.ShowToast( "Failed to download " + job.HumanReadableJobName + ": " + ex.ToString() );
 					}
+				} finally {
+					lock ( JobQueueLock ) {
+						JobsRunningPerType[service] -= 1;
+					}
 				}
 
 				InvokeSaveJobs();
-
-				lock ( Lock ) {
-					--RunningJobs;
-				}
-
 				InvokePowerEvent();
 
-				await RunJob();
+				await RunJob( service );
 			}
 		}
 
@@ -302,7 +317,9 @@ namespace VodArchiver {
 								}
 								job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
 								if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
-									JobQueue.Enqueue( job );
+									lock ( JobQueueLock ) {
+										WaitingJobs[job.VideoInfo.Service].Add( job );
+									}
 								}
 								jobs.Add( job );
 							}
@@ -320,8 +337,8 @@ namespace VodArchiver {
 				}
 			}
 
-			for ( int i = 0; i < MaxRunningJobs; ++i ) {
-				Task.Run( () => RunJob() );
+			foreach ( StreamService s in Enum.GetValues( typeof( StreamService ) ) ) {
+				Task.Run( () => RunJob( s ) );
 			}
 		}
 
@@ -385,7 +402,7 @@ namespace VodArchiver {
 					break;
 				case "Force Start":
 					IVideoJob job = (IVideoJob)e.Model;
-					Task.Run( () => RunJob( job, true ) );
+					Task.Run( () => RunJob( job.VideoInfo.Service, job, true ) );
 					break;
 			}
 		}
@@ -395,11 +412,19 @@ namespace VodArchiver {
 		}
 
 		private void InvokePowerEvent() {
-			lock ( Lock ) {
-				if ( RunningJobs == 0 && JobQueue.IsEmpty ) {
-					PowerEvent();
+			lock ( JobQueueLock ) {
+				foreach ( var kvp in WaitingJobs ) {
+					if ( kvp.Value.Count > 0 ) {
+						return;
+					}
+				}
+				foreach ( var kvp in JobsRunningPerType ) {
+					if ( kvp.Value > 0 ) {
+						return;
+					}
 				}
 			}
+			PowerEvent();
 		}
 
 		private void PowerEvent() {
