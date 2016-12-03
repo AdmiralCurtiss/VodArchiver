@@ -126,7 +126,10 @@ namespace VodArchiver {
 		public static object JobFileLock = new object();
 
 		public struct RunProgramReturnValue { public string StdOut; public string StdErr; }
-		public static RunProgramReturnValue RunProgram( String prog, String args, bool displayCommandLine = false, bool displayOutput = false ) {
+		public static async Task<RunProgramReturnValue> RunProgram( String prog, String args, bool displayCommandLine = false, bool displayOutput = false ) {
+			return await Task.Run( () => RunProgramSynchronous( prog, args, displayCommandLine, displayOutput ) );
+		}
+		public static RunProgramReturnValue RunProgramSynchronous( String prog, String args, bool displayCommandLine = false, bool displayOutput = false ) {
 			if ( displayCommandLine ) {
 				Console.Write( prog );
 				Console.Write( " " );
