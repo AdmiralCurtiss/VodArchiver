@@ -58,9 +58,9 @@ namespace VodArchiver {
 		private async Task<FetchReturnValue> Fetch() {
 			UserInfo userInfo = new UserInfo();
 			switch ( comboBoxService.Text ) {
-				case "Twitch (Recordings)": userInfo.Service = ServiceVideoCategoryType.TwitchRecordings; break;
-				case "Twitch (Highlights)": userInfo.Service = ServiceVideoCategoryType.TwitchHighlights; break;
-				case "Hitbox": userInfo.Service = ServiceVideoCategoryType.HitboxRecordings; break;
+				case "Twitch (Recordings)": userInfo.Service = ServiceVideoCategoryType.TwitchRecordings; userInfo.Persistable = true; break;
+				case "Twitch (Highlights)": userInfo.Service = ServiceVideoCategoryType.TwitchHighlights; userInfo.Persistable = true; break;
+				case "Hitbox": userInfo.Service = ServiceVideoCategoryType.HitboxRecordings; userInfo.Persistable = true; break;
 				default: return new FetchReturnValue { Success = false, HasMore = false };
 			}
 			userInfo.Username = textboxUsername.Text.Trim();
@@ -128,8 +128,10 @@ namespace VodArchiver {
 				return new FetchReturnValue { Success = true, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };
 			}
 
-			if ( UserInfoPersister.KnownUsers.Add( userInfo ) ) {
-				UserInfoPersister.Save();
+			if ( userInfo.Persistable ) {
+				if ( UserInfoPersister.KnownUsers.Add( userInfo ) ) {
+					UserInfoPersister.Save();
+				}
 			}
 
 			return new FetchReturnValue { Success = true, HasMore = hasMore, TotalVideos = maxVideos, VideoCountThisFetch = currentVideos, Videos = videosToAdd };
@@ -265,8 +267,10 @@ namespace VodArchiver {
 			UserInfo u = comboBoxKnownUsers.SelectedItem as UserInfo;
 			if ( u != null ) {
 				u.AutoDownload = checkBoxAutoDownload.Checked;
-				if ( UserInfoPersister.KnownUsers.AddOrUpdate( u ) ) {
-					UserInfoPersister.Save();
+				if ( u.Persistable ) {
+					if ( UserInfoPersister.KnownUsers.AddOrUpdate( u ) ) {
+						UserInfoPersister.Save();
+					}
 				}
 			}
 		}

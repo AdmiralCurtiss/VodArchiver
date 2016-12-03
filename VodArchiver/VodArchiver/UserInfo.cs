@@ -14,6 +14,7 @@ namespace VodArchiver {
 
 	public class UserInfo : IEquatable<UserInfo>, IEqualityComparer<UserInfo>, IComparable<UserInfo> {
 		public ServiceVideoCategoryType Service;
+		public bool Persistable;
 		public string Username;
 		public bool AutoDownload;
 
@@ -49,6 +50,7 @@ namespace VodArchiver {
 				u.AutoDownload = bool.Parse( parts[partnum++] );
 			}
 			u.Username = parts[partnum];
+			u.Persistable = true;
 			return u;
 		}
 
