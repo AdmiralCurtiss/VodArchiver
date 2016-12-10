@@ -62,5 +62,17 @@ namespace VodArchiver.VideoJobs {
 		public string Notes;
 
 		public abstract Task Run();
+
+		public override bool Equals( object obj ) {
+			return Equals( obj as IVideoJob );
+		}
+
+		public bool Equals( IVideoJob other ) {
+			return other != null && VideoInfo.Equals( other.VideoInfo );
+		}
+
+		public override int GetHashCode() {
+			return VideoInfo.GetHashCode();
+		}
 	}
 }

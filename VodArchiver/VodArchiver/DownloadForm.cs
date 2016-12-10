@@ -18,6 +18,8 @@ namespace VodArchiver {
 	public partial class DownloadForm : Form {
 		Twixel TwitchAPI;
 
+		HashSet<IVideoJob> JobSet;
+
 		Dictionary<StreamService, List<IVideoJob>> WaitingJobs;
 		Dictionary<StreamService, int> JobsRunningPerType;
 		private object JobQueueLock = new object();
@@ -31,6 +33,8 @@ namespace VodArchiver {
 			comboBoxService.SelectedIndex = 0;
 			comboBoxPowerStateWhenDone.SelectedIndex = 0;
 			TwitchAPI = new Twixel( Util.TwitchClientId, Util.TwitchRedirectURI, Twixel.APIVersion.v3 );
+
+			JobSet = new HashSet<IVideoJob>();
 
 			WaitingJobs = new Dictionary<StreamService, List<IVideoJob>>();
 			JobsRunningPerType = new Dictionary<StreamService, int>();
@@ -162,16 +166,6 @@ namespace VodArchiver {
 			Task.Run( () => RunJob( service ) );
 		}
 
-		public bool JobExists( StreamService service, string id ) {
-			foreach ( var item in objectListViewDownloads.Items ) {
-				IVideoJob job = ( item as BrightIdeasSoftware.OLVListItem )?.RowObject as IVideoJob;
-				if ( job != null && job.VideoInfo.Service == service && job.VideoInfo.VideoId == id ) {
-					return true;
-				}
-			}
-			return false;
-		}
-
 		public struct CreateAndEnqueueJobReturnValue { public bool Success; public IVideoJob Job; }
 		public CreateAndEnqueueJobReturnValue CreateAndEnqueueJob( StreamService service, string id, IVideoInfo info = null ) {
 			IVideoJob job;
@@ -206,12 +200,13 @@ namespace VodArchiver {
 		}
 
 		public bool EnqueueJob( IVideoJob job ) {
-			if ( JobExists( job.VideoInfo.Service, job.VideoInfo.VideoId ) ) {
+			if ( JobSet.Contains( job ) ) {
 				return false;
 			}
 
 			job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
 			objectListViewDownloads.AddObject( job );
+			JobSet.Add( job );
 			job.Status = "Waiting...";
 			lock ( JobQueueLock ) {
 				WaitingJobs[job.VideoInfo.Service].Add( job );
@@ -319,6 +314,9 @@ namespace VodArchiver {
 				} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
 
 				objectListViewDownloads.AddObjects( jobs );
+				foreach ( IVideoJob job in jobs ) {
+					JobSet.Add( job );
+				}
 				for ( int i = 0; i < objectListViewDownloads.Items.Count; ++i ) {
 					objectListViewDownloads.Items[i].Text = ( i + 1 ).ToString();
 					if ( i % 2 == 1 ) {
@@ -387,6 +385,7 @@ namespace VodArchiver {
 			switch ( e.SubItem.Text ) {
 				case "Remove":
 					objectListViewDownloads.RemoveObject( e.Model );
+					JobSet.Remove( (IVideoJob)e.Model );
 					// TODO: Remove from job queue too!
 					// TODO: Stop job when removed & running!
 					break;

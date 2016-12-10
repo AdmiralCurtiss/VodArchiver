@@ -36,5 +36,17 @@ namespace VodArchiver.VideoInfo {
 		public virtual TimeSpan VideoLength { get; set; }
 		public virtual RecordingState VideoRecordingState { get; set; }
 		public virtual VideoFileType VideoType { get; set; }
+
+		public override bool Equals( object obj ) {
+			return Equals( obj as IVideoInfo );
+		}
+
+		public bool Equals( IVideoInfo other ) {
+			return other != null && Service == other.Service && VideoId == other.VideoId;
+		}
+
+		public override int GetHashCode() {
+			return Service.GetHashCode() ^ VideoId.GetHashCode();
+		}
 	}
 }
