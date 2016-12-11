@@ -43,13 +43,13 @@ namespace VodArchiver {
 		}
 
 		public static async Task<YoutubeVideoInfo> RetrieveVideo( string id ) {
-			var data = await Util.RunProgram( @"youtube-dl", "-j \"https://www.youtube.com/watch?v=" + id + "\"" );
+			var data = await ExternalProgramExecution.RunProgram( @"youtube-dl", new string[] { "-j", "https://www.youtube.com/watch?v=" + id } );
 			var json = JObject.Parse( data.StdOut );
 			return ParseFromJson( json );
 		}
 
 		public static async Task<List<YoutubeVideoInfo>> RetrieveVideosFromPlaylist( string playlist ) {
-			var data = await Util.RunProgram( @"youtube-dl", "-J \"https://www.youtube.com/playlist?list=" + playlist + "\"" );
+			var data = await ExternalProgramExecution.RunProgram( @"youtube-dl", new string[] { "-J", "https://www.youtube.com/playlist?list=" + playlist } );
 			var json = JObject.Parse( data.StdOut );
 			var entries = json["entries"];
 			List<YoutubeVideoInfo> list = new List<YoutubeVideoInfo>();

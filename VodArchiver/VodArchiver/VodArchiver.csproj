@@ -69,6 +69,7 @@
     <Compile Include="DownloadForm.Designer.cs">
       <DependentUpon>DownloadForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="ExternalProgramExecution.cs" />
     <Compile Include="Hitbox.cs" />
     <Compile Include="SettingsWindow.cs">
       <SubType>Form</SubType>

@@ -33,7 +33,26 @@ namespace VodArchiver.VideoJobs {
 				if ( !await Util.FileExists( tempFilepath ) ) {
 					Directory.CreateDirectory( tempFolder );
 					Status = "Running youtube-dl...";
-					var data = await Util.RunProgram( @"youtube-dl", "-f \"bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio\" -o \"" + tempFilepath + "\" --merge-output-format mkv --no-color --abort-on-error --abort-on-unavailable-fragment \"https://www.youtube.com/watch?v=" + VideoInfo.VideoId + "\"" );
+					var data = await ExternalProgramExecution.RunProgram(
+						@"youtube-dl",
+						new string[] {
+							"-f", "bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio",
+							"-o", tempFilepath,
+							"--merge-output-format", "mkv",
+							"--no-color",
+							"--abort-on-error",
+							"--abort-on-unavailable-fragment",
+							"https://www.youtube.com/watch?v=" + VideoInfo.VideoId
+						},
+						stdoutCallbacks: new System.Diagnostics.DataReceivedEventHandler[1] {
+							( sender, received ) => {
+								if ( !String.IsNullOrEmpty( received.Data ) ) {
+									Status = received.Data;
+								}
+							}
+						}
+					);
+
 				}
 
 				Status = "Waiting for free disk IO slot to move...";
