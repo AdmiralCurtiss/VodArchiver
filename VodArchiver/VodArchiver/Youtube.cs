@@ -48,8 +48,8 @@ namespace VodArchiver {
 			return ParseFromJson( json );
 		}
 
-		public static async Task<List<YoutubeVideoInfo>> RetrieveVideosFromPlaylist( string playlist ) {
-			var data = await ExternalProgramExecution.RunProgram( @"youtube-dl", new string[] { "-J", "https://www.youtube.com/playlist?list=" + playlist } );
+		public static async Task<List<YoutubeVideoInfo>> RetrieveVideosFromParameterString( string parameter ) {
+			var data = await ExternalProgramExecution.RunProgram( @"youtube-dl", new string[] { "-J", parameter } );
 			var json = JObject.Parse( data.StdOut );
 			var entries = json["entries"];
 			List<YoutubeVideoInfo> list = new List<YoutubeVideoInfo>();
@@ -57,6 +57,14 @@ namespace VodArchiver {
 				list.Add( ParseFromJson( entry ) );
 			}
 			return list;
+		}
+
+		public static async Task<List<YoutubeVideoInfo>> RetrieveVideosFromPlaylist( string playlist ) {
+			return await RetrieveVideosFromParameterString( "https://www.youtube.com/playlist?list=" + playlist );
+		}
+
+		public static async Task<List<YoutubeVideoInfo>> RetrieveVideosFromChannel( string channel ) {
+			return await RetrieveVideosFromParameterString( "ytuser:" + channel );
 		}
 	}
 }

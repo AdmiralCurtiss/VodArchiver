@@ -62,6 +62,7 @@ namespace VodArchiver {
 				case "Twitch (Highlights)": userInfo.Service = ServiceVideoCategoryType.TwitchHighlights; userInfo.Persistable = true; break;
 				case "Hitbox": userInfo.Service = ServiceVideoCategoryType.HitboxRecordings; userInfo.Persistable = true; break;
 				case "Youtube (Playlist)": userInfo.Service = ServiceVideoCategoryType.YoutubePlaylist; userInfo.Persistable = false; break;
+				case "Youtube (Channel)": userInfo.Service = ServiceVideoCategoryType.YoutubeChannel; userInfo.Persistable = true; break;
 				default: return new FetchReturnValue { Success = false, HasMore = false };
 			}
 			userInfo.Username = textboxUsername.Text.Trim();
@@ -132,6 +133,14 @@ namespace VodArchiver {
 						videosToAdd.Add( v );
 					}
 					currentVideos = playlistVideos.Count;
+					break;
+				case ServiceVideoCategoryType.YoutubeChannel:
+					List<YoutubeVideoInfo> channelVideos = await Youtube.RetrieveVideosFromChannel( userInfo.Username );
+					hasMore = false;
+					foreach ( var v in channelVideos ) {
+						videosToAdd.Add( v );
+					}
+					currentVideos = channelVideos.Count;
 					break;
 				default:
 					return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };

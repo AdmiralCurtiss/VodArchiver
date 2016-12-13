@@ -166,7 +166,8 @@
             "Twitch (Recordings)",
             "Twitch (Highlights)",
             "Hitbox",
-            "Youtube (Playlist)"});
+            "Youtube (Playlist)",
+            "Youtube (Channel)"});
 			this.comboBoxService.Location = new System.Drawing.Point(250, 12);
 			this.comboBoxService.Name = "comboBoxService";
 			this.comboBoxService.Size = new System.Drawing.Size(133, 21);
