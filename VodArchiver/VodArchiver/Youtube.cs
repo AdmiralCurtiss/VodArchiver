@@ -49,12 +49,23 @@ namespace VodArchiver {
 		}
 
 		public static async Task<List<YoutubeVideoInfo>> RetrieveVideosFromParameterString( string parameter ) {
-			var data = await ExternalProgramExecution.RunProgram( @"youtube-dl", new string[] { "-J", parameter } );
-			var json = JObject.Parse( data.StdOut );
+			string raw = "";
+			try {
+				ExternalProgramExecution.RunProgramReturnValue data = await ExternalProgramExecution.RunProgram( @"youtube-dl", new string[] { "--ignore-errors", "-J", parameter } );
+				raw = data.StdOut;
+			} catch ( ExternalProgramReturnNonzeroException ex ) {
+				// try anyway, this gets thrown when a video is unavailable for copyright reasons
+				raw = ex.StdOut;
+			}
+			var json = JObject.Parse( raw );
 			var entries = json["entries"];
 			List<YoutubeVideoInfo> list = new List<YoutubeVideoInfo>();
 			foreach ( var entry in entries ) {
-				list.Add( ParseFromJson( entry ) );
+				try {
+					list.Add( ParseFromJson( entry ) );
+				} catch ( Exception ex ) {
+					Console.WriteLine( "Failed to parse video from Youtube: " + ex.ToString() );
+				}
 			}
 			return list;
 		}
