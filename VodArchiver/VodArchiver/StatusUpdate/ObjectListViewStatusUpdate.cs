@@ -15,7 +15,7 @@ namespace VodArchiver.StatusUpdate {
 		}
 
 		public void Update() {
-			ObjectListView.UpdateObject( Object );
+			ObjectListView.RefreshObject( Object );
 		}
 	}
 }
