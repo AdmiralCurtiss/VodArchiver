@@ -121,6 +121,19 @@ namespace VodArchiver {
 			throw new Exception( "Uri '" + uri.ToString() + "' does not contain parameter '" + parameter + "'!" );
 		}
 
+		public static ushort ReadUInt16( this System.IO.Stream s ) {
+			int b1 = s.ReadByte();
+			int b2 = s.ReadByte();
+
+			return (ushort)( b2 << 8 | b1 );
+		}
+		public static ushort PeekUInt16( this System.IO.Stream s ) {
+			long pos = s.Position;
+			ushort retval = s.ReadUInt16();
+			s.Position = pos;
+			return retval;
+		}
+
 		public static SemaphoreSlim ExpensiveDiskIOSemaphore = new SemaphoreSlim( 1 );
 
 		public static object JobFileLock = new object();

@@ -278,38 +278,49 @@ namespace VodArchiver {
 			new VodList( this, TwitchAPI ).Show();
 		}
 
+		private List<IVideoJob> LoadJobsInternal( System.IO.Stream fs ) {
+			List<IVideoJob> jobs = new List<IVideoJob>();
+			System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+			int jobCount = (int)formatter.Deserialize( fs );
+			for ( int i = 0; i < jobCount; ++i ) {
+				object obj = formatter.Deserialize( fs );
+				IVideoJob job = obj as IVideoJob;
+				if ( job != null ) {
+					if ( job.JobStatus == VideoJobStatus.Running ) {
+						job.JobStatus = VideoJobStatus.NotStarted;
+						job.StatusUpdater = new StatusUpdate.NullStatusUpdate();
+						job.Status = "Interrupted during: " + job.Status;
+					}
+					if ( job as TwitchVideoJob != null ) {
+						( job as TwitchVideoJob ).TwitchAPI = TwitchAPI;
+					} else if ( job as TwitchChatReplayJob != null ) {
+						( job as TwitchChatReplayJob ).TwitchAPI = TwitchAPI;
+					}
+					job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
+					if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
+						lock ( JobQueueLock ) {
+							WaitingJobs[job.VideoInfo.Service].Add( job );
+						}
+					}
+					jobs.Add( job );
+				}
+			}
+			return jobs;
+		}
+
 		private void LoadJobs() {
 			lock ( Util.JobFileLock ) {
 				List<IVideoJob> jobs = new List<IVideoJob>();
 
 				try {
 					using ( FileStream fs = System.IO.File.OpenRead( Util.VodBinaryPath ) ) {
-						System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-						int jobCount = (int)formatter.Deserialize( fs );
-						for ( int i = 0; i < jobCount; ++i ) {
-							object obj = formatter.Deserialize( fs );
-							IVideoJob job = obj as IVideoJob;
-							if ( job != null ) {
-								if ( job.JobStatus == VideoJobStatus.Running ) {
-									job.JobStatus = VideoJobStatus.NotStarted;
-									job.StatusUpdater = new StatusUpdate.NullStatusUpdate();
-									job.Status = "Interrupted during: " + job.Status;
-								}
-								if ( job as TwitchVideoJob != null ) {
-									( job as TwitchVideoJob ).TwitchAPI = TwitchAPI;
-								} else if ( job as TwitchChatReplayJob != null ) {
-									( job as TwitchChatReplayJob ).TwitchAPI = TwitchAPI;
-								}
-								job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
-								if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
-									lock ( JobQueueLock ) {
-										WaitingJobs[job.VideoInfo.Service].Add( job );
-									}
-								}
-								jobs.Add( job );
+						if ( fs.PeekUInt16() == 0x8B1F ) {
+							using ( System.IO.Compression.GZipStream gzs = new System.IO.Compression.GZipStream( fs, System.IO.Compression.CompressionMode.Decompress ) ) {
+								jobs = LoadJobsInternal( gzs );
 							}
+						} else {
+							jobs = LoadJobsInternal( fs );
 						}
-						fs.Close();
 					}
 				} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
 
@@ -346,6 +357,14 @@ namespace VodArchiver {
 			}
 		}
 
+		private void SaveJobsInternal( System.IO.Stream fs, List<IVideoJob> jobs ) {
+			System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+			formatter.Serialize( fs, jobs.Count );
+			foreach ( var job in jobs ) {
+				formatter.Serialize( fs, job );
+			}
+		}
+
 		private void SaveJobs() {
 			Invoke( (MethodInvoker)( () => { 
 			lock ( SaveJobTimerLock ) {
@@ -366,13 +385,9 @@ namespace VodArchiver {
 					}
 				}
 
-				using ( FileStream fs = System.IO.File.Create( Util.VodBinaryTempPath ) ) {
-					System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-					formatter.Serialize( fs, jobs.Count );
-					foreach ( var job in jobs ) {
-						formatter.Serialize( fs, job );
-					}
-					fs.Close();
+				using ( FileStream fs = System.IO.File.Create( Util.VodBinaryTempPath ) )
+				using ( System.IO.Compression.GZipStream gzs = new System.IO.Compression.GZipStream( fs, System.IO.Compression.CompressionLevel.Optimal ) ) {
+					SaveJobsInternal( gzs, jobs );
 				}
 				if ( System.IO.File.Exists( Util.VodBinaryPath ) ) {
 					Thread.Sleep( 100 );
