@@ -357,11 +357,19 @@ namespace VodArchiver {
 				if ( Util.ShowToastNotifications ) {
 					ToastUtil.ShowToast( DateTime.Now + ": Saving jobs." );
 				}
+
+				List<IVideoJob> jobs = new List<IVideoJob>();
+				foreach ( var item in objectListViewDownloads.Objects ) {
+					IVideoJob job = item as IVideoJob;
+					if ( job != null ) {
+						jobs.Add( job );
+					}
+				}
+
 				using ( FileStream fs = System.IO.File.Create( Util.VodBinaryTempPath ) ) {
 					System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-					formatter.Serialize( fs, objectListViewDownloads.Items.Count );
-					foreach ( var item in objectListViewDownloads.Items ) {
-						IVideoJob job = ( item as BrightIdeasSoftware.OLVListItem )?.RowObject as IVideoJob;
+					formatter.Serialize( fs, jobs.Count );
+					foreach ( var job in jobs ) {
 						formatter.Serialize( fs, job );
 					}
 					fs.Close();
