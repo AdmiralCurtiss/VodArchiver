@@ -135,12 +135,16 @@
 			this.objectListViewDownloads.Location = new System.Drawing.Point(12, 41);
 			this.objectListViewDownloads.Name = "objectListViewDownloads";
 			this.objectListViewDownloads.SelectedBackColor = System.Drawing.SystemColors.Highlight;
+			this.objectListViewDownloads.ShowCommandMenuOnRightClick = true;
 			this.objectListViewDownloads.ShowItemCountOnGroups = true;
 			this.objectListViewDownloads.Size = new System.Drawing.Size(1354, 404);
 			this.objectListViewDownloads.TabIndex = 4;
 			this.objectListViewDownloads.TintSortColumn = true;
 			this.objectListViewDownloads.UseAlternatingBackColors = true;
 			this.objectListViewDownloads.UseCompatibleStateImageBehavior = false;
+			this.objectListViewDownloads.UseFilterIndicator = true;
+			this.objectListViewDownloads.UseFiltering = true;
+			this.objectListViewDownloads.UseHotControls = false;
 			this.objectListViewDownloads.View = System.Windows.Forms.View.Details;
 			this.objectListViewDownloads.ButtonClick += new System.EventHandler<BrightIdeasSoftware.CellClickEventArgs>(this.objectListViewDownloads_ButtonClick);
 			this.objectListViewDownloads.CellEditStarting += new BrightIdeasSoftware.CellEditEventHandler(this.objectListViewDownloads_CellEditStarting);
