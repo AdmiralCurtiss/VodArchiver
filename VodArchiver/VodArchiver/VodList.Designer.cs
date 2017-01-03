@@ -43,6 +43,7 @@
 			this.buttonClear = new System.Windows.Forms.Button();
 			this.buttonDownloadAllKnown = new System.Windows.Forms.Button();
 			this.checkBoxAutoDownload = new System.Windows.Forms.CheckBox();
+			this.checkBoxFlat = new System.Windows.Forms.CheckBox();
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewVideos)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -194,9 +195,9 @@
 			// buttonFetch
 			// 
 			this.buttonFetch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonFetch.Location = new System.Drawing.Point(710, 12);
+			this.buttonFetch.Location = new System.Drawing.Point(755, 12);
 			this.buttonFetch.Name = "buttonFetch";
-			this.buttonFetch.Size = new System.Drawing.Size(158, 20);
+			this.buttonFetch.Size = new System.Drawing.Size(113, 20);
 			this.buttonFetch.TabIndex = 5;
 			this.buttonFetch.Text = "Fetch";
 			this.buttonFetch.UseVisualStyleBackColor = true;
@@ -257,12 +258,24 @@
 			this.checkBoxAutoDownload.UseVisualStyleBackColor = true;
 			this.checkBoxAutoDownload.CheckedChanged += new System.EventHandler(this.checkBoxAutoDownload_CheckedChanged);
 			// 
+			// checkBoxFlat
+			// 
+			this.checkBoxFlat.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.checkBoxFlat.AutoSize = true;
+			this.checkBoxFlat.Location = new System.Drawing.Point(710, 14);
+			this.checkBoxFlat.Name = "checkBoxFlat";
+			this.checkBoxFlat.Size = new System.Drawing.Size(43, 17);
+			this.checkBoxFlat.TabIndex = 15;
+			this.checkBoxFlat.Text = "Flat";
+			this.checkBoxFlat.UseVisualStyleBackColor = true;
+			// 
 			// VodList
 			// 
 			this.AcceptButton = this.buttonFetch;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(983, 482);
+			this.Controls.Add(this.checkBoxFlat);
 			this.Controls.Add(this.checkBoxAutoDownload);
 			this.Controls.Add(this.buttonDownloadAllKnown);
 			this.Controls.Add(this.buttonClear);
@@ -303,5 +316,6 @@
 		private System.Windows.Forms.Button buttonClear;
 		private System.Windows.Forms.Button buttonDownloadAllKnown;
 		private System.Windows.Forms.CheckBox checkBoxAutoDownload;
+		private System.Windows.Forms.CheckBox checkBoxFlat;
 	}
 }

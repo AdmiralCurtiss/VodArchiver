@@ -71,7 +71,7 @@ namespace VodArchiver {
 				userInfo.Username = Util.GetParameterFromUri( new Uri( userInfo.Username ), "list" );
 			}
 
-			var rv = await Fetch( TwitchAPI, userInfo, Offset );
+			var rv = await Fetch( TwitchAPI, userInfo, Offset, checkBoxFlat.Checked );
 
 			if ( rv.Success && rv.Videos.Count > 0 ) {
 				Offset += rv.VideoCountThisFetch;
@@ -96,7 +96,7 @@ namespace VodArchiver {
 			return rv;
 		}
 
-		private static async Task<FetchReturnValue> Fetch( Twixel twitchApi, UserInfo userInfo, int offset ) {
+		private static async Task<FetchReturnValue> Fetch( Twixel twitchApi, UserInfo userInfo, int offset, bool flat ) {
 			List<IVideoInfo> videosToAdd = new List<IVideoInfo>();
 			bool hasMore = true;
 			long maxVideos = -1;
@@ -127,7 +127,7 @@ namespace VodArchiver {
 					currentVideos = videos.Count;
 					break;
 				case ServiceVideoCategoryType.YoutubePlaylist:
-					List<YoutubeVideoInfo> playlistVideos = await Youtube.RetrieveVideosFromPlaylist( userInfo.Username );
+					List<IVideoInfo> playlistVideos = await Youtube.RetrieveVideosFromPlaylist( userInfo.Username, flat );
 					hasMore = false;
 					foreach ( var v in playlistVideos ) {
 						videosToAdd.Add( v );
@@ -135,7 +135,7 @@ namespace VodArchiver {
 					currentVideos = playlistVideos.Count;
 					break;
 				case ServiceVideoCategoryType.YoutubeChannel:
-					List<YoutubeVideoInfo> channelVideos = await Youtube.RetrieveVideosFromChannel( userInfo.Username );
+					List<IVideoInfo> channelVideos = await Youtube.RetrieveVideosFromChannel( userInfo.Username, flat );
 					hasMore = false;
 					foreach ( var v in channelVideos ) {
 						videosToAdd.Add( v );
@@ -266,7 +266,7 @@ namespace VodArchiver {
 							int Offset = 0;
 							do {
 								await Task.Delay( rng.Next( 55000, 95000 ) );
-								fetchReturnValue = await Fetch( twitchApi, userInfo, Offset );
+								fetchReturnValue = await Fetch( twitchApi, userInfo, Offset, true );
 								Offset += fetchReturnValue.VideoCountThisFetch;
 								if ( fetchReturnValue.Success ) {
 									videos.AddRange( fetchReturnValue.Videos );
