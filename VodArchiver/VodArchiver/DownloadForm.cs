@@ -15,12 +15,23 @@ using VodArchiver.VideoInfo;
 using VodArchiver.VideoJobs;
 
 namespace VodArchiver {
+	public class WaitingVideoJob {
+		public IVideoJob Job;
+		public DateTime EarliestPossibleStartTime;
+
+		public WaitingVideoJob( IVideoJob job ) { Job = job; EarliestPossibleStartTime = DateTime.UtcNow; }
+		public WaitingVideoJob( IVideoJob job, DateTime allowedStartTime ) { Job = job; EarliestPossibleStartTime = allowedStartTime; }
+		public bool IsAllowedToStart() {
+			return DateTime.UtcNow >= EarliestPossibleStartTime;
+		}
+	}
+
 	public partial class DownloadForm : Form {
 		Twixel TwitchAPI;
 
 		HashSet<IVideoJob> JobSet;
 
-		Dictionary<StreamService, List<IVideoJob>> WaitingJobs;
+		Dictionary<StreamService, List<WaitingVideoJob>> WaitingJobs;
 		Dictionary<StreamService, int> JobsRunningPerType;
 		private object JobQueueLock = new object();
 
@@ -36,10 +47,10 @@ namespace VodArchiver {
 
 			JobSet = new HashSet<IVideoJob>();
 
-			WaitingJobs = new Dictionary<StreamService, List<IVideoJob>>();
+			WaitingJobs = new Dictionary<StreamService, List<WaitingVideoJob>>();
 			JobsRunningPerType = new Dictionary<StreamService, int>();
 			foreach ( StreamService s in Enum.GetValues( typeof( StreamService ) ) ) {
-				WaitingJobs.Add( s, new List<IVideoJob>() );
+				WaitingJobs.Add( s, new List<WaitingVideoJob>() );
 				JobsRunningPerType.Add( s, 0 );
 			}
 
@@ -209,7 +220,7 @@ namespace VodArchiver {
 			JobSet.Add( job );
 			job.Status = "Waiting...";
 			lock ( JobQueueLock ) {
-				WaitingJobs[job.VideoInfo.Service].Add( job );
+				WaitingJobs[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
 			}
 
 			if ( Util.ShowToastNotifications ) {
@@ -231,10 +242,19 @@ namespace VodArchiver {
 						JobsRunningPerType[service] += 1;
 					} else {
 						if ( WaitingJobs[service].Count != 0 ) {
-							job = WaitingJobs[service].First();
-							WaitingJobs[service].Remove( job );
-							runNewJob = true;
-							JobsRunningPerType[service] += 1;
+							WaitingVideoJob waitingJob = null;
+							foreach ( WaitingVideoJob wj in WaitingJobs[service] ) {
+								if ( wj.IsAllowedToStart() ) {
+									waitingJob = wj;
+									break;
+								}
+							}
+							if ( waitingJob != null ) {
+								job = waitingJob.Job;
+								WaitingJobs[service].Remove( waitingJob );
+								runNewJob = true;
+								JobsRunningPerType[service] += 1;
+							}
 						}
 					}
 				}
@@ -249,6 +269,12 @@ namespace VodArchiver {
 						if ( Util.ShowToastNotifications ) {
 							ToastUtil.ShowToast( "Downloaded " + job.HumanReadableJobName + "!" );
 						}
+					}
+				} catch ( RetryLaterException ex ) {
+					job.JobStatus = VideoJobStatus.NotStarted;
+					job.Status = "Retry Later: " + ex.ToString();
+					lock ( JobQueueLock ) {
+						WaitingJobs[service].Add( new WaitingVideoJob( job, DateTime.UtcNow.AddMinutes( 10.0 ) ) );
 					}
 				} catch ( VideoDeadException ex ) {
 					job.JobStatus = VideoJobStatus.Dead;
@@ -301,7 +327,7 @@ namespace VodArchiver {
 					job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
 					if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
 						lock ( JobQueueLock ) {
-							WaitingJobs[job.VideoInfo.Service].Add( job );
+							WaitingJobs[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
 						}
 					}
 					jobs.Add( job );

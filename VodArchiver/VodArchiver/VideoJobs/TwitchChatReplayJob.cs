@@ -40,7 +40,7 @@ namespace VodArchiver.VideoJobs {
 					if ( this.VideoInfo.VideoRecordingState != RecordingState.Live ) {
 						files = await TsVideoJob.Download( this, System.IO.Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() ), GetUrls( VideoInfo ), 5000 );
 					} else {
-						throw new Exception( "Don't know how to deal with running stream's chat." );
+						throw new RetryLaterException( "Don't know how to deal with running stream's chat." );
 					}
 
 					Status = "Waiting for free disk IO slot to combine...";
