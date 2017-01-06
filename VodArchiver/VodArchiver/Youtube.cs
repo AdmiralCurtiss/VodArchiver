@@ -10,15 +10,18 @@ namespace VodArchiver {
 	public class Youtube {
 		public static YoutubeVideoInfo ParseFromJsonFull( JToken json ) {
 			YoutubeVideoInfo y = new YoutubeVideoInfo();
-			y.Username = json["uploader_id"].ToString();
-			y.VideoId = json["id"].ToString();
-			y.VideoTitle = json["title"].ToString();
+			y.Username = json["uploader_id"].Value<string>();
+			if ( string.IsNullOrWhiteSpace( y.Username ) ) {
+				throw new Exception( "Missing uploader_id!" );
+			}
+			y.VideoId = json["id"].Value<string>();
+			y.VideoTitle = json["title"].Value<string>();
 
 			var tags = json["tags"];
 			if ( tags != null ) {
 				StringBuilder sb = new StringBuilder();
 				foreach ( var tag in tags ) {
-					sb.Append( tag.ToString() ).Append( "; " );
+					sb.Append( tag.Value<string>() ).Append( "; " );
 				}
 
 				if ( sb.Length >= 2 ) {
@@ -31,21 +34,25 @@ namespace VodArchiver {
 				y.VideoGame = "";
 			}
 
-			y.VideoTimestamp = DateTime.ParseExact( json["upload_date"].ToString(), "yyyyMMdd", null );
-			y.VideoLength = TimeSpan.FromSeconds( (double)UInt64.Parse( json["duration"].ToString() ) );
+			string datetimestring = json["upload_date"].Value<string>();
+			if ( string.IsNullOrWhiteSpace( datetimestring ) ) {
+				throw new Exception( "Missing upload_date!" );
+			}
+			y.VideoTimestamp = DateTime.ParseExact( datetimestring, "yyyyMMdd", null );
+			y.VideoLength = TimeSpan.FromSeconds( (double)UInt64.Parse( json["duration"].Value<string>() ) );
 			y.VideoRecordingState = RecordingState.Recorded;
 			y.VideoType = VideoFileType.Unknown;
 
-			y.UserDisplayName = json["uploader"].ToString();
-			y.VideoDescription = json["description"].ToString();
+			y.UserDisplayName = json["uploader"].Value<string>();
+			y.VideoDescription = json["description"].Value<string>();
 			return y;
 		}
 
 		public static IVideoInfo ParseFromJsonFlat( JToken json ) {
 			GenericVideoInfo y = new GenericVideoInfo();
 			y.Service = StreamService.Youtube;
-			y.VideoId = json["id"].ToString();
-			y.VideoTitle = json["title"].ToString();
+			y.VideoId = json["id"].Value<string>();
+			y.VideoTitle = json["title"].Value<string>();
 			return y;
 		}
 
