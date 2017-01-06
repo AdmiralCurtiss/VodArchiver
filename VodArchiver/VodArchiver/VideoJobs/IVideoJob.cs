@@ -61,6 +61,12 @@ namespace VodArchiver.VideoJobs {
 		[System.Runtime.Serialization.OptionalField( VersionAdded = 3 )]
 		public string Notes;
 
+		[System.Runtime.Serialization.OptionalField( VersionAdded = 4 )]
+		public DateTime JobStartTimestamp;
+
+		[System.Runtime.Serialization.OptionalField( VersionAdded = 4 )]
+		public DateTime JobFinishTimestamp;
+
 		public abstract Task Run();
 
 		public override bool Equals( object obj ) {

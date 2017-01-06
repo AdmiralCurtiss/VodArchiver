@@ -243,7 +243,9 @@ namespace VodArchiver {
 			if ( runNewJob ) {
 				try {
 					if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
+						job.JobStartTimestamp = DateTime.UtcNow;
 						await job.Run();
+						job.JobFinishTimestamp = DateTime.UtcNow;
 						if ( Util.ShowToastNotifications ) {
 							ToastUtil.ShowToast( "Downloaded " + job.HumanReadableJobName + "!" );
 						}
