@@ -10,8 +10,9 @@ namespace VodArchiver {
 		TwitchRecordings,
 		TwitchHighlights,
 		HitboxRecordings,
-		YoutubePlaylist,
+		YoutubeUser,
 		YoutubeChannel,
+		YoutubePlaylist,
 	}
 
 	public class UserInfo : IEquatable<UserInfo>, IEqualityComparer<UserInfo>, IComparable<UserInfo> {

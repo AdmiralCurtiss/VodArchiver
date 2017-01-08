@@ -104,7 +104,20 @@ namespace VodArchiver {
 		}
 
 		public static async Task<List<IVideoInfo>> RetrieveVideosFromChannel( string channel, bool flat ) {
-			return await RetrieveVideosFromParameterString( "ytuser:" + channel, flat );
+			return await RetrieveVideosFromParameterString( "https://www.youtube.com/channel/" + channel, flat );
+		}
+
+		public static async Task<List<IVideoInfo>> RetrieveVideosFromUser( string user, bool flat ) {
+			List<IVideoInfo> videos = await RetrieveVideosFromParameterString( "ytuser:" + user, flat );
+
+			// fetching a flat video list doesn't set in the username, but we know it since we used it to request the video list, so manually fill it in
+			if ( flat ) {
+				for ( int i = 0; i < videos.Count; ++i ) {
+					videos[i].Username = user;
+				}
+			}
+
+			return videos;
 		}
 	}
 }
