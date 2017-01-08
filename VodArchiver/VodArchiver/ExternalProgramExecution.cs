@@ -18,7 +18,11 @@ namespace VodArchiver {
 	public class ExternalProgramExecution {
 		public static string EscapeArgument( string arg ) {
 			// TODO: this isn't enough
-			return "\"" + arg.Replace( "\\", "\\\\" ).Replace( "\"", "\\\"" ) + "\"";
+			if ( arg.IndexOfAny( new char[] { '"', ' ', '\t', '\\' } ) == -1 ) {
+				return "\"" + arg.Replace( "\\", "\\\\" ).Replace( "\"", "\\\"" ) + "\"";
+			} else {
+				return arg;
+			}
 		}
 
 		public struct RunProgramReturnValue { public string StdOut; public string StdErr; }
