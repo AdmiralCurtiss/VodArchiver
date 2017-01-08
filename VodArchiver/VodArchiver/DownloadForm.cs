@@ -34,6 +34,7 @@ namespace VodArchiver {
 		Dictionary<StreamService, List<WaitingVideoJob>> WaitingJobs;
 		Dictionary<StreamService, int> JobsRunningPerType;
 		private object JobQueueLock = new object();
+		public const int MaxJobsRunningPerType = 1;
 
 		Task TimedAutoFetchTask;
 
@@ -236,7 +237,7 @@ namespace VodArchiver {
 			bool runNewJob = false;
 			lock ( JobQueueLock ) {
 				// TODO: This almost certainly has odd results if one thread tries to dequeue a job that was force-started from somewhere else!
-				if ( forceStart || JobsRunningPerType[service] < 1 ) {
+				if ( forceStart || JobsRunningPerType[service] < MaxJobsRunningPerType ) {
 					if ( job != null ) {
 						runNewJob = true;
 						JobsRunningPerType[service] += 1;
