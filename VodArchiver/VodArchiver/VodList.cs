@@ -58,14 +58,15 @@ namespace VodArchiver {
 		private async Task<FetchReturnValue> Fetch() {
 			UserInfo userInfo = new UserInfo();
 			switch ( comboBoxService.Text ) {
-				case "Twitch (Recordings)": userInfo.Service = ServiceVideoCategoryType.TwitchRecordings; userInfo.Persistable = true; break;
-				case "Twitch (Highlights)": userInfo.Service = ServiceVideoCategoryType.TwitchHighlights; userInfo.Persistable = true; break;
-				case "Hitbox": userInfo.Service = ServiceVideoCategoryType.HitboxRecordings; userInfo.Persistable = true; break;
-				case "Youtube (Playlist)": userInfo.Service = ServiceVideoCategoryType.YoutubePlaylist; userInfo.Persistable = false; break;
-				case "Youtube (User)": userInfo.Service = ServiceVideoCategoryType.YoutubeUser; userInfo.Persistable = true; break;
-				case "Youtube (Channel)": userInfo.Service = ServiceVideoCategoryType.YoutubeChannel; userInfo.Persistable = true; break;
+				case "Twitch (Recordings)": userInfo.Service = ServiceVideoCategoryType.TwitchRecordings; break;
+				case "Twitch (Highlights)": userInfo.Service = ServiceVideoCategoryType.TwitchHighlights; break;
+				case "Hitbox": userInfo.Service = ServiceVideoCategoryType.HitboxRecordings; break;
+				case "Youtube (Playlist)": userInfo.Service = ServiceVideoCategoryType.YoutubePlaylist; break;
+				case "Youtube (User)": userInfo.Service = ServiceVideoCategoryType.YoutubeUser; break;
+				case "Youtube (Channel)": userInfo.Service = ServiceVideoCategoryType.YoutubeChannel; break;
 				default: return new FetchReturnValue { Success = false, HasMore = false };
 			}
+			userInfo.Persistable = checkBoxSaveForLater.Checked;
 			userInfo.Username = textboxUsername.Text.Trim();
 			
 			if ( userInfo.Service == ServiceVideoCategoryType.YoutubePlaylist && ( userInfo.Username.StartsWith( "http://" ) || userInfo.Username.StartsWith( "https://" ) ) ) {

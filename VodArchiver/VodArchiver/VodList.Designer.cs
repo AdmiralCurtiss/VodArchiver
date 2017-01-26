@@ -44,6 +44,7 @@
 			this.buttonDownloadAllKnown = new System.Windows.Forms.Button();
 			this.checkBoxAutoDownload = new System.Windows.Forms.CheckBox();
 			this.checkBoxFlat = new System.Windows.Forms.CheckBox();
+			this.checkBoxSaveForLater = new System.Windows.Forms.CheckBox();
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewVideos)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -181,7 +182,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.textboxUsername.Location = new System.Drawing.Point(450, 12);
 			this.textboxUsername.Name = "textboxUsername";
-			this.textboxUsername.Size = new System.Drawing.Size(254, 20);
+			this.textboxUsername.Size = new System.Drawing.Size(201, 20);
 			this.textboxUsername.TabIndex = 7;
 			// 
 			// labelUsername
@@ -270,12 +271,24 @@
 			this.checkBoxFlat.Text = "Flat";
 			this.checkBoxFlat.UseVisualStyleBackColor = true;
 			// 
+			// checkBoxSaveForLater
+			// 
+			this.checkBoxSaveForLater.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.checkBoxSaveForLater.AutoSize = true;
+			this.checkBoxSaveForLater.Location = new System.Drawing.Point(657, 14);
+			this.checkBoxSaveForLater.Name = "checkBoxSaveForLater";
+			this.checkBoxSaveForLater.Size = new System.Drawing.Size(51, 17);
+			this.checkBoxSaveForLater.TabIndex = 16;
+			this.checkBoxSaveForLater.Text = "Save";
+			this.checkBoxSaveForLater.UseVisualStyleBackColor = true;
+			// 
 			// VodList
 			// 
 			this.AcceptButton = this.buttonFetch;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(983, 482);
+			this.Controls.Add(this.checkBoxSaveForLater);
 			this.Controls.Add(this.checkBoxFlat);
 			this.Controls.Add(this.checkBoxAutoDownload);
 			this.Controls.Add(this.buttonDownloadAllKnown);
@@ -318,5 +331,6 @@
 		private System.Windows.Forms.Button buttonDownloadAllKnown;
 		private System.Windows.Forms.CheckBox checkBoxAutoDownload;
 		private System.Windows.Forms.CheckBox checkBoxFlat;
+		private System.Windows.Forms.CheckBox checkBoxSaveForLater;
 	}
 }
