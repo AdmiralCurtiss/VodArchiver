@@ -71,6 +71,18 @@ namespace VodArchiver {
 
 			objectListViewDownloads.FormatRow += ObjectListViewDownloads_FormatRow;
 
+			foreach ( BrightIdeasSoftware.OLVColumn col in objectListViewDownloads.Columns ) {
+				if ( col.Text == "Status" ) {
+					System.Collections.ArrayList statusFilters = new System.Collections.ArrayList();
+					statusFilters.Add( VideoJobs.VideoJobStatus.NotStarted );
+					statusFilters.Add( VideoJobs.VideoJobStatus.Running );
+					col.ValuesChosenForFiltering = statusFilters;
+					objectListViewDownloads.ModelFilter = objectListViewDownloads.CreateColumnFilter();
+					objectListViewDownloads.UseFiltering = true;
+					break;
+				}
+			}
+
 			LoadJobs();
 
 			if ( Util.AllowTimedAutoFetch ) {
