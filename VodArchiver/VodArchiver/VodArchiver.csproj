@@ -86,6 +86,7 @@
     <Compile Include="KeepAliveWebClient.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Tasks\VideoTaskGroup.cs" />
     <Compile Include="ToastUtil.cs" />
     <Compile Include="UserInfo.cs" />
     <Compile Include="Util.cs" />

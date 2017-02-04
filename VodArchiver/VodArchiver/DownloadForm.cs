@@ -11,30 +11,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TwixelAPI;
+using VodArchiver.Tasks;
 using VodArchiver.VideoInfo;
 using VodArchiver.VideoJobs;
 
 namespace VodArchiver {
-	public class WaitingVideoJob {
-		public IVideoJob Job;
-		public DateTime EarliestPossibleStartTime;
-
-		public WaitingVideoJob( IVideoJob job ) { Job = job; EarliestPossibleStartTime = DateTime.UtcNow; }
-		public WaitingVideoJob( IVideoJob job, DateTime allowedStartTime ) { Job = job; EarliestPossibleStartTime = allowedStartTime; }
-		public bool IsAllowedToStart() {
-			return DateTime.UtcNow >= EarliestPossibleStartTime;
-		}
-	}
-
 	public partial class DownloadForm : Form {
 		Twixel TwitchAPI;
 
 		HashSet<IVideoJob> JobSet;
 
-		Dictionary<StreamService, List<WaitingVideoJob>> WaitingJobs;
-		Dictionary<StreamService, int> JobsRunningPerType;
-		private object JobQueueLock = new object();
-		public const int MaxJobsRunningPerType = 1;
+		Dictionary<StreamService, VideoTaskGroup> VideoTaskGroups;
 
 		Task TimedAutoFetchTask;
 
@@ -48,11 +35,9 @@ namespace VodArchiver {
 
 			JobSet = new HashSet<IVideoJob>();
 
-			WaitingJobs = new Dictionary<StreamService, List<WaitingVideoJob>>();
-			JobsRunningPerType = new Dictionary<StreamService, int>();
+			VideoTaskGroups = new Dictionary<StreamService, VideoTaskGroup>();
 			foreach ( StreamService s in Enum.GetValues( typeof( StreamService ) ) ) {
-				WaitingJobs.Add( s, new List<WaitingVideoJob>() );
-				JobsRunningPerType.Add( s, 0 );
+				VideoTaskGroups.Add( s, new VideoTaskGroup( this, s ) );
 			}
 
 			if ( !Util.AllowTimedAutoFetch ) {
@@ -232,9 +217,7 @@ namespace VodArchiver {
 			objectListViewDownloads.AddObject( job );
 			JobSet.Add( job );
 			job.Status = "Waiting...";
-			lock ( JobQueueLock ) {
-				WaitingJobs[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
-			}
+			VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
 
 			if ( Util.ShowToastNotifications ) {
 				ToastUtil.ShowToast( "Enqueued " + job.HumanReadableJobName + "!" );
@@ -246,69 +229,7 @@ namespace VodArchiver {
 		}
 
 		public async Task RunJob( StreamService service, IVideoJob job = null, bool forceStart = false ) {
-			bool runNewJob = false;
-			lock ( JobQueueLock ) {
-				// TODO: This almost certainly has odd results if one thread tries to dequeue a job that was force-started from somewhere else!
-				if ( forceStart || JobsRunningPerType[service] < MaxJobsRunningPerType ) {
-					if ( job != null ) {
-						runNewJob = true;
-						JobsRunningPerType[service] += 1;
-					} else {
-						if ( WaitingJobs[service].Count != 0 ) {
-							WaitingVideoJob waitingJob = null;
-							foreach ( WaitingVideoJob wj in WaitingJobs[service] ) {
-								if ( wj.IsAllowedToStart() ) {
-									waitingJob = wj;
-									break;
-								}
-							}
-							if ( waitingJob != null ) {
-								job = waitingJob.Job;
-								WaitingJobs[service].Remove( waitingJob );
-								runNewJob = true;
-								JobsRunningPerType[service] += 1;
-							}
-						}
-					}
-				}
-			}
-
-			if ( runNewJob ) {
-				try {
-					if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
-						job.JobStartTimestamp = DateTime.UtcNow;
-						await job.Run();
-						job.JobFinishTimestamp = DateTime.UtcNow;
-						if ( Util.ShowToastNotifications ) {
-							ToastUtil.ShowToast( "Downloaded " + job.HumanReadableJobName + "!" );
-						}
-					}
-				} catch ( RetryLaterException ex ) {
-					job.JobStatus = VideoJobStatus.NotStarted;
-					job.Status = "Retry Later: " + ex.ToString();
-					lock ( JobQueueLock ) {
-						WaitingJobs[service].Add( new WaitingVideoJob( job, DateTime.UtcNow.AddMinutes( 10.0 ) ) );
-					}
-				} catch ( VideoDeadException ex ) {
-					job.JobStatus = VideoJobStatus.Dead;
-					job.Status = ex.Message;
-				} catch ( Exception ex ) {
-					job.JobStatus = VideoJobStatus.NotStarted;
-					job.Status = "ERROR: " + ex.ToString();
-					if ( Util.ShowToastNotifications ) {
-						ToastUtil.ShowToast( "Failed to download " + job.HumanReadableJobName + ": " + ex.ToString() );
-					}
-				} finally {
-					lock ( JobQueueLock ) {
-						JobsRunningPerType[service] -= 1;
-					}
-				}
-
-				InvokeSaveJobs();
-				InvokePowerEvent();
-
-				await RunJob( service );
-			}
+			await VideoTaskGroups[service].RunJob( job, forceStart );
 		}
 
 		private void buttonSettings_Click( object sender, EventArgs e ) {
@@ -339,9 +260,7 @@ namespace VodArchiver {
 					}
 					job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
 					if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
-						lock ( JobQueueLock ) {
-							WaitingJobs[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
-						}
+						VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
 					}
 					jobs.Add( job );
 				}
@@ -384,7 +303,7 @@ namespace VodArchiver {
 
 		private System.Timers.Timer SaveJobTimer = null;
 		private static object SaveJobTimerLock = new object();
-		private void InvokeSaveJobs() {
+		public void InvokeSaveJobs() {
 			lock ( SaveJobTimerLock ) {
 				if ( SaveJobTimer == null ) {
 					SaveJobTimer = new System.Timers.Timer( TimeSpan.FromMinutes( 1 ).TotalMilliseconds );
@@ -464,17 +383,10 @@ namespace VodArchiver {
 			return;
 		}
 
-		private void InvokePowerEvent() {
-			lock ( JobQueueLock ) {
-				foreach ( var kvp in WaitingJobs ) {
-					if ( kvp.Value.Count > 0 ) {
-						return;
-					}
-				}
-				foreach ( var kvp in JobsRunningPerType ) {
-					if ( kvp.Value > 0 ) {
-						return;
-					}
+		public void InvokePowerEvent() {
+			foreach ( var kvp in VideoTaskGroups ) {
+				if ( !kvp.Value.IsEmpty() ) {
+					return;
 				}
 			}
 			PowerEvent();
