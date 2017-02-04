@@ -36,7 +36,7 @@ namespace VodArchiver.VideoJobs {
 					var data = await ExternalProgramExecution.RunProgram(
 						@"youtube-dl",
 						new string[] {
-							"-f", "bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio",
+							"-f", "bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
 							"-o", tempFilepath,
 							"--merge-output-format", "mkv",
 							"--no-color",
