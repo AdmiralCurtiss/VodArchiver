@@ -26,7 +26,7 @@ namespace VodArchiver.Tasks {
 		private List<WaitingVideoJob> WaitingJobs;
 		private int JobsRunningPerType;
 		private object JobQueueLock;
-		private const int MaxJobsRunningPerType = 1;
+		public int MaxJobsRunningPerType;
 
 		public VideoTaskGroup( DownloadForm parent, StreamService service ) {
 			Parent = parent;
@@ -34,6 +34,7 @@ namespace VodArchiver.Tasks {
 			WaitingJobs = new List<WaitingVideoJob>();
 			JobsRunningPerType = 0;
 			JobQueueLock = new object();
+			MaxJobsRunningPerType = service == StreamService.Youtube ? 1 : 3;
 		}
 
 		public void Add( WaitingVideoJob job ) {

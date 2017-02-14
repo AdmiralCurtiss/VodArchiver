@@ -297,7 +297,9 @@ namespace VodArchiver {
 			}
 
 			foreach ( StreamService s in Enum.GetValues( typeof( StreamService ) ) ) {
-				Task.Run( () => RunJob( s ) );
+				for ( int i = 0; i < VideoTaskGroups[s].MaxJobsRunningPerType; ++i ) {
+					Task.Run( () => RunJob( s ) );
+				}
 			}
 		}
 
