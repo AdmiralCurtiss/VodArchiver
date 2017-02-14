@@ -47,7 +47,9 @@ namespace VodArchiver.VideoJobs {
 		public string ButtonAction {
 			get {
 				switch ( JobStatus ) {
-					case VideoJobStatus.NotStarted: return "Force Start";
+					case VideoJobStatus.NotStarted:
+					case VideoJobStatus.Dead:
+						return "Force Start";
 					default: return null;
 				}
 			}

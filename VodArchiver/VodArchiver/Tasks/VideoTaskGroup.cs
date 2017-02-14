@@ -78,8 +78,9 @@ namespace VodArchiver.Tasks {
 			}
 
 			if ( runNewJob ) {
+				bool wasDead = job.JobStatus == VideoJobStatus.Dead;
 				try {
-					if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
+					if ( job.JobStatus != VideoJobStatus.Finished ) {
 						job.JobStartTimestamp = DateTime.UtcNow;
 						await job.Run();
 						job.JobFinishTimestamp = DateTime.UtcNow;
@@ -88,7 +89,7 @@ namespace VodArchiver.Tasks {
 						}
 					}
 				} catch ( RetryLaterException ex ) {
-					job.JobStatus = VideoJobStatus.NotStarted;
+					job.JobStatus = wasDead ? VideoJobStatus.Dead : VideoJobStatus.NotStarted;
 					job.Status = "Retry Later: " + ex.ToString();
 					lock ( JobQueueLock ) {
 						WaitingJobs.Add( new WaitingVideoJob( job, DateTime.UtcNow.AddMinutes( 10.0 ) ) );
@@ -97,7 +98,7 @@ namespace VodArchiver.Tasks {
 					job.JobStatus = VideoJobStatus.Dead;
 					job.Status = ex.Message;
 				} catch ( Exception ex ) {
-					job.JobStatus = VideoJobStatus.NotStarted;
+					job.JobStatus = wasDead ? VideoJobStatus.Dead : VideoJobStatus.NotStarted;
 					job.Status = "ERROR: " + ex.ToString();
 					if ( Util.ShowToastNotifications ) {
 						ToastUtil.ShowToast( "Failed to download " + job.HumanReadableJobName + ": " + ex.ToString() );
