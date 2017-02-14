@@ -298,9 +298,10 @@ namespace VodArchiver {
 		private void checkBoxAutoDownload_CheckedChanged( object sender, EventArgs e ) {
 			UserInfo u = comboBoxKnownUsers.SelectedItem as UserInfo;
 			if ( u != null ) {
-				u.AutoDownload = checkBoxAutoDownload.Checked;
-				if ( u.Persistable ) {
-					if ( UserInfoPersister.KnownUsers.AddOrUpdate( u ) ) {
+				if ( u.AutoDownload != checkBoxAutoDownload.Checked ) {
+					u.AutoDownload = checkBoxAutoDownload.Checked;
+					if ( u.Persistable ) {
+						UserInfoPersister.KnownUsers.AddOrUpdate( u );
 						UserInfoPersister.Save();
 					}
 				}
