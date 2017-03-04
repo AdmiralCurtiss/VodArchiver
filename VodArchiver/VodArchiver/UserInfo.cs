@@ -20,6 +20,7 @@ namespace VodArchiver {
 		public bool Persistable;
 		public string Username;
 		public bool AutoDownload;
+		public long? UserID;
 
 		public bool Equals( UserInfo other ) {
 			return this.Service == other.Service && this.Username == other.Username;
@@ -38,19 +39,26 @@ namespace VodArchiver {
 		}
 
 		public string ToSerializableString() {
-			return Service + "/" + AutoDownload + "/" + Username;
+			String s = Service + "/" + AutoDownload + "/";
+			s += UserID == null ? "?" : UserID.ToString();
+			s += "/" + Username;
+			return s;
 		}
 
 		public static UserInfo FromSerializableString( string s ) {
 			UserInfo u = new UserInfo();
 
-			string[] parts = s.Split( new char[] { '/' }, 3 );
+			string[] parts = s.Split( new char[] { '/' }, 4 );
 			int partnum = 0;
 			if ( !Enum.TryParse( parts[partnum++], out u.Service ) ) {
 				throw new Exception( "Parsing ServiceVideoCategoryType from '" + parts[0] + "' failed." );
 			}
 			if ( parts.Length > 2 ) {
 				u.AutoDownload = bool.Parse( parts[partnum++] );
+			}
+			if ( parts.Length > 3 ) {
+				string uid = parts[partnum++];
+				u.UserID = uid == "?" ? null : (long?)long.Parse( uid );
 			}
 			u.Username = parts[partnum];
 			u.Persistable = true;

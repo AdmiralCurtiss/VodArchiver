@@ -15,6 +15,7 @@ namespace VodArchiver {
 		DownloadForm DownloadWindow;
 		Twixel TwitchAPI;
 		int Offset = 0;
+		UserInfo selectedUserInfo = null;
 
 		public VodList( DownloadForm parent, Twixel twixel ) {
 			InitializeComponent();
@@ -56,21 +57,26 @@ namespace VodArchiver {
 
 		struct FetchReturnValue { public bool Success; public bool HasMore; public long TotalVideos; public int VideoCountThisFetch; public List<IVideoInfo> Videos; }
 		private async Task<FetchReturnValue> Fetch() {
-			UserInfo userInfo = new UserInfo();
-			switch ( comboBoxService.Text ) {
-				case "Twitch (Recordings)": userInfo.Service = ServiceVideoCategoryType.TwitchRecordings; break;
-				case "Twitch (Highlights)": userInfo.Service = ServiceVideoCategoryType.TwitchHighlights; break;
-				case "Hitbox": userInfo.Service = ServiceVideoCategoryType.HitboxRecordings; break;
-				case "Youtube (Playlist)": userInfo.Service = ServiceVideoCategoryType.YoutubePlaylist; break;
-				case "Youtube (User)": userInfo.Service = ServiceVideoCategoryType.YoutubeUser; break;
-				case "Youtube (Channel)": userInfo.Service = ServiceVideoCategoryType.YoutubeChannel; break;
-				default: return new FetchReturnValue { Success = false, HasMore = false };
-			}
-			userInfo.Persistable = checkBoxSaveForLater.Checked;
-			userInfo.Username = textboxUsername.Text.Trim();
+			UserInfo userInfo;
+			if ( selectedUserInfo == null ) {
+				userInfo = new UserInfo();
+				switch ( comboBoxService.Text ) {
+					case "Twitch (Recordings)": userInfo.Service = ServiceVideoCategoryType.TwitchRecordings; break;
+					case "Twitch (Highlights)": userInfo.Service = ServiceVideoCategoryType.TwitchHighlights; break;
+					case "Hitbox": userInfo.Service = ServiceVideoCategoryType.HitboxRecordings; break;
+					case "Youtube (Playlist)": userInfo.Service = ServiceVideoCategoryType.YoutubePlaylist; break;
+					case "Youtube (User)": userInfo.Service = ServiceVideoCategoryType.YoutubeUser; break;
+					case "Youtube (Channel)": userInfo.Service = ServiceVideoCategoryType.YoutubeChannel; break;
+					default: return new FetchReturnValue { Success = false, HasMore = false };
+				}
+				userInfo.Persistable = checkBoxSaveForLater.Checked;
+				userInfo.Username = textboxUsername.Text.Trim();
 			
-			if ( userInfo.Service == ServiceVideoCategoryType.YoutubePlaylist && ( userInfo.Username.StartsWith( "http://" ) || userInfo.Username.StartsWith( "https://" ) ) ) {
-				userInfo.Username = Util.GetParameterFromUri( new Uri( userInfo.Username ), "list" );
+				if ( userInfo.Service == ServiceVideoCategoryType.YoutubePlaylist && ( userInfo.Username.StartsWith( "http://" ) || userInfo.Username.StartsWith( "https://" ) ) ) {
+					userInfo.Username = Util.GetParameterFromUri( new Uri( userInfo.Username ), "list" );
+				}
+			} else {
+				userInfo = selectedUserInfo;
 			}
 
 			var rv = await Fetch( TwitchAPI, userInfo, Offset, checkBoxFlat.Checked );
@@ -103,10 +109,17 @@ namespace VodArchiver {
 			bool hasMore = true;
 			long maxVideos = -1;
 			int currentVideos = -1;
+			bool forceReSave = false;
 
 			switch ( userInfo.Service ) {
 				case ServiceVideoCategoryType.TwitchRecordings:
 				case ServiceVideoCategoryType.TwitchHighlights:
+					if ( userInfo.UserID == null ) {
+						userInfo.UserID = await twitchApi.GetUserId( userInfo.Username, Twixel.APIVersion.v5 );
+						if ( userInfo.UserID != null ) {
+							forceReSave = true;
+						}
+					}
 					Total<List<Video>> broadcasts = await twitchApi.RetrieveVideos( userInfo.Username, offset: offset, limit: 25, broadcasts: userInfo.Service == ServiceVideoCategoryType.TwitchRecordings, hls: false );
 					if ( broadcasts.total.HasValue ) {
 						hasMore = offset + broadcasts.wrapped.Count < broadcasts.total;
@@ -156,11 +169,16 @@ namespace VodArchiver {
 					return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };
 			}
 
+			if ( userInfo.Persistable && forceReSave ) {
+				UserInfoPersister.KnownUsers.AddOrUpdate( userInfo );
+				UserInfoPersister.Save();
+			}
+
 			if ( videosToAdd.Count <= 0 ) {
 				return new FetchReturnValue { Success = true, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };
 			}
 
-			if ( userInfo.Persistable ) {
+			if ( userInfo.Persistable && !forceReSave ) {
 				if ( UserInfoPersister.KnownUsers.Add( userInfo ) ) {
 					UserInfoPersister.Save();
 				}
@@ -184,6 +202,7 @@ namespace VodArchiver {
 		}
 
 		private void ProcessPreset( UserInfo u ) {
+			selectedUserInfo = u;
 			if ( u != null ) {
 				comboBoxService.SelectedIndex = (int)u.Service;
 				textboxUsername.Text = u.Username;
