@@ -120,7 +120,11 @@ namespace VodArchiver {
 							forceReSave = true;
 						}
 					}
-					Total<List<Video>> broadcasts = await twitchApi.RetrieveVideos( userInfo.Username, offset: offset, limit: 25, broadcasts: userInfo.Service == ServiceVideoCategoryType.TwitchRecordings, hls: false );
+					Total<List<Video>> broadcasts = await twitchApi.RetrieveVideos(
+						channel: userInfo.UserID == null ? userInfo.Username : userInfo.UserID.ToString(),
+						offset: offset, limit: 25, broadcasts: userInfo.Service == ServiceVideoCategoryType.TwitchRecordings, hls: false,
+						version: userInfo.UserID == null ? Twixel.APIVersion.v3 : Twixel.APIVersion.v5
+					);
 					if ( broadcasts.total.HasValue ) {
 						hasMore = offset + broadcasts.wrapped.Count < broadcasts.total;
 						maxVideos = (long)broadcasts.total;
