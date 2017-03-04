@@ -36,11 +36,18 @@ namespace VodArchiver.VideoJobs {
 				if ( !await Util.FileExists( tempname ) ) {
 					Status = "Downloading files...";
 					string[] files;
-					// no clue how a still running stream handles chat so better not mess with that until we know
-					if ( this.VideoInfo.VideoRecordingState != RecordingState.Live ) {
-						files = await TsVideoJob.Download( this, System.IO.Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() ), GetUrls( VideoInfo ), 5000 );
-					} else {
-						throw new RetryLaterException( "Don't know how to deal with running stream's chat." );
+					while ( true ) {
+						string[] urls = GetUrls( VideoInfo );
+						if ( this.VideoInfo.VideoRecordingState == RecordingState.Live ) {
+							urls = urls.Take( Math.Max( urls.Length - 10, 0 ) ).ToArray();
+						}
+						files = await TsVideoJob.Download( this, System.IO.Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() ), urls, 5000 );
+						if ( this.VideoInfo.VideoRecordingState == RecordingState.Live ) {
+							await Task.Delay( 90000 );
+							VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ), StreamService.TwitchChatReplay );
+						} else {
+							break;
+						}
 					}
 
 					Status = "Waiting for free disk IO slot to combine...";
