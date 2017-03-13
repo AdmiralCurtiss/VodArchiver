@@ -392,6 +392,7 @@ namespace VodArchiver {
 				}
 			}
 			PowerEvent();
+			comboBoxPowerStateWhenDone.SelectedIndex = 0;
 		}
 
 		private void PowerEvent() {
