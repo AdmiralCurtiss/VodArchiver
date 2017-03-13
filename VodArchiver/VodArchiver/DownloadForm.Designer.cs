@@ -148,6 +148,7 @@
 			this.objectListViewDownloads.View = System.Windows.Forms.View.Details;
 			this.objectListViewDownloads.ButtonClick += new System.EventHandler<BrightIdeasSoftware.CellClickEventArgs>(this.objectListViewDownloads_ButtonClick);
 			this.objectListViewDownloads.CellEditStarting += new BrightIdeasSoftware.CellEditEventHandler(this.objectListViewDownloads_CellEditStarting);
+			this.objectListViewDownloads.CellRightClick += new System.EventHandler<BrightIdeasSoftware.CellRightClickEventArgs>(this.objectListViewDownloads_CellRightClick);
 			// 
 			// columnIndex
 			// 

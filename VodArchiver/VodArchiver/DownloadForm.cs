@@ -415,5 +415,25 @@ namespace VodArchiver {
 		private void comboBoxPowerStateWhenDone_SelectedIndexChanged( object sender, EventArgs e ) {
 			SelectedPowerStateOption = comboBoxPowerStateWhenDone.Text;
 		}
+
+		private void objectListViewDownloads_CellRightClick( object sender, BrightIdeasSoftware.CellRightClickEventArgs e ) {
+			e.MenuStrip = this.CreateItemMenu( e.Model, e.Column );
+		}
+
+		private ContextMenuStrip CreateItemMenu( object model, BrightIdeasSoftware.OLVColumn column ) {
+			if ( model != null && model as IVideoJob != null ) {
+				IVideoJob job = model as IVideoJob;
+				ContextMenuStrip menu = new ContextMenuStrip();
+				if ( job.JobStatus == VideoJobStatus.NotStarted ) {
+					ToolStripItem killItem = menu.Items.Add( "Kill" );
+					killItem.Click += ( sender, e ) => {
+						job.JobStatus = VideoJobStatus.Dead;
+						job.Status = "[Manually killed] " + job.Status;
+					};
+				}
+				return menu.Items.Count > 0 ? menu : null;
+			}
+			return null;
+		}
 	}
 }
