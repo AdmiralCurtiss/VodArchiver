@@ -152,6 +152,7 @@
 			// 
 			// columnIndex
 			// 
+			this.columnIndex.AspectName = "Index";
 			this.columnIndex.Groupable = false;
 			this.columnIndex.IsEditable = false;
 			this.columnIndex.Text = "Index";

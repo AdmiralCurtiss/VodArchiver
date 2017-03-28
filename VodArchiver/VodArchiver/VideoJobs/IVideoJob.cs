@@ -42,6 +42,9 @@ namespace VodArchiver.VideoJobs {
 		[NonSerialized]
 		public StatusUpdate.IStatusUpdate StatusUpdater;
 
+		[NonSerialized]
+		public long Index;
+
 		public VideoJobStatus JobStatus;
 
 		public string ButtonAction {

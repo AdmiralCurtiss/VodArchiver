@@ -20,6 +20,7 @@ namespace VodArchiver {
 		Twixel TwitchAPI;
 
 		HashSet<IVideoJob> JobSet;
+		long IndexCounter = 0;
 
 		Dictionary<StreamService, VideoTaskGroup> VideoTaskGroups;
 
@@ -105,7 +106,6 @@ namespace VodArchiver {
 		}
 
 		private void ObjectListViewDownloads_FormatRow( object sender, BrightIdeasSoftware.FormatRowEventArgs e ) {
-			e.Item.Text = ( e.RowIndex + 1 ).ToString();
 		}
 
 		public static string ParseId( string url, out StreamService service ) {
@@ -214,6 +214,7 @@ namespace VodArchiver {
 			}
 
 			job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
+			job.Index = ++IndexCounter;
 			objectListViewDownloads.AddObject( job );
 			JobSet.Add( job );
 			job.Status = "Waiting...";
@@ -284,12 +285,14 @@ namespace VodArchiver {
 					}
 				} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
 
+				foreach ( IVideoJob job in jobs ) {
+					job.Index = ++IndexCounter;
+				}
 				objectListViewDownloads.AddObjects( jobs );
 				foreach ( IVideoJob job in jobs ) {
 					JobSet.Add( job );
 				}
 				for ( int i = 0; i < objectListViewDownloads.Items.Count; ++i ) {
-					objectListViewDownloads.Items[i].Text = ( i + 1 ).ToString();
 					if ( i % 2 == 1 ) {
 						objectListViewDownloads.Items[i].BackColor = objectListViewDownloads.AlternateRowBackColorOrDefault;
 					}
