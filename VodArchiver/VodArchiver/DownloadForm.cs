@@ -55,6 +55,8 @@ namespace VodArchiver {
 				return 0;
 			};
 
+			objectListViewDownloads.FilterMenuBuildStrategy.MaxObjectsToConsider = int.MaxValue;
+
 			objectListViewDownloads.FormatRow += ObjectListViewDownloads_FormatRow;
 
 			foreach ( BrightIdeasSoftware.OLVColumn col in objectListViewDownloads.Columns ) {
