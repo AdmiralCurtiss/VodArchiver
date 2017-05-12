@@ -333,38 +333,44 @@ namespace VodArchiver {
 		}
 
 		private void SaveJobs() {
-			Invoke( (MethodInvoker)( () => { 
-			lock ( SaveJobTimerLock ) {
-				if ( SaveJobTimer != null ) {
-					SaveJobTimer.Stop();
-				}
-			}
 			lock ( Util.JobFileLock ) {
-				if ( Util.ShowToastNotifications ) {
-					ToastUtil.ShowToast( DateTime.Now + ": Saving jobs." );
-				}
+				using ( MemoryStream memoryStream = new MemoryStream() ) {
+					Invoke( (MethodInvoker)( () => {
+						lock ( SaveJobTimerLock ) {
+							if ( SaveJobTimer != null ) {
+								SaveJobTimer.Stop();
+							}
+						}
+						if ( Util.ShowToastNotifications ) {
+							ToastUtil.ShowToast( DateTime.Now + ": Saving jobs." );
+						}
 
-				List<IVideoJob> jobs = new List<IVideoJob>();
-				foreach ( var item in objectListViewDownloads.Objects ) {
-					IVideoJob job = item as IVideoJob;
-					if ( job != null ) {
-						jobs.Add( job );
+						List<IVideoJob> jobs = new List<IVideoJob>();
+						foreach ( var item in objectListViewDownloads.Objects ) {
+							IVideoJob job = item as IVideoJob;
+							if ( job != null ) {
+								jobs.Add( job );
+							}
+						}
+
+						SaveJobsInternal( memoryStream, jobs );
+					} ) );
+
+					long count = memoryStream.Position;
+					memoryStream.Position = 0;
+					using ( FileStream fs = System.IO.File.Create( Util.VodBinaryTempPath ) )
+					using ( System.IO.Compression.GZipStream gzs = new System.IO.Compression.GZipStream( fs, System.IO.Compression.CompressionLevel.Optimal ) ) {
+						Util.CopyStream( memoryStream, gzs, count );
 					}
-				}
-
-				using ( FileStream fs = System.IO.File.Create( Util.VodBinaryTempPath ) )
-				using ( System.IO.Compression.GZipStream gzs = new System.IO.Compression.GZipStream( fs, System.IO.Compression.CompressionLevel.Optimal ) ) {
-					SaveJobsInternal( gzs, jobs );
-				}
-				if ( System.IO.File.Exists( Util.VodBinaryPath ) ) {
-					Thread.Sleep( 100 );
-					System.IO.File.Delete( Util.VodBinaryPath );
+					if ( System.IO.File.Exists( Util.VodBinaryPath ) ) {
+						Thread.Sleep( 100 );
+						System.IO.File.Delete( Util.VodBinaryPath );
+						Thread.Sleep( 100 );
+					}
+					System.IO.File.Move( Util.VodBinaryTempPath, Util.VodBinaryPath );
 					Thread.Sleep( 100 );
 				}
-				System.IO.File.Move( Util.VodBinaryTempPath, Util.VodBinaryPath );
-				Thread.Sleep( 100 );
 			}
-			} ) );
 		}
 
 		private void DownloadForm_FormClosing( object sender, FormClosingEventArgs e ) {
