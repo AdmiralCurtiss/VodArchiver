@@ -168,7 +168,11 @@ namespace VodArchiver.VideoJobs {
 						await Task.Delay( delayPerDownload );
 					}
 				}
-				--triesLeft;
+
+				if ( files.Count < urls.Length ) {
+					await Task.Delay( 60000 );
+					--triesLeft;
+				}
 			}
 
 			return files.ToArray();
