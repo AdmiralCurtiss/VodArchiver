@@ -47,17 +47,6 @@ namespace VodArchiver.VideoJobs {
 
 		public VideoJobStatus JobStatus;
 
-		public string ButtonAction {
-			get {
-				switch ( JobStatus ) {
-					case VideoJobStatus.NotStarted:
-					case VideoJobStatus.Dead:
-						return "Force Start";
-					default: return null;
-				}
-			}
-		}
-		
 		public virtual VideoInfo.IVideoInfo VideoInfo { get; set; }
 
 		[System.Runtime.Serialization.OptionalField( VersionAdded = 2 )]

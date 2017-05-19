@@ -39,8 +39,6 @@
 			this.columnLength = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnRecordingState = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnNotes = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
-			this.columnAction1 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
-			this.columnActionRemove = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.columnStatus = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			this.buttonSettings = new System.Windows.Forms.Button();
 			this.buttonFetchUser = new System.Windows.Forms.Button();
@@ -106,8 +104,6 @@
 			this.objectListViewDownloads.AllColumns.Add(this.columnLength);
 			this.objectListViewDownloads.AllColumns.Add(this.columnRecordingState);
 			this.objectListViewDownloads.AllColumns.Add(this.columnNotes);
-			this.objectListViewDownloads.AllColumns.Add(this.columnAction1);
-			this.objectListViewDownloads.AllColumns.Add(this.columnActionRemove);
 			this.objectListViewDownloads.AllColumns.Add(this.columnStatus);
 			this.objectListViewDownloads.AlternateRowBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(240)))));
 			this.objectListViewDownloads.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -126,8 +122,6 @@
             this.columnLength,
             this.columnRecordingState,
             this.columnNotes,
-            this.columnAction1,
-            this.columnActionRemove,
             this.columnStatus});
 			this.objectListViewDownloads.Cursor = System.Windows.Forms.Cursors.Default;
 			this.objectListViewDownloads.HighlightBackgroundColor = System.Drawing.SystemColors.Highlight;
@@ -146,7 +140,6 @@
 			this.objectListViewDownloads.UseFiltering = true;
 			this.objectListViewDownloads.UseHotControls = false;
 			this.objectListViewDownloads.View = System.Windows.Forms.View.Details;
-			this.objectListViewDownloads.ButtonClick += new System.EventHandler<BrightIdeasSoftware.CellClickEventArgs>(this.objectListViewDownloads_ButtonClick);
 			this.objectListViewDownloads.CellEditStarting += new BrightIdeasSoftware.CellEditEventHandler(this.objectListViewDownloads_CellEditStarting);
 			this.objectListViewDownloads.CellRightClick += new System.EventHandler<BrightIdeasSoftware.CellRightClickEventArgs>(this.objectListViewDownloads_CellRightClick);
 			// 
@@ -222,23 +215,6 @@
 			this.columnNotes.AspectName = "Notes";
 			this.columnNotes.Text = "Notes";
 			this.columnNotes.Width = 221;
-			// 
-			// columnAction1
-			// 
-			this.columnAction1.AspectName = "ButtonAction";
-			this.columnAction1.ButtonSizing = BrightIdeasSoftware.OLVColumn.ButtonSizingMode.CellBounds;
-			this.columnAction1.IsButton = true;
-			this.columnAction1.IsEditable = false;
-			this.columnAction1.Text = "Action";
-			// 
-			// columnActionRemove
-			// 
-			this.columnActionRemove.AspectName = "VideoInfo.Service";
-			this.columnActionRemove.AspectToStringFormat = "Remove";
-			this.columnActionRemove.ButtonSizing = BrightIdeasSoftware.OLVColumn.ButtonSizingMode.CellBounds;
-			this.columnActionRemove.IsButton = true;
-			this.columnActionRemove.IsEditable = false;
-			this.columnActionRemove.Text = "Remove";
 			// 
 			// columnStatus
 			// 
@@ -347,8 +323,6 @@
 		private System.Windows.Forms.Button buttonSettings;
 		private System.Windows.Forms.Button buttonFetchUser;
 		private BrightIdeasSoftware.OLVColumn columnRecordingState;
-		private BrightIdeasSoftware.OLVColumn columnAction1;
-		private BrightIdeasSoftware.OLVColumn columnActionRemove;
 		private BrightIdeasSoftware.OLVColumn columnIndex;
 		private BrightIdeasSoftware.OLVColumn columnValidated;
 		private System.Windows.Forms.Label labelStatusBar;

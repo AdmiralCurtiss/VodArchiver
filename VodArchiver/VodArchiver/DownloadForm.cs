@@ -377,21 +377,6 @@ namespace VodArchiver {
 			SaveJobs();
 		}
 
-		private void objectListViewDownloads_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
-			switch ( e.SubItem.Text ) {
-				case "Remove":
-					objectListViewDownloads.RemoveObject( e.Model );
-					JobSet.Remove( (IVideoJob)e.Model );
-					// TODO: Remove from job queue too!
-					// TODO: Stop job when removed & running!
-					break;
-				case "Force Start":
-					IVideoJob job = (IVideoJob)e.Model;
-					Task.Run( () => RunJob( job.VideoInfo.Service, job, true ) );
-					break;
-			}
-		}
-
 		private void objectListViewDownloads_CellEditStarting( object sender, BrightIdeasSoftware.CellEditEventArgs e ) {
 			return;
 		}
@@ -435,13 +420,37 @@ namespace VodArchiver {
 			if ( model != null && model as IVideoJob != null ) {
 				IVideoJob job = model as IVideoJob;
 				ContextMenuStrip menu = new ContextMenuStrip();
+
+				if ( job.JobStatus == VideoJobStatus.NotStarted || job.JobStatus == VideoJobStatus.Dead ) {
+					ToolStripItem item = menu.Items.Add( "Download now" );
+					item.Click += ( sender, e ) => {
+						if ( job.JobStatus == VideoJobStatus.NotStarted || job.JobStatus == VideoJobStatus.Dead ) {
+							Task.Run( () => RunJob( job.VideoInfo.Service, job, true ) );
+						}
+					};
+					menu.Items.Add( new ToolStripSeparator() );
+				}
+
 				if ( job.JobStatus == VideoJobStatus.NotStarted ) {
-					ToolStripItem killItem = menu.Items.Add( "Kill" );
-					killItem.Click += ( sender, e ) => {
-						job.JobStatus = VideoJobStatus.Dead;
-						job.Status = "[Manually killed] " + job.Status;
+					ToolStripItem item = menu.Items.Add( "Kill" );
+					item.Click += ( sender, e ) => {
+						if ( job.JobStatus == VideoJobStatus.NotStarted ) {
+							job.JobStatus = VideoJobStatus.Dead;
+							job.Status = "[Manually killed] " + job.Status;
+						}
 					};
 				}
+
+				if ( job.JobStatus != VideoJobStatus.Running ) {
+					ToolStripItem item = menu.Items.Add( "Remove" );
+					item.Click += ( sender, e ) => {
+						if ( job.JobStatus != VideoJobStatus.Running ) {
+							objectListViewDownloads.RemoveObject( job );
+							JobSet.Remove( job );
+						}
+					};
+				}
+
 				return menu.Items.Count > 0 ? menu : null;
 			}
 			return null;
