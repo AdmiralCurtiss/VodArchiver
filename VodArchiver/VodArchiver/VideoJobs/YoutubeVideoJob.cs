@@ -21,7 +21,18 @@ namespace VodArchiver.VideoJobs {
 			JobStatus = VideoJobStatus.Running;
 			if ( ( VideoInfo as YoutubeVideoInfo ) == null ) {
 				Status = "Retrieving video info...";
-				VideoInfo = await Youtube.RetrieveVideo( VideoInfo.VideoId );
+				var result = await Youtube.RetrieveVideo( VideoInfo.VideoId );
+
+				switch ( result.result ) {
+					case Youtube.RetrieveVideoResult.Success:
+						VideoInfo = result.info;
+						break;
+					case Youtube.RetrieveVideoResult.ParseFailure:
+						// this seems to happen randomly from time to time, just retry later
+						return ResultType.TemporarilyUnavailable;
+					default:
+						return ResultType.Failure;
+				}
 			}
 
 			string filenameWithoutExtension = "youtube_" + VideoInfo.Username + "_" + VideoInfo.VideoTimestamp.ToString( "yyyy-MM-dd" ) + "_" + VideoInfo.VideoId;

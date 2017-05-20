@@ -8,11 +8,11 @@ using VodArchiver.VideoInfo;
 
 namespace VodArchiver {
 	public class Youtube {
-		public static YoutubeVideoInfo ParseFromJsonFull( JToken json ) {
+		public static (bool success, YoutubeVideoInfo info) ParseFromJsonFull( JToken json ) {
 			YoutubeVideoInfo y = new YoutubeVideoInfo();
 			y.Username = json["uploader_id"].Value<string>();
 			if ( string.IsNullOrWhiteSpace( y.Username ) ) {
-				throw new Exception( "Missing uploader_id!" );
+				return (false, y);
 			}
 			y.VideoId = json["id"].Value<string>();
 			y.VideoTitle = json["title"].Value<string>();
@@ -36,7 +36,7 @@ namespace VodArchiver {
 
 			string datetimestring = json["upload_date"].Value<string>();
 			if ( string.IsNullOrWhiteSpace( datetimestring ) ) {
-				throw new Exception( "Missing upload_date!" );
+				return (false, y);
 			}
 			y.VideoTimestamp = DateTime.ParseExact( datetimestring, "yyyyMMdd", null );
 			y.VideoLength = TimeSpan.FromSeconds( (double)UInt64.Parse( json["duration"].Value<string>() ) );
@@ -45,18 +45,18 @@ namespace VodArchiver {
 
 			y.UserDisplayName = json["uploader"].Value<string>();
 			y.VideoDescription = json["description"].Value<string>();
-			return y;
+			return (true, y);
 		}
 
-		public static IVideoInfo ParseFromJsonFlat( JToken json ) {
+		public static (bool success, GenericVideoInfo info) ParseFromJsonFlat( JToken json ) {
 			GenericVideoInfo y = new GenericVideoInfo();
 			y.Service = StreamService.Youtube;
 			y.VideoId = json["id"].Value<string>();
 			y.VideoTitle = json["title"].Value<string>();
-			return y;
+			return (true, y);
 		}
 
-		public static IVideoInfo ParseFromJson( JToken json, bool flat ) {
+		public static (bool success, IVideoInfo info) ParseFromJson( JToken json, bool flat ) {
 			if ( flat ) {
 				return ParseFromJsonFlat( json );
 			} else {
@@ -64,10 +64,12 @@ namespace VodArchiver {
 			}
 		}
 
-		public static async Task<IVideoInfo> RetrieveVideo( string id ) {
+		public enum RetrieveVideoResult { Success, FetchFailure, ParseFailure }
+		public static async Task<(RetrieveVideoResult result, IVideoInfo info)> RetrieveVideo( string id ) {
 			var data = await ExternalProgramExecution.RunProgram( @"youtube-dl", new string[] { "-j", "https://www.youtube.com/watch?v=" + id } );
 			var json = JObject.Parse( data.StdOut );
-			return ParseFromJson( json, false );
+			var parsed = ParseFromJson( json, false );
+			return (parsed.success ? RetrieveVideoResult.Success : RetrieveVideoResult.ParseFailure, parsed.info);
 		}
 
 		public static async Task<List<IVideoInfo>> RetrieveVideosFromParameterString( string parameter, bool flat ) {
@@ -91,7 +93,10 @@ namespace VodArchiver {
 			List<IVideoInfo> list = new List<IVideoInfo>();
 			foreach ( var entry in entries ) {
 				try {
-					list.Add( ParseFromJson( entry, flat ) );
+					var d = ParseFromJson( entry, flat );
+					if ( d.success ) {
+						list.Add( d.info );
+					}
 				} catch ( Exception ex ) {
 					Console.WriteLine( "Failed to parse video from Youtube: " + ex.ToString() );
 				}
