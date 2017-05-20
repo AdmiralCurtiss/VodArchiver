@@ -431,6 +431,15 @@ namespace VodArchiver {
 					menu.Items.Add( new ToolStripSeparator() );
 				}
 
+				if ( job.JobStatus == VideoJobStatus.Running ) {
+					ToolStripItem item = menu.Items.Add( "Stop" );
+					item.Click += ( sender, e ) => {
+						if ( job.JobStatus == VideoJobStatus.Running ) {
+							job.Stop();
+						}
+					};
+				}
+
 				if ( job.JobStatus == VideoJobStatus.NotStarted ) {
 					ToolStripItem item = menu.Items.Add( "Kill" );
 					item.Click += ( sender, e ) => {

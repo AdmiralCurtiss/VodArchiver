@@ -82,10 +82,19 @@ namespace VodArchiver.Tasks {
 				try {
 					if ( job.JobStatus != VideoJobStatus.Finished ) {
 						job.JobStartTimestamp = DateTime.UtcNow;
-						await job.Run();
-						job.JobFinishTimestamp = DateTime.UtcNow;
+						ResultType result = await job.Run();
+						if ( result == ResultType.Success ) {
+							job.JobFinishTimestamp = DateTime.UtcNow;
+							job.JobStatus = VideoJobStatus.Finished;
+						} else {
+							job.JobStatus = wasDead ? VideoJobStatus.Dead : VideoJobStatus.NotStarted;
+						}
 						if ( Util.ShowToastNotifications ) {
-							ToastUtil.ShowToast( "Downloaded " + job.HumanReadableJobName + "!" );
+							if ( result == ResultType.Success ) {
+								ToastUtil.ShowToast( "Downloaded " + job.HumanReadableJobName + "!" );
+							} else if ( result == ResultType.Failure ) {
+								ToastUtil.ShowToast( "Failed to download " + job.HumanReadableJobName + "." );
+							}
 						}
 					}
 				} catch ( RetryLaterException ex ) {

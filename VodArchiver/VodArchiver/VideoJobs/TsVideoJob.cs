@@ -9,7 +9,8 @@ using VodArchiver.VideoInfo;
 namespace VodArchiver.VideoJobs {
 	[Serializable]
 	public abstract class TsVideoJob : IVideoJob {
-		public override async Task Run() {
+		public override async Task<ResultType> Run() {
+			Stopped = false;
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
 			string[] urls = await GetFileUrlsOfVod();
@@ -24,7 +25,11 @@ namespace VodArchiver.VideoJobs {
 					while ( true ) {
 						System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
 						timer.Start();
-						files = await Download( this, GetTempFolderForParts(), urls );
+						var downloadResult = await Download( this, GetTempFolderForParts(), urls );
+						if ( downloadResult.Item1 != ResultType.Success ) {
+							return downloadResult.Item1;
+						}
+						files = downloadResult.Item2;
 						if ( this.VideoInfo.VideoRecordingState != RecordingState.Live ) {
 							break;
 						} else {
@@ -64,6 +69,7 @@ namespace VodArchiver.VideoJobs {
 
 			Status = "Done!";
 			JobStatus = VideoJobStatus.Finished;
+			return ResultType.Success;
 		}
 
 		public abstract Task<string[]> GetFileUrlsOfVod();
@@ -102,7 +108,7 @@ namespace VodArchiver.VideoJobs {
 			return filenames.ToArray();
 		}
 
-		public static async Task<string[]> Download( IVideoJob job, string targetFolder, string[] urls, int delayPerDownload = 0 ) {
+		public static async Task<Tuple<ResultType, string[]>> Download( IVideoJob job, string targetFolder, string[] urls, int delayPerDownload = 0 ) {
 			Directory.CreateDirectory( targetFolder );
 
 			List<string> files = new List<string>( urls.Length );
@@ -110,10 +116,16 @@ namespace VodArchiver.VideoJobs {
 			int triesLeft = MaxTries;
 			while ( files.Count < urls.Length ) {
 				if ( triesLeft <= 0 ) {
-					throw new Exception( "Failed to download individual parts after " + MaxTries + " tries, aborting." );
+					job.Status = "Failed to download individual parts after " + MaxTries + " tries, aborting.";
+					return new Tuple<ResultType, string[]>( ResultType.Failure, null );
 				}
 				files.Clear();
 				for ( int i = 0; i < urls.Length; ++i ) {
+					if ( job.IsStopped() ) {
+						job.Status = "Stopped.";
+						return new Tuple<ResultType, string[]>( ResultType.Cancelled, null );
+					}
+
 					string url = urls[i];
 					string outpath = Path.Combine( targetFolder, "part" + i.ToString( "D8" ) + ".ts" );
 					string outpath_temp = outpath + ".tmp";
@@ -175,7 +187,7 @@ namespace VodArchiver.VideoJobs {
 				}
 			}
 
-			return files.ToArray();
+			return new Tuple<ResultType, string[]>( ResultType.Success, files.ToArray() );
 		}
 
 		public static async Task Combine( string combinedFilename, string[] files ) {

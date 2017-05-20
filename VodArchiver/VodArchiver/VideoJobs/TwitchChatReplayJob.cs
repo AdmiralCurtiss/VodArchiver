@@ -24,7 +24,8 @@ namespace VodArchiver.VideoJobs {
 			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoId + "_" + "chat";
 		}
 
-		public override async Task Run() {
+		public override async Task<ResultType> Run() {
+			Stopped = false;
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
 			VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ), StreamService.TwitchChatReplay );
@@ -41,7 +42,11 @@ namespace VodArchiver.VideoJobs {
 						if ( this.VideoInfo.VideoRecordingState == RecordingState.Live ) {
 							urls = urls.Take( Math.Max( urls.Length - 10, 0 ) ).ToArray();
 						}
-						files = await TsVideoJob.Download( this, System.IO.Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() ), urls, 5000 );
+						var downloadResult = await TsVideoJob.Download( this, System.IO.Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() ), urls, 5000 );
+						if ( downloadResult.Item1 != ResultType.Success ) {
+							return downloadResult.Item1;
+						}
+						files = downloadResult.Item2;
 						if ( this.VideoInfo.VideoRecordingState == RecordingState.Live ) {
 							await Task.Delay( 90000 );
 							VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ), StreamService.TwitchChatReplay );
@@ -75,6 +80,7 @@ namespace VodArchiver.VideoJobs {
 
 			Status = "Done!";
 			JobStatus = VideoJobStatus.Finished;
+			return ResultType.Success;
 		}
 
 		public string[] GetUrls( IVideoInfo info ) {

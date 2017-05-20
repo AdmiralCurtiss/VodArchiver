@@ -16,7 +16,8 @@ namespace VodArchiver.VideoJobs {
 			Status = "...";
 		}
 
-		public override async Task Run() {
+		public override async Task<ResultType> Run() {
+			Stopped = false;
 			JobStatus = VideoJobStatus.Running;
 			if ( ( VideoInfo as YoutubeVideoInfo ) == null ) {
 				Status = "Retrieving video info...";
@@ -68,6 +69,7 @@ namespace VodArchiver.VideoJobs {
 
 			Status = "Done!";
 			JobStatus = VideoJobStatus.Finished;
+			return ResultType.Success;
 		}
 	}
 }

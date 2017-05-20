@@ -12,6 +12,12 @@ namespace VodArchiver.VideoJobs {
 		Dead,
 	}
 
+	public enum ResultType {
+		Failure,
+		Success,
+		Cancelled,
+	}
+
 	[Serializable]
 	public abstract class IVideoJob {
 		private string _Status;
@@ -43,6 +49,9 @@ namespace VodArchiver.VideoJobs {
 		public StatusUpdate.IStatusUpdate StatusUpdater;
 
 		[NonSerialized]
+		protected bool Stopped;
+
+		[NonSerialized]
 		public long Index;
 
 		public VideoJobStatus JobStatus;
@@ -61,7 +70,7 @@ namespace VodArchiver.VideoJobs {
 		[System.Runtime.Serialization.OptionalField( VersionAdded = 4 )]
 		public DateTime JobFinishTimestamp;
 
-		public abstract Task Run();
+		public abstract Task<ResultType> Run();
 
 		public override bool Equals( object obj ) {
 			return Equals( obj as IVideoJob );
@@ -73,6 +82,14 @@ namespace VodArchiver.VideoJobs {
 
 		public override int GetHashCode() {
 			return VideoInfo.GetHashCode();
+		}
+
+		public void Stop() {
+			Stopped = true;
+		}
+
+		public bool IsStopped() {
+			return Stopped;
 		}
 	}
 }
