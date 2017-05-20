@@ -38,7 +38,7 @@ namespace VodArchiver {
 
 			VideoTaskGroups = new Dictionary<StreamService, VideoTaskGroup>();
 			foreach ( StreamService s in Enum.GetValues( typeof( StreamService ) ) ) {
-				VideoTaskGroups.Add( s, new VideoTaskGroup( this, s ) );
+				VideoTaskGroups.Add( s, new VideoTaskGroup( s, () => InvokeSaveJobs(), () => InvokePowerEvent() ) );
 			}
 
 			if ( !Util.AllowTimedAutoFetch ) {

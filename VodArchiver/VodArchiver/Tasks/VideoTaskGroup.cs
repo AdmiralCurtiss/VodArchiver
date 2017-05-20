@@ -19,8 +19,8 @@ namespace VodArchiver.Tasks {
 	}
 
 	public class VideoTaskGroup {
-		// TODO: Get rid of this reference. The handful of calls we need to it should be via delegates or something.
-		private DownloadForm Parent;
+		public delegate void RequestSaveJobsDelegate();
+		public delegate void RequestPowerEventDelegate();
 
 		private StreamService Service;
 		private List<WaitingVideoJob> WaitingJobs;
@@ -28,13 +28,17 @@ namespace VodArchiver.Tasks {
 		private object JobQueueLock;
 		public int MaxJobsRunningPerType;
 
-		public VideoTaskGroup( DownloadForm parent, StreamService service ) {
-			Parent = parent;
+		private RequestSaveJobsDelegate RequestSaveJobs;
+		private RequestPowerEventDelegate RequestPowerEvent;
+
+		public VideoTaskGroup( StreamService service, RequestSaveJobsDelegate saveJobsDelegate, RequestPowerEventDelegate powerEventDelegate ) {
 			Service = service;
 			WaitingJobs = new List<WaitingVideoJob>();
 			JobsRunningPerType = 0;
 			JobQueueLock = new object();
 			MaxJobsRunningPerType = service == StreamService.Youtube ? 1 : 3;
+			RequestSaveJobs = saveJobsDelegate;
+			RequestPowerEvent = powerEventDelegate;
 		}
 
 		public void Add( WaitingVideoJob job ) {
@@ -120,8 +124,8 @@ namespace VodArchiver.Tasks {
 					}
 				}
 
-				Parent.InvokeSaveJobs();
-				Parent.InvokePowerEvent();
+				RequestSaveJobs();
+				RequestPowerEvent();
 
 				await RunJob();
 			}
