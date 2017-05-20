@@ -17,6 +17,7 @@ namespace VodArchiver.VideoJobs {
 		Success,
 		Cancelled,
 		Dead,
+		TemporarilyUnavailable,
 	}
 
 	[Serializable]

@@ -72,7 +72,6 @@
     </Compile>
     <Compile Include="ExternalProgramExecution.cs" />
     <Compile Include="Hitbox.cs" />
-    <Compile Include="RetryLaterException.cs" />
     <Compile Include="SettingsWindow.cs">
       <SubType>Form</SubType>
     </Compile>

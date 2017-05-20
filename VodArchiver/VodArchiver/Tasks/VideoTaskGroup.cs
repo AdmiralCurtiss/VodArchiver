@@ -92,6 +92,14 @@ namespace VodArchiver.Tasks {
 						} else {
 							job.JobStatus = wasDead ? VideoJobStatus.Dead : VideoJobStatus.NotStarted;
 						}
+
+						if ( result == ResultType.TemporarilyUnavailable ) {
+							job.Status = "Temporarily unavailable, retrying later.";
+							lock ( JobQueueLock ) {
+								WaitingJobs.Add( new WaitingVideoJob( job, DateTime.UtcNow.AddMinutes( 30.0 ) ) );
+							}
+						}
+
 						if ( Util.ShowToastNotifications ) {
 							if ( result == ResultType.Success ) {
 								ToastUtil.ShowToast( "Downloaded " + job.HumanReadableJobName + "!" );
@@ -99,12 +107,6 @@ namespace VodArchiver.Tasks {
 								ToastUtil.ShowToast( "Failed to download " + job.HumanReadableJobName + "." );
 							}
 						}
-					}
-				} catch ( RetryLaterException ex ) {
-					job.JobStatus = wasDead ? VideoJobStatus.Dead : VideoJobStatus.NotStarted;
-					job.Status = "Retry Later: " + ex.ToString();
-					lock ( JobQueueLock ) {
-						WaitingJobs.Add( new WaitingVideoJob( job, DateTime.UtcNow.AddMinutes( 10.0 ) ) );
 					}
 				} catch ( Exception ex ) {
 					job.JobStatus = wasDead ? VideoJobStatus.Dead : VideoJobStatus.NotStarted;
