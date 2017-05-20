@@ -17,8 +17,12 @@ namespace VodArchiver.VideoJobs {
 			Status = "...";
 		}
 
-		public override async Task<string[]> GetFileUrlsOfVod() {
-			HitboxVideo video = await Hitbox.RetrieveVideo( VideoInfo.VideoId );
+		public override async Task<(bool success, string[] urls)> GetFileUrlsOfVod() {
+			(bool retrieveVideoSuccess, HitboxVideo video) = await Hitbox.RetrieveVideo( VideoInfo.VideoId );
+			if ( !retrieveVideoSuccess ) {
+				return (false, null);
+			}
+
 			VideoInfo = new HitboxVideoInfo( video );
 
 			// TODO: Figure out how to determine quality when there are multiple.
@@ -31,7 +35,7 @@ namespace VodArchiver.VideoJobs {
 			if ( response.StatusCode == System.Net.HttpStatusCode.OK ) {
 				m3u8 = await response.Content.ReadAsStringAsync();
 			} else {
-				throw new Exception( "Hitbox M3U8 request failed." );
+				return (false, null);
 			}
 
 			string[] filenames = TsVideoJob.GetFilenamesFromM3U8( m3u8 );
@@ -39,7 +43,7 @@ namespace VodArchiver.VideoJobs {
 			foreach ( var filename in filenames ) {
 				urls.Add( folderpath + filename );
 			}
-			return urls.ToArray();
+			return (true, urls.ToArray());
 		}
 
 		public static string GetM3U8PathFromM3U( string m3u ) {

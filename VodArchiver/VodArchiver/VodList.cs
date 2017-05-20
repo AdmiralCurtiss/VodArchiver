@@ -138,12 +138,14 @@ namespace VodArchiver {
 					currentVideos = broadcasts.wrapped.Count;
 					break;
 				case ServiceVideoCategoryType.HitboxRecordings:
-					List<HitboxVideo> videos = await Hitbox.RetrieveVideos( userInfo.Username, offset: offset, limit: 100 );
-					hasMore = videos.Count == 100;
-					foreach ( var v in videos ) {
-						videosToAdd.Add( new HitboxVideoInfo( v ) );
+					( bool success, List<HitboxVideo> videos ) = await Hitbox.RetrieveVideos( userInfo.Username, offset: offset, limit: 100 );
+					if ( success ) {
+						hasMore = videos.Count == 100;
+						foreach ( var v in videos ) {
+							videosToAdd.Add( new HitboxVideoInfo( v ) );
+						}
+						currentVideos = videos.Count;
 					}
-					currentVideos = videos.Count;
 					break;
 				case ServiceVideoCategoryType.YoutubePlaylist:
 					List<IVideoInfo> playlistVideos = await Youtube.RetrieveVideosFromPlaylist( userInfo.Username, flat );

@@ -61,20 +61,20 @@ namespace VodArchiver {
 
 	public class Hitbox {
 		static string apiUrl = "http://api.hitbox.tv/";
-		public static async Task<HitboxVideo> RetrieveVideo( string id ) {
+		public static async Task<(bool success, HitboxVideo video)> RetrieveVideo( string id ) {
 			Uri uri = new Uri( apiUrl + "media/video/" + id );
 
 			HttpClient client = new HttpClient();
 			HttpResponseMessage response = await client.GetAsync( uri );
 			if ( response.StatusCode == HttpStatusCode.OK ) {
 				string responseString = await response.Content.ReadAsStringAsync();
-				return new HitboxVideo( JObject.Parse( responseString )["video"][0] );
+				return ( true, new HitboxVideo( JObject.Parse( responseString )["video"][0] ) );
 			} else {
-				throw new Exception( "Hitbox request failed." );
+				return ( false, null );
 			}
 		}
 
-		public static async Task<List<HitboxVideo>> RetrieveVideos( string username, string filter = "recent", int offset = 0, int limit = 100 ) {
+		public static async Task<(bool success, List<HitboxVideo> videos)> RetrieveVideos( string username, string filter = "recent", int offset = 0, int limit = 100 ) {
 			Uri uri = new Uri( apiUrl + "media/video/" + username + "/list?filter=" + filter + "&limit=" + limit + "&offset=" + offset );
 
 			HttpClient client = new HttpClient();
@@ -88,9 +88,9 @@ namespace VodArchiver {
 				foreach ( var v in jsonVideos ) {
 					videos.Add( new HitboxVideo( v ) );
 				}
-				return videos;
+				return ( true, videos );
 			} else {
-				throw new Exception( "Hitbox request failed." );
+				return ( false, null );
 			}
 		}
 	}

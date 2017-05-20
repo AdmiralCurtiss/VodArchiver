@@ -21,7 +21,7 @@ namespace VodArchiver.VideoJobs {
 			TwitchAPI = api;
 		}
 
-		public override async Task<string[]> GetFileUrlsOfVod() {
+		public override async Task<(bool success, string[] urls)> GetFileUrlsOfVod() {
 			VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ) );
 
 			string folderpath;
@@ -50,7 +50,7 @@ namespace VodArchiver.VideoJobs {
 			foreach ( var filename in filenames ) {
 				urls.Add( folderpath + filename );
 			}
-			return urls.ToArray();
+			return (true, urls.ToArray());
 		}
 
 		public static string GetM3U8PathFromM3U( string m3u, string videoType ) {

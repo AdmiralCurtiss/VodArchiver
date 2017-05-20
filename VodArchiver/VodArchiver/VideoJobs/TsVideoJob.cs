@@ -13,7 +13,12 @@ namespace VodArchiver.VideoJobs {
 			Stopped = false;
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
-			string[] urls = await GetFileUrlsOfVod();
+			(bool getFileUrlsSuccess, string[] urls) = await GetFileUrlsOfVod();
+			if (!getFileUrlsSuccess) {
+				Status = "Failed retrieving file URLs.";
+				return ResultType.Failure;
+			}
+
 			string combinedFilename = Path.Combine( GetTempFolder(), GetTargetFilenameWithoutExtension() + "_combined.ts" );
 			string remuxedTempname = Path.Combine( GetTempFolder(), GetTargetFilenameWithoutExtension() + "_combined.mp4" );
 			string remuxedFilename = Path.Combine( GetTargetFolder(), GetTargetFilenameWithoutExtension() + ".mp4" );
@@ -26,10 +31,10 @@ namespace VodArchiver.VideoJobs {
 						System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
 						timer.Start();
 						var downloadResult = await Download( this, GetTempFolderForParts(), urls );
-						if ( downloadResult.Item1 != ResultType.Success ) {
-							return downloadResult.Item1;
+						if ( downloadResult.result != ResultType.Success ) {
+							return downloadResult.result;
 						}
-						files = downloadResult.Item2;
+						files = downloadResult.files;
 						if ( this.VideoInfo.VideoRecordingState != RecordingState.Live ) {
 							break;
 						} else {
@@ -41,7 +46,11 @@ namespace VodArchiver.VideoJobs {
 								Status = "Waiting " + ts.TotalSeconds + " seconds for stream to update...";
 								await Task.Delay( ts );
 							}
-							urls = await GetFileUrlsOfVod();
+							(getFileUrlsSuccess, urls) = await GetFileUrlsOfVod();
+							if (!getFileUrlsSuccess) {
+								Status = "Failed retrieving file URLs.";
+								return ResultType.Failure;
+							}
 						}
 					}
 
@@ -72,7 +81,7 @@ namespace VodArchiver.VideoJobs {
 			return ResultType.Success;
 		}
 
-		public abstract Task<string[]> GetFileUrlsOfVod();
+		public abstract Task<(bool success, string[] urls)> GetFileUrlsOfVod();
 
 		public virtual string GetTempFolder() {
 			return Util.TempFolderPath;
