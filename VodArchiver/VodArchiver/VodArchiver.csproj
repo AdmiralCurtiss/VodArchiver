@@ -91,7 +91,6 @@
     <Compile Include="ToastUtil.cs" />
     <Compile Include="UserInfo.cs" />
     <Compile Include="Util.cs" />
-    <Compile Include="VideoDeadException.cs" />
     <Compile Include="VideoInfo\GenericVideoInfo.cs" />
     <Compile Include="VideoInfo\HitboxVideoInfo.cs" />
     <Compile Include="VideoInfo\IVideoInfo.cs" />

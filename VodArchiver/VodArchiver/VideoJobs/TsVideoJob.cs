@@ -166,7 +166,7 @@ namespace VodArchiver.VideoJobs {
 										Newtonsoft.Json.Linq.JObject reply = Newtonsoft.Json.Linq.JObject.Parse( new StreamReader( httpWebResponse.GetResponseStream() ).ReadToEnd() );
 										string detail = reply["errors"][0]["detail"].ToObject<string>();
 										if ( detail == "No chats for this Video" ) {
-											throw new VideoDeadException( detail );
+											return (ResultType.Dead, null);
 										}
 										break;
 									default:

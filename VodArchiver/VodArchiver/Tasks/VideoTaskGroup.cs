@@ -86,6 +86,9 @@ namespace VodArchiver.Tasks {
 						if ( result == ResultType.Success ) {
 							job.JobFinishTimestamp = DateTime.UtcNow;
 							job.JobStatus = VideoJobStatus.Finished;
+						} else if ( result == ResultType.Dead ) {
+							job.Status = "Dead.";
+							job.JobStatus = VideoJobStatus.Dead;
 						} else {
 							job.JobStatus = wasDead ? VideoJobStatus.Dead : VideoJobStatus.NotStarted;
 						}
@@ -103,9 +106,6 @@ namespace VodArchiver.Tasks {
 					lock ( JobQueueLock ) {
 						WaitingJobs.Add( new WaitingVideoJob( job, DateTime.UtcNow.AddMinutes( 10.0 ) ) );
 					}
-				} catch ( VideoDeadException ex ) {
-					job.JobStatus = VideoJobStatus.Dead;
-					job.Status = ex.Message;
 				} catch ( Exception ex ) {
 					job.JobStatus = wasDead ? VideoJobStatus.Dead : VideoJobStatus.NotStarted;
 					job.Status = "ERROR: " + ex.ToString();
