@@ -108,7 +108,7 @@ namespace VodArchiver.VideoJobs {
 			return filenames.ToArray();
 		}
 
-		public static async Task<Tuple<ResultType, string[]>> Download( IVideoJob job, string targetFolder, string[] urls, int delayPerDownload = 0 ) {
+		public static async Task<(ResultType result, string[] files)> Download( IVideoJob job, string targetFolder, string[] urls, int delayPerDownload = 0 ) {
 			Directory.CreateDirectory( targetFolder );
 
 			List<string> files = new List<string>( urls.Length );
@@ -117,13 +117,13 @@ namespace VodArchiver.VideoJobs {
 			while ( files.Count < urls.Length ) {
 				if ( triesLeft <= 0 ) {
 					job.Status = "Failed to download individual parts after " + MaxTries + " tries, aborting.";
-					return new Tuple<ResultType, string[]>( ResultType.Failure, null );
+					return ( ResultType.Failure, null );
 				}
 				files.Clear();
 				for ( int i = 0; i < urls.Length; ++i ) {
 					if ( job.IsStopped() ) {
 						job.Status = "Stopped.";
-						return new Tuple<ResultType, string[]>( ResultType.Cancelled, null );
+						return ( ResultType.Cancelled, null );
 					}
 
 					string url = urls[i];
@@ -187,7 +187,7 @@ namespace VodArchiver.VideoJobs {
 				}
 			}
 
-			return new Tuple<ResultType, string[]>( ResultType.Success, files.ToArray() );
+			return ( ResultType.Success, files.ToArray() );
 		}
 
 		public static async Task Combine( string combinedFilename, string[] files ) {

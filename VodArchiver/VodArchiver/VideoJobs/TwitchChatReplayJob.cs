@@ -42,11 +42,11 @@ namespace VodArchiver.VideoJobs {
 						if ( this.VideoInfo.VideoRecordingState == RecordingState.Live ) {
 							urls = urls.Take( Math.Max( urls.Length - 10, 0 ) ).ToArray();
 						}
-						var downloadResult = await TsVideoJob.Download( this, System.IO.Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() ), urls, 5000 );
-						if ( downloadResult.Item1 != ResultType.Success ) {
-							return downloadResult.Item1;
+						ResultType result;
+						(result, files) = await TsVideoJob.Download( this, System.IO.Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() ), urls, 5000 );
+						if ( result != ResultType.Success ) {
+							return result;
 						}
-						files = downloadResult.Item2;
 						if ( this.VideoInfo.VideoRecordingState == RecordingState.Live ) {
 							await Task.Delay( 90000 );
 							VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ), StreamService.TwitchChatReplay );
