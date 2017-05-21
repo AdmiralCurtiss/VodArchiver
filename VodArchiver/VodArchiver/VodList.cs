@@ -196,7 +196,6 @@ namespace VodArchiver {
 		private void objectListViewVideos_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
 			IVideoInfo videoInfo = (IVideoInfo)e.Model;
 			DownloadWindow.CreateAndEnqueueJob( videoInfo );
-			Task.Run( () => DownloadWindow.RunJob( videoInfo.Service ) );
 		}
 
 		private void comboBoxKnownUsers_SelectedIndexChanged( object sender, EventArgs e ) {
@@ -250,7 +249,6 @@ namespace VodArchiver {
 			foreach ( IVideoInfo videoInfo in videos ) {
 				Console.WriteLine( "Enqueueing " + videoInfo.Username + "/" + videoInfo.VideoId );
 				downloadWindow.CreateAndEnqueueJob( videoInfo );
-				Task.Run( () => downloadWindow.RunJob( videoInfo.Service ) );
 			}
 		}
 

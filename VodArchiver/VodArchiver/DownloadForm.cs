@@ -174,7 +174,6 @@ namespace VodArchiver {
 
 			CreateAndEnqueueJob( service, id );
 			textboxMediaId.Text = "";
-			Task.Run( () => RunJob( service ) );
 		}
 
 		public struct CreateAndEnqueueJobReturnValue { public bool Success; public IVideoJob Job; }
@@ -229,10 +228,6 @@ namespace VodArchiver {
 			InvokeSaveJobs();
 
 			return true;
-		}
-
-		public async Task RunJob( StreamService service, IVideoJob job = null, bool forceStart = false ) {
-			await VideoTaskGroups[service].RunJob( job, forceStart );
 		}
 
 		private void buttonSettings_Click( object sender, EventArgs e ) {
@@ -298,12 +293,6 @@ namespace VodArchiver {
 					if ( i % 2 == 1 ) {
 						objectListViewDownloads.Items[i].BackColor = objectListViewDownloads.AlternateRowBackColorOrDefault;
 					}
-				}
-			}
-
-			foreach ( StreamService s in Enum.GetValues( typeof( StreamService ) ) ) {
-				for ( int i = 0; i < VideoTaskGroups[s].MaxJobsRunningPerType; ++i ) {
-					Task.Run( () => RunJob( s ) );
 				}
 			}
 		}
@@ -425,7 +414,7 @@ namespace VodArchiver {
 					ToolStripItem item = menu.Items.Add( "Download now" );
 					item.Click += ( sender, e ) => {
 						if ( job.JobStatus == VideoJobStatus.NotStarted || job.JobStatus == VideoJobStatus.Dead ) {
-							Task.Run( () => RunJob( job.VideoInfo.Service, job, true ) );
+							VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job, true ) );
 						}
 					};
 					menu.Items.Add( new ToolStripSeparator() );
