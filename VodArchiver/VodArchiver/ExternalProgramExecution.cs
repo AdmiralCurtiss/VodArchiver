@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 
 namespace VodArchiver {
 	public class ExternalProgramReturnNonzeroException : Exception {
+		public int ReturnValue;
 		public string Program;
 		public string[] Arguments;
 		public string StdOut;
 		public string StdErr;
 		public override string ToString() {
-			return Program + " returned nonzero: " + ( StdErr.Trim() != "" ? StdErr : StdOut );
+			return Program + " returned " + ReturnValue + ": " + ( StdErr.Trim() != "" ? StdErr : StdOut );
 		}
 	}
 
@@ -81,7 +82,7 @@ namespace VodArchiver {
 				string err = errorData.ToString();
 
 				if ( exeProcess.ExitCode != 0 ) {
-					throw new ExternalProgramReturnNonzeroException() { Program = prog, Arguments = args, StdOut = output, StdErr = err };
+					throw new ExternalProgramReturnNonzeroException() { ReturnValue = exeProcess.ExitCode, Program = prog, Arguments = args, StdOut = output, StdErr = err };
 				}
 
 				return new RunProgramReturnValue() { StdOut = output, StdErr = err };
