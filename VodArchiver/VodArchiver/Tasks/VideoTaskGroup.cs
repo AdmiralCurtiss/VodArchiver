@@ -94,6 +94,9 @@ namespace VodArchiver.Tasks {
 				for ( int i = RunningTasks.Count - 1; i >= 0; --i ) {
 					(IVideoJob taskJob, Task<ResultType> task) = RunningTasks[i];
 					if ( task.IsCompleted ) {
+						// need to remove the task first, as otherwise the Add() still detects it as running
+						RunningTasks.RemoveAt( i );
+
 						if ( task.Status == TaskStatus.RanToCompletion ) {
 							ResultType result = task.Result;
 							if ( result == ResultType.TemporarilyUnavailable ) {
@@ -106,8 +109,6 @@ namespace VodArchiver.Tasks {
 								taskJob.Status = "Failed for unknown reasons.";
 							}
 						}
-
-						RunningTasks.RemoveAt( i );
 
 						RequestSaveJobs();
 						RequestPowerEvent();
