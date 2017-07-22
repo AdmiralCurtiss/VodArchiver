@@ -115,7 +115,7 @@ namespace VodArchiver {
 
 			if ( uri.Host.Contains( "twitch.tv" ) ) {
 				service = StreamService.Twitch;
-			} else if ( uri.Host.Contains( "hitbox.tv" ) ) {
+			} else if ( uri.Host.Contains( "hitbox.tv" ) || uri.Host.Contains( "smashcast.tv" ) ) {
 				service = StreamService.Hitbox;
 			} else if ( uri.Host.Contains( "youtube.com" ) ) {
 				service = StreamService.Youtube;

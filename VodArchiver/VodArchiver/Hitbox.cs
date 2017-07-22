@@ -60,7 +60,7 @@ namespace VodArchiver {
 	}
 
 	public class Hitbox {
-		static string apiUrl = "http://api.hitbox.tv/";
+		static string apiUrl = "http://api.smashcast.tv/";
 		public static async Task<(bool success, HitboxVideo video)> RetrieveVideo( string id ) {
 			Uri uri = new Uri( apiUrl + "media/video/" + id );
 

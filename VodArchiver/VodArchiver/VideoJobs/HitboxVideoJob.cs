@@ -26,7 +26,7 @@ namespace VodArchiver.VideoJobs {
 			VideoInfo = new HitboxVideoInfo( video );
 
 			// TODO: Figure out how to determine quality when there are multiple.
-			string m3u8path = "http://edge.bf.hitbox.tv/static/videos/vods" + GetM3U8PathFromM3U( video.MediaProfiles.First().Url );
+			string m3u8path = "https://smashcast-vod.akamaized.net/static/videos/vods" + GetM3U8PathFromM3U( video.MediaProfiles.First().Url );
 			string folderpath = TsVideoJob.GetFolder( m3u8path );
 			string m3u8;
 
