@@ -192,6 +192,9 @@ namespace VodArchiver {
 				case StreamService.Youtube:
 					job = new YoutubeVideoJob( id );
 					break;
+				case StreamService.RawUrl:
+					job = new GenericFileJob( id );
+					break;
 				default:
 					throw new Exception( service.ToString() + " isn't a known service." );
 			}

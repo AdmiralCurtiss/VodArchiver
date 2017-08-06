@@ -170,7 +170,8 @@
             "Hitbox",
             "Youtube (User)",
             "Youtube (Channel)",
-            "Youtube (Playlist)"});
+            "Youtube (Playlist)",
+            "RSS Feed"});
 			this.comboBoxService.Location = new System.Drawing.Point(250, 12);
 			this.comboBoxService.Name = "comboBoxService";
 			this.comboBoxService.Size = new System.Drawing.Size(133, 21);

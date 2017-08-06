@@ -67,6 +67,7 @@ namespace VodArchiver {
 					case "Youtube (Playlist)": userInfo.Service = ServiceVideoCategoryType.YoutubePlaylist; break;
 					case "Youtube (User)": userInfo.Service = ServiceVideoCategoryType.YoutubeUser; break;
 					case "Youtube (Channel)": userInfo.Service = ServiceVideoCategoryType.YoutubeChannel; break;
+					case "RSS Feed": userInfo.Service = ServiceVideoCategoryType.RssFeed; break;
 					default: return new FetchReturnValue { Success = false, HasMore = false };
 				}
 				userInfo.Persistable = checkBoxSaveForLater.Checked;
@@ -170,6 +171,14 @@ namespace VodArchiver {
 						videosToAdd.Add( v );
 					}
 					currentVideos = userVideos.Count;
+					break;
+				case ServiceVideoCategoryType.RssFeed:
+					List<IVideoInfo> rssFeedMedia = Rss.GetMediaFromFeed( userInfo.Username );
+					hasMore = false;
+					foreach ( var m in rssFeedMedia ) {
+						videosToAdd.Add( m );
+					}
+					currentVideos = rssFeedMedia.Count;
 					break;
 				default:
 					return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };

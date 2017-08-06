@@ -134,6 +134,21 @@ namespace VodArchiver {
 			return retval;
 		}
 
+		public static List<char> GetCustomInvalidFileNameChars() {
+			List<char> chars = System.IO.Path.GetInvalidFileNameChars().ToList();
+			chars.Add( ' ' ); // although spaces are technically valid we don't want them
+			chars.Add( '.' ); // no dots either, just in case
+			return chars;
+		}
+
+		public static string MakeStringFileSystemSafeBaseName( string s ) {
+			string fn = s;
+			foreach ( char c in GetCustomInvalidFileNameChars() ) {
+				fn = fn.Replace( c, '_' );
+			}
+			return fn;
+		}
+
 		public static void CopyStream( System.IO.Stream input, System.IO.Stream output, long count ) {
 			byte[] buffer = new byte[4096];
 			int read;

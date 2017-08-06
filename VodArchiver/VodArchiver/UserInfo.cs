@@ -13,6 +13,7 @@ namespace VodArchiver {
 		YoutubeUser,
 		YoutubeChannel,
 		YoutubePlaylist,
+		RssFeed,
 	}
 
 	public class UserInfo : IEquatable<UserInfo>, IEqualityComparer<UserInfo>, IComparable<UserInfo> {

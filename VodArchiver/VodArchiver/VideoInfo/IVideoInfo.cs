@@ -11,6 +11,7 @@ namespace VodArchiver.VideoInfo {
 		Hitbox,
 		TwitchChatReplay,
 		Youtube,
+		RawUrl,
 	}
 
 	public enum RecordingState {

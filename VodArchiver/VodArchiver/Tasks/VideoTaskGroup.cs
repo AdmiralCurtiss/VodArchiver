@@ -42,7 +42,7 @@ namespace VodArchiver.Tasks {
 			Service = service;
 			WaitingJobs = new List<WaitingVideoJob>();
 			JobQueueLock = new object();
-			MaxJobsRunningPerType = service == StreamService.Youtube ? 1 : 3;
+			MaxJobsRunningPerType = ( service == StreamService.Youtube || service == StreamService.RawUrl ) ? 1 : 3;
 			RunningTasks = new List<(IVideoJob job, Task<ResultType> task)>( MaxJobsRunningPerType );
 			RequestSaveJobs = saveJobsDelegate;
 			RequestPowerEvent = powerEventDelegate;
