@@ -26,7 +26,7 @@ namespace VodArchiver.VideoJobs {
 
 		public string GetTargetFilename() {
 			// best guess...
-			string extension = Util.MakeStringFileSystemSafeBaseName( VideoInfo.VideoId.Trim() ).Split( '_' ).LastOrDefault();
+			string extension = Util.MakeStringFileSystemSafeBaseName( VideoInfo.VideoId.Trim().Split( '/' ).LastOrDefault().Split( '?' ).FirstOrDefault() ).Split( '_' ).LastOrDefault();
 			if ( String.IsNullOrWhiteSpace( extension ) ) {
 				extension = "bin";
 			}
