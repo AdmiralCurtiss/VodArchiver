@@ -55,7 +55,7 @@ namespace VodArchiver {
 			foreach ( SyndicationItem item in feed.Items ) {
 				SyndicationLink link = item.Links.Where( x => x.MediaType != null ).FirstOrDefault();
 				if ( link == null ) {
-					throw new Exception( "Failed to determine correct link!" );
+					continue;
 				}
 
 				string description = GetStringFromSyndicationContent( item.Summary );
