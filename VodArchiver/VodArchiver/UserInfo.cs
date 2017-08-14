@@ -17,6 +17,7 @@ namespace VodArchiver {
 	}
 
 	public class UserInfo : IEquatable<UserInfo>, IEqualityComparer<UserInfo>, IComparable<UserInfo> {
+		public static int SerializeDataCount = 4;
 		public ServiceVideoCategoryType Service;
 		public bool Persistable;
 		public string Username;
@@ -46,10 +47,10 @@ namespace VodArchiver {
 			return s;
 		}
 
-		public static UserInfo FromSerializableString( string s ) {
+		public static UserInfo FromSerializableString( string s, int splitcount ) {
 			UserInfo u = new UserInfo();
 
-			string[] parts = s.Split( new char[] { '/' }, 4 );
+			string[] parts = s.Split( new char[] { '/' }, splitcount );
 			int partnum = 0;
 			if ( !Enum.TryParse( parts[partnum++], out u.Service ) ) {
 				throw new Exception( "Parsing ServiceVideoCategoryType from '" + parts[0] + "' failed." );
@@ -96,8 +97,18 @@ namespace VodArchiver {
 				_KnownUsers = new SortedSet<UserInfo>();
 				if ( System.IO.File.Exists( Util.UserSerializationPath ) ) {
 					string[] userList = System.IO.File.ReadAllLines( Util.UserSerializationPath );
+					int expectedAmountOfSections = 4; // if no #datacount label in file assume 4, that was the amount at the time the label was implemented
 					foreach ( var s in userList ) {
-						_KnownUsers.Add( UserInfo.FromSerializableString( s ) );
+						if ( s.StartsWith( "#" ) ) {
+							if ( s.StartsWith( "#datacount" ) ) {
+								int tmp;
+								if ( Int32.TryParse( s.Substring( "#datacount".Length ).Trim(), out tmp ) ) {
+									expectedAmountOfSections = tmp;
+								}
+							}
+							continue;
+						}
+						_KnownUsers.Add( UserInfo.FromSerializableString( s, expectedAmountOfSections ) );
 					}
 				}
 			}
@@ -106,6 +117,7 @@ namespace VodArchiver {
 		public static void Save() {
 			lock ( _KnownUsersLock ) {
 				List<string> userList = new List<string>( KnownUsers.Count );
+				userList.Add( "#datacount" + UserInfo.SerializeDataCount );
 				foreach ( var u in KnownUsers ) {
 					userList.Add( u.ToSerializableString() );
 				}
