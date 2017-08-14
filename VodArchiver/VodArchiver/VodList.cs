@@ -184,6 +184,9 @@ namespace VodArchiver {
 					return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };
 			}
 
+			userInfo.LastRefreshedOn = DateTime.UtcNow;
+			forceReSave = true;
+
 			if ( userInfo.Persistable && forceReSave ) {
 				UserInfoPersister.KnownUsers.AddOrUpdate( userInfo );
 				UserInfoPersister.Save();
