@@ -106,6 +106,10 @@ namespace VodArchiver {
 			return (ulong)( time - new DateTime( 1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc ) ).TotalSeconds;
 		}
 
+		public static DateTime DateTimeFromUnixTime( this ulong time ) {
+			return new DateTime( 1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc ).AddSeconds( time );
+		}
+
 		public static string GetParameterFromUri( Uri uri, string parameter ) {
 			foreach ( string q in uri.Query.Substring( 1 ).Split( '&' ) ) {
 				var kvp = q.Split( new char[] { '=' }, 2 );
