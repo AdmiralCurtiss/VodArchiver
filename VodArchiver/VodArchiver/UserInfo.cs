@@ -16,6 +16,31 @@ namespace VodArchiver {
 		RssFeed,
 	}
 
+	public static class ServiceVideoCategoryGroups {
+		public static List<List<ServiceVideoCategoryType>> Groups {
+			get {
+				return new List<List<ServiceVideoCategoryType>> {
+					new List<ServiceVideoCategoryType> {
+						ServiceVideoCategoryType.TwitchRecordings,
+						ServiceVideoCategoryType.TwitchHighlights,
+					},
+					new List<ServiceVideoCategoryType> {
+						ServiceVideoCategoryType.HitboxRecordings,
+					},
+					new List<ServiceVideoCategoryType> {
+						ServiceVideoCategoryType.YoutubeUser,
+						ServiceVideoCategoryType.YoutubeChannel,
+						ServiceVideoCategoryType.YoutubePlaylist,
+					},
+					new List<ServiceVideoCategoryType> {
+						ServiceVideoCategoryType.RssFeed,
+					},
+				};
+			}
+		}
+	}
+
+
 	public class UserInfo : IEquatable<UserInfo>, IEqualityComparer<UserInfo>, IComparable<UserInfo> {
 		public static int SerializeDataCount = 5;
 		public ServiceVideoCategoryType Service;
@@ -90,12 +115,14 @@ namespace VodArchiver {
 	public class UserInfoPersister {
 		private static object _KnownUsersLock = new object();
 		private static SortedSet<UserInfo> _KnownUsers = null;
-		public static SortedSet<UserInfo> KnownUsers {
+		private static SortedSet<UserInfo> KnownUsers {
 			get {
-				if ( _KnownUsers == null ) {
-					Load();
+				lock ( _KnownUsersLock ) {
+					if ( _KnownUsers == null ) {
+						Load();
+					}
+					return _KnownUsers;
 				}
-				return _KnownUsers;
 			}
 		}
 
@@ -129,6 +156,24 @@ namespace VodArchiver {
 					userList.Add( u.ToSerializableString() );
 				}
 				System.IO.File.WriteAllLines( Util.UserSerializationPath, userList );
+			}
+		}
+
+		public static bool Add( UserInfo ui ) {
+			lock ( _KnownUsersLock ) {
+				return KnownUsers.Add( ui );
+			}
+		}
+
+		public static bool AddOrUpdate( UserInfo ui ) {
+			lock ( _KnownUsersLock ) {
+				return KnownUsers.AddOrUpdate( ui );
+			}
+		}
+
+		public static List<UserInfo> GetKnownUsers() {
+			lock ( _KnownUsersLock ) {
+				return new List<UserInfo>( KnownUsers );
 			}
 		}
 	}

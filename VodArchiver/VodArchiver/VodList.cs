@@ -26,7 +26,7 @@ namespace VodArchiver {
 			objectListViewVideos.SecondarySortOrder = SortOrder.Ascending;
 
 			comboBoxKnownUsers.Items.Add( " == No Preset == " );
-			comboBoxKnownUsers.Items.AddRange( UserInfoPersister.KnownUsers.ToArray() );
+			comboBoxKnownUsers.Items.AddRange( UserInfoPersister.GetKnownUsers().ToArray() );
 			comboBoxKnownUsers.SelectedIndex = 0;
 
 			buttonClear.Enabled = false;
@@ -188,7 +188,7 @@ namespace VodArchiver {
 			forceReSave = true;
 
 			if ( userInfo.Persistable && forceReSave ) {
-				UserInfoPersister.KnownUsers.AddOrUpdate( userInfo );
+				UserInfoPersister.AddOrUpdate( userInfo );
 				UserInfoPersister.Save();
 			}
 
@@ -197,7 +197,7 @@ namespace VodArchiver {
 			}
 
 			if ( userInfo.Persistable && !forceReSave ) {
-				if ( UserInfoPersister.KnownUsers.Add( userInfo ) ) {
+				if ( UserInfoPersister.Add( userInfo ) ) {
 					UserInfoPersister.Save();
 				}
 			}
@@ -336,7 +336,7 @@ namespace VodArchiver {
 				if ( u.AutoDownload != checkBoxAutoDownload.Checked ) {
 					u.AutoDownload = checkBoxAutoDownload.Checked;
 					if ( u.Persistable ) {
-						UserInfoPersister.KnownUsers.AddOrUpdate( u );
+						UserInfoPersister.AddOrUpdate( u );
 						UserInfoPersister.Save();
 					}
 				}
