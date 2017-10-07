@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 using TwixelAPI;
 using VodArchiver.Tasks;
 using VodArchiver.VideoInfo;
@@ -267,6 +268,21 @@ namespace VodArchiver {
 				List<IVideoJob> jobs = new List<IVideoJob>();
 
 				try {
+				  if ( File.Exists( Util.VodXmlPath ) ) {
+					XmlDocument doc = new XmlDocument();
+					using ( FileStream fs = System.IO.File.OpenRead( Util.VodXmlPath ) ) {
+						if ( fs.PeekUInt16() == 0x8B1F ) {
+							using ( System.IO.Compression.GZipStream gzs = new System.IO.Compression.GZipStream( fs, System.IO.Compression.CompressionMode.Decompress ) ) {
+								doc.Load( gzs );
+							}
+						} else {
+							doc.Load( fs );
+						}
+					}
+					foreach ( XmlNode node in doc.SelectNodes( "//root/Job" ) ) {
+						jobs.Add( IVideoJob.Deserialize( node ) );
+					}
+				  } else {
 					using ( FileStream fs = System.IO.File.OpenRead( Util.VodBinaryPath ) ) {
 						if ( fs.PeekUInt16() == 0x8B1F ) {
 							using ( System.IO.Compression.GZipStream gzs = new System.IO.Compression.GZipStream( fs, System.IO.Compression.CompressionMode.Decompress ) ) {
@@ -276,6 +292,7 @@ namespace VodArchiver {
 							jobs = LoadJobsInternal( fs );
 						}
 					}
+				  }
 				} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
 
 				foreach ( IVideoJob job in jobs ) {
@@ -310,10 +327,14 @@ namespace VodArchiver {
 		}
 
 		private void SaveJobsInternal( System.IO.Stream fs, List<IVideoJob> jobs ) {
-			System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-			formatter.Serialize( fs, jobs.Count );
+			XmlDocument document = new XmlDocument();
+			XmlNode node = document.CreateElement( "root" );
 			foreach ( var job in jobs ) {
-				formatter.Serialize( fs, job );
+				node.AppendChild( job.Serialize( document, document.CreateElement( "Job" ) ) );
+			}
+			document.AppendChild( node );
+			using ( StreamWriter sw = new StreamWriter( fs, new UTF8Encoding( false, true ), 1024 * 1024, true ) ) {
+				document.Save( XmlWriter.Create( sw ) );
 			}
 		}
 
@@ -343,16 +364,16 @@ namespace VodArchiver {
 
 					long count = memoryStream.Position;
 					memoryStream.Position = 0;
-					using ( FileStream fs = System.IO.File.Create( Util.VodBinaryTempPath ) )
+					using ( FileStream fs = System.IO.File.Create( Util.VodXmlTempPath ) )
 					using ( System.IO.Compression.GZipStream gzs = new System.IO.Compression.GZipStream( fs, System.IO.Compression.CompressionLevel.Optimal ) ) {
 						Util.CopyStream( memoryStream, gzs, count );
 					}
-					if ( System.IO.File.Exists( Util.VodBinaryPath ) ) {
+					if ( System.IO.File.Exists( Util.VodXmlPath ) ) {
 						Thread.Sleep( 100 );
-						System.IO.File.Delete( Util.VodBinaryPath );
+						System.IO.File.Delete( Util.VodXmlPath );
 						Thread.Sleep( 100 );
 					}
-					System.IO.File.Move( Util.VodBinaryTempPath, Util.VodBinaryPath );
+					System.IO.File.Move( Util.VodXmlTempPath, Util.VodXmlPath );
 					Thread.Sleep( 100 );
 				}
 			}
