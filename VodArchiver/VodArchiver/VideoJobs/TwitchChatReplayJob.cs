@@ -21,6 +21,8 @@ namespace VodArchiver.VideoJobs {
 			TwitchAPI = api;
 		}
 
+		public TwitchChatReplayJob( XmlNode node ) : base( node ) { }
+
 		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "_type", "TwitchChatReplayJob" );
 			return base.Serialize( document, node );

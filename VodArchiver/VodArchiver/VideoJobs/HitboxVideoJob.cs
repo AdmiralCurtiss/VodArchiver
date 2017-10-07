@@ -18,6 +18,8 @@ namespace VodArchiver.VideoJobs {
 			Status = "...";
 		}
 
+		public HitboxVideoJob( XmlNode node ) : base( node ) { }
+
 		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "_type", "HitboxVideoJob" );
 			return base.Serialize( document, node );

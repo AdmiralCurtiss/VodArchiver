@@ -14,6 +14,10 @@ namespace VodArchiver.VideoInfo {
 			VideoInfo = video;
 		}
 
+		public HitboxVideoInfo( XmlNode node ) {
+			VideoInfo = new HitboxVideo( node.SelectSingleNode( "VideoInfo" ) );
+		}
+
 		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "_type", "HitboxVideoInfo" );
 			node.AppendChild( VideoInfo.Serialize( document, document.CreateElement( "VideoInfo" ) ) );

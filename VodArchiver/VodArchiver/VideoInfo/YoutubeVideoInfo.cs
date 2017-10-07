@@ -21,6 +21,21 @@ namespace VodArchiver.VideoInfo {
 		public string UserDisplayName { get; set; }
 		public string VideoDescription { get; set; }
 
+		public YoutubeVideoInfo() { }
+
+		public YoutubeVideoInfo( XmlNode node ) {
+			Username = node.Attributes["username"].Value;
+			VideoId = node.Attributes["videoId"].Value;
+			VideoTitle = node.Attributes["videoTitle"].Value;
+			VideoGame = node.Attributes["videoTags"].Value;
+			VideoTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["videoTimestamp"].Value ) );
+			VideoLength = TimeSpan.FromSeconds( double.Parse( node.Attributes["videoLength"].Value ) );
+			VideoRecordingState = (RecordingState)Enum.Parse( typeof( RecordingState ), node.Attributes["videoRecordingState"].Value );
+			VideoType = (VideoFileType)Enum.Parse( typeof( VideoFileType ), node.Attributes["videoType"].Value );
+			UserDisplayName = node.Attributes["userDisplayName"].Value;
+			VideoDescription = node.Attributes["videoDescription"].Value;
+		}
+
 		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "_type", "YoutubeVideoInfo" );
 			node.AppendAttribute( document, "username", Username );

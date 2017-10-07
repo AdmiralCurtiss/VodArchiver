@@ -26,5 +26,13 @@ namespace VodArchiver {
 			node.AppendChild( element );
 			return element;
 		}
+
+		public static Dictionary<T, U> DeserializeDictionary<T, U>( this XmlNode node, Func<string, T> keyFromStringMethod, Func<string, U> valueFromStringMethod ) {
+			Dictionary<T, U> d = new Dictionary<T, U>();
+			foreach ( XmlAttribute attr in node.Attributes ) {
+				d.Add( keyFromStringMethod( attr.Name.Substring( 1 ) ), valueFromStringMethod( attr.Value ) );
+			}
+			return d;
+		}
 	}
 }

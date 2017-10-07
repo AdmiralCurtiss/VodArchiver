@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
 	public enum VideoJobStatus {
@@ -73,6 +74,18 @@ namespace VodArchiver.VideoJobs {
 		[System.Runtime.Serialization.OptionalField( VersionAdded = 4 )]
 		public DateTime JobFinishTimestamp;
 
+		public IVideoJob() { }
+
+		public IVideoJob( XmlNode node ) {
+			_Status = node.Attributes["textStatus"].Value;
+			JobStatus = (VideoJobStatus)Enum.Parse( typeof( VideoJobStatus ), node.Attributes["jobStatus"].Value );
+			VideoInfo = IVideoInfo.Deserialize( node.SelectSingleNode( "VideoInfo" ) );
+			HasBeenValidated = bool.Parse( node.Attributes["hasBeenValidated"].Value );
+			Notes =  node.Attributes["notes"].Value;
+			JobStartTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["jobStartTimestamp"].Value ) );
+			JobFinishTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["jobFinishTimestamp"].Value ) );
+		}
+
 		public abstract Task<ResultType> Run();
 
 		public virtual XmlNode Serialize( XmlDocument document, XmlNode node ) {
@@ -84,6 +97,18 @@ namespace VodArchiver.VideoJobs {
 			node.AppendAttribute( document, "jobStartTimestamp", JobStartTimestamp.ToBinary().ToString() );
 			node.AppendAttribute( document, "jobFinishTimestamp", JobFinishTimestamp.ToBinary().ToString() );
 			return node;
+		}
+
+		public static IVideoJob Deserialize( XmlNode node ) {
+			string type = node.Attributes["_type"].Value;
+			switch ( type ) {
+				case "GenericFileJob": return new GenericFileJob( node );
+				case "HitboxVideoJob": return new HitboxVideoJob( node );
+				case "TwitchChatReplayJob": return new TwitchChatReplayJob( node );
+				case "TwitchVideoJob": return new TwitchVideoJob( node );
+				case "YoutubeVideoJob": return new YoutubeVideoJob( node );
+				default: throw new Exception( "Unknown video job type: " + type );
+			}
 		}
 
 		public override bool Equals( object obj ) {

@@ -4,11 +4,15 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
 	[Serializable]
 	public abstract class TsVideoJob : IVideoJob {
+		public TsVideoJob() : base() { }
+		public TsVideoJob( XmlNode node ) : base( node ) { }
+
 		public override async Task<ResultType> Run() {
 			Stopped = false;
 			JobStatus = VideoJobStatus.Running;

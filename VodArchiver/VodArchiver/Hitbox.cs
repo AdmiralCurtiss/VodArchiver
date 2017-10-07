@@ -21,6 +21,12 @@ namespace VodArchiver {
 			Bitrate = (int)jt["bitrate"];
 		}
 
+		public HitboxMediaProfile( XmlNode node ) {
+			Url = node.Attributes["url"].Value;
+			Height = int.Parse( node.Attributes["height"].Value );
+			Bitrate = int.Parse( node.Attributes["bitrate"].Value );
+		}
+
 		public XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "url", Url );
 			node.AppendAttribute( document, "height", Height.ToString() );
@@ -64,6 +70,24 @@ namespace VodArchiver {
 				MediaProfiles[i] = new HitboxMediaProfile( profiles[i] );
 			}
 			MediaTypeId = (int)video["media_type_id"];
+		}
+
+		public HitboxVideo( XmlNode node ) {
+			MediaUserName = node.Attributes["mediaUserName"].Value;
+			MediaId = int.Parse( node.Attributes["mediaId"].Value );
+			MediaFile = node.Attributes["mediaFile"].Value;
+			MediaUserId = int.Parse( node.Attributes["mediaUserId"].Value );
+			List<HitboxMediaProfile> profiles = new List<HitboxMediaProfile>();
+			foreach ( XmlNode p in node.SelectNodes( "MediaProfile" ) ) {
+				profiles.Add( new HitboxMediaProfile( p ) );
+			}
+			MediaProfiles = profiles.ToArray();
+			MediaDateAdded = DateTime.FromBinary( long.Parse( node.Attributes["mediaDateAdded"].Value ) );
+			MediaTitle = node.Attributes["mediaTitle"].Value;
+			MediaDescription = node.Attributes["mediaDescription"].Value;
+			MediaGame = node.Attributes["mediaGame"].Value;
+			MediaDuration = double.Parse( node.Attributes["mediaDuration"].Value );
+			MediaTypeId = int.Parse( node.Attributes["mediaTypeId"].Value );
 		}
 
 		public XmlNode Serialize( XmlDocument document, XmlNode node ) {

@@ -41,6 +41,17 @@ namespace VodArchiver.VideoInfo {
 
 		public abstract XmlNode Serialize( XmlDocument document, XmlNode node );
 
+		public static IVideoInfo Deserialize( XmlNode node ) {
+			string type = node.Attributes["_type"].Value;
+			switch ( type ) {
+				case "GenericVideoInfo": return new GenericVideoInfo( node );
+				case "HitboxVideoInfo": return new HitboxVideoInfo( node );
+				case "TwitchVideoInfo": return new TwitchVideoInfo( node );
+				case "YoutubeVideoInfo": return new YoutubeVideoInfo( node );
+				default: throw new Exception( "Unknown video job type: " + type );
+			}
+		}
+
 		public override bool Equals( object obj ) {
 			return Equals( obj as IVideoInfo );
 		}

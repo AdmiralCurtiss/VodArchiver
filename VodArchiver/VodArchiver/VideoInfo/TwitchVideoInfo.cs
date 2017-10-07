@@ -18,6 +18,11 @@ namespace VodArchiver.VideoInfo {
 			_Service = service;
 		}
 
+		public TwitchVideoInfo( XmlNode node ) {
+			VideoInfo = DeserializeTwixelVideo( node.SelectSingleNode( "VideoInfo" ) );
+			_Service = (StreamService)Enum.Parse( typeof( StreamService ), node.Attributes["service"].Value );
+		}
+
 		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "_type", "TwitchVideoInfo" );
 			node.AppendChild( SerializeTwixelVideo( VideoInfo, document, document.CreateElement( "VideoInfo" ) ) );
@@ -61,6 +66,51 @@ namespace VodArchiver.VideoInfo {
 			}
 
 			return node;
+		}
+
+		public static TwixelAPI.Video DeserializeTwixelVideo( XmlNode node ) {
+			TwixelAPI.Video v = new TwixelAPI.Video(
+				node.Attributes["title"]?.Value,
+				node.Attributes["description"]?.Value,
+				long.Parse( node.Attributes["broadcastId"]?.Value ),
+				node.Attributes["status"]?.Value,
+				node.Attributes["tagList"]?.Value,
+				node.Attributes["id"]?.Value,
+				"2000-01-01", // temporary, this ctor is dumb
+				node.Attributes["game"]?.Value,
+				long.Parse( node.Attributes["length"]?.Value ),
+				node.Attributes["preview"]?.Value,
+				node.Attributes["url"]?.Value,
+				long.Parse( node.Attributes["views"]?.Value ),
+				null,
+				null,
+				node.Attributes["broadcastType"]?.Value,
+				new Newtonsoft.Json.Linq.JObject(),
+				null
+			);
+			v.version = (TwixelAPI.Twixel.APIVersion)Enum.Parse( typeof( TwixelAPI.Twixel.APIVersion ), node.Attributes["_version"]?.Value );
+			v.recordedAt = DateTime.FromBinary( long.Parse( node.Attributes["recordedAt"]?.Value ) );
+			v.fps = node.SelectSingleNode("fps")?.DeserializeDictionary( ( string key ) => key, ( string value ) => double.Parse( value ) );
+			v.resolutions = node.SelectSingleNode( "resolutions" )?.DeserializeDictionary( ( string key ) => key, ( string value ) => new TwixelAPI.Resolution( int.Parse( value.Split('x')[0] ), int.Parse( value.Split( 'x' )[1] ) ) );
+			v.channel = node.SelectSingleNode( "channel" )?.DeserializeDictionary( ( string key ) => key, ( string value ) => value );
+			v.baseLinks = node.SelectSingleNode( "baseLinks" )?.DeserializeDictionary( ( string key ) => key, ( string value ) => new Uri( value ) );
+			v.previewv5 = node.SelectSingleNode( "previewv5" )?.DeserializeDictionary( ( string key ) => key, ( string value ) => new Uri( value ) );
+			v.embed = node.Attributes["embed"]?.Value;
+			v.language = node.Attributes["language"]?.Value;
+			v.viewable = node.Attributes["viewable"]?.Value;
+
+			XmlNode thumbnailsNode = node.SelectSingleNode( "thumbnails" );
+			if ( thumbnailsNode != null ) {
+				v.thumbnails = new Dictionary<string, TwixelAPI.Thumbnail>();
+				foreach ( XmlNode tn in thumbnailsNode.ChildNodes ) {
+					string key = tn.Name.Substring( 1 );
+					string url = tn.Attributes["url"].Value;
+					string type = tn.Attributes["type"].Value;
+					v.thumbnails.Add( key, new TwixelAPI.Thumbnail( url, type ) );
+				}
+			}
+
+			return v;
 		}
 
 		public override StreamService Service {
