@@ -9,7 +9,6 @@ using System.Xml;
 using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
-	[Serializable]
 	public class HitboxVideoJob : TsVideoJob {
 		public HitboxVideoJob( string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
 			JobStatus = VideoJobStatus.NotStarted;

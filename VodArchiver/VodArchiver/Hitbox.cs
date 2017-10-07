@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Xml;
 
 namespace VodArchiver {
-	[Serializable]
 	public class HitboxMediaProfile {
 		public string Url;
 		public int Height;
@@ -35,7 +34,6 @@ namespace VodArchiver {
 		}
 	}
 
-	[Serializable]
 	public class HitboxVideo {
 		public string MediaUserName;
 		public int MediaId;

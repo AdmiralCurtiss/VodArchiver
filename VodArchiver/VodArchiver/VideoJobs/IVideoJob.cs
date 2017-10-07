@@ -22,7 +22,6 @@ namespace VodArchiver.VideoJobs {
 		TemporarilyUnavailable,
 	}
 
-	[Serializable]
 	public abstract class IVideoJob {
 		private string _Status;
 		public virtual string Status {
@@ -49,29 +48,22 @@ namespace VodArchiver.VideoJobs {
 			}
 		}
 
-		[NonSerialized]
 		public StatusUpdate.IStatusUpdate StatusUpdater;
 
-		[NonSerialized]
 		protected bool Stopped;
 
-		[NonSerialized]
 		public long Index;
 
 		public VideoJobStatus JobStatus;
 
 		public virtual VideoInfo.IVideoInfo VideoInfo { get; set; }
 
-		[System.Runtime.Serialization.OptionalField( VersionAdded = 2 )]
 		public bool HasBeenValidated;
 
-		[System.Runtime.Serialization.OptionalField( VersionAdded = 3 )]
 		public string Notes;
 
-		[System.Runtime.Serialization.OptionalField( VersionAdded = 4 )]
 		public DateTime JobStartTimestamp;
 
-		[System.Runtime.Serialization.OptionalField( VersionAdded = 4 )]
 		public DateTime JobFinishTimestamp;
 
 		public IVideoJob() { }

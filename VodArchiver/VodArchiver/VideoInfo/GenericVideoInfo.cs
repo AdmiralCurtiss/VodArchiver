@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.Xml;
 
 namespace VodArchiver.VideoInfo {
-	[Serializable]
 	public class GenericVideoInfo : IVideoInfo {
 		public GenericVideoInfo() { }
 

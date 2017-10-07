@@ -8,7 +8,6 @@ using System.Xml;
 using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
-	[Serializable]
 	public abstract class TsVideoJob : IVideoJob {
 		public TsVideoJob() : base() { }
 		public TsVideoJob( XmlNode node ) : base( node ) { }

@@ -8,7 +8,6 @@ using System.Xml;
 using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
-	[Serializable]
 	public class YoutubeVideoJob : IVideoJob {
 		public YoutubeVideoJob( string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
 			JobStatus = VideoJobStatus.NotStarted;

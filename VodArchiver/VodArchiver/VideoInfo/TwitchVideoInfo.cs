@@ -6,11 +6,8 @@ using System.Threading.Tasks;
 using System.Xml;
 
 namespace VodArchiver.VideoInfo {
-	[Serializable]
 	public class TwitchVideoInfo : IVideoInfo {
 		TwixelAPI.Video VideoInfo;
-
-		[System.Runtime.Serialization.OptionalField( VersionAdded = 2 )]
 		StreamService _Service;
 
 		public TwitchVideoInfo( TwixelAPI.Video video, StreamService service = StreamService.Twitch ) {
@@ -211,11 +208,6 @@ namespace VodArchiver.VideoInfo {
 			set {
 				throw new InvalidOperationException();
 			}
-		}
-
-		[System.Runtime.Serialization.OnDeserializing]
-		private void SetCountryRegionDefault( System.Runtime.Serialization.StreamingContext sc ) {
-			_Service = StreamService.Twitch;
 		}
 	}
 }

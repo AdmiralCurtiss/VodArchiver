@@ -9,9 +9,7 @@ using TwixelAPI;
 using System.Xml;
 
 namespace VodArchiver.VideoJobs {
-	[Serializable]
 	class TwitchChatReplayJob : IVideoJob {
-		[NonSerialized]
 		public Twixel TwitchAPI;
 
 		public TwitchChatReplayJob( Twixel api, string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {

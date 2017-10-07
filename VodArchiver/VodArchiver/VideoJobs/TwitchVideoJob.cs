@@ -9,9 +9,7 @@ using TwixelAPI;
 using System.Xml;
 
 namespace VodArchiver.VideoJobs {
-	[Serializable]
 	public class TwitchVideoJob : TsVideoJob {
-		[NonSerialized]
 		public Twixel TwitchAPI;
 		string VideoQuality = "chunked";
 

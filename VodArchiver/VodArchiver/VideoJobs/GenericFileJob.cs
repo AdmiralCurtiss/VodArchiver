@@ -8,7 +8,6 @@ using System.Xml;
 using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
-	[Serializable]
 	class GenericFileJob : IVideoJob {
 		public GenericFileJob( string url, StatusUpdate.IStatusUpdate statusUpdater = null ) {
 			JobStatus = VideoJobStatus.NotStarted;
