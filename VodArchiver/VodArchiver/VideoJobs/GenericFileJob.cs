@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
@@ -14,6 +15,11 @@ namespace VodArchiver.VideoJobs {
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
 			VideoInfo = new GenericVideoInfo() { Service = StreamService.RawUrl, VideoId = url };
 			Status = "...";
+		}
+
+		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
+			node.AppendAttribute( document, "_type", "GenericFileJob" );
+			return base.Serialize( document, node );
 		}
 
 		private static string StringToFilename( string basename, string extension ) {

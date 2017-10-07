@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace VodArchiver.VideoInfo {
 	public enum StreamService {
@@ -37,6 +38,8 @@ namespace VodArchiver.VideoInfo {
 		public virtual TimeSpan VideoLength { get; set; }
 		public virtual RecordingState VideoRecordingState { get; set; }
 		public virtual VideoFileType VideoType { get; set; }
+
+		public abstract XmlNode Serialize( XmlDocument document, XmlNode node );
 
 		public override bool Equals( object obj ) {
 			return Equals( obj as IVideoInfo );

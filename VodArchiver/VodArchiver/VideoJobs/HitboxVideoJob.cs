@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using VodArchiver.VideoInfo;
 
 namespace VodArchiver.VideoJobs {
@@ -15,6 +16,11 @@ namespace VodArchiver.VideoJobs {
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
 			VideoInfo = new GenericVideoInfo() { Service = StreamService.Hitbox, VideoId = id };
 			Status = "...";
+		}
+
+		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
+			node.AppendAttribute( document, "_type", "HitboxVideoJob" );
+			return base.Serialize( document, node );
 		}
 
 		public override async Task<(bool success, string[] urls)> GetFileUrlsOfVod() {

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VodArchiver.VideoInfo;
 using TwixelAPI;
+using System.Xml;
 
 namespace VodArchiver.VideoJobs {
 	[Serializable]
@@ -18,6 +19,11 @@ namespace VodArchiver.VideoJobs {
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
 			VideoInfo = new GenericVideoInfo() { Service = StreamService.TwitchChatReplay, VideoId = id };
 			TwitchAPI = api;
+		}
+
+		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
+			node.AppendAttribute( document, "_type", "TwitchChatReplayJob" );
+			return base.Serialize( document, node );
 		}
 
 		public string GetTargetFilenameWithoutExtension() {

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VodArchiver.VideoInfo;
 using TwixelAPI;
+using System.Xml;
 
 namespace VodArchiver.VideoJobs {
 	[Serializable]
@@ -19,6 +20,13 @@ namespace VodArchiver.VideoJobs {
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
 			VideoInfo = new GenericVideoInfo() { Service = StreamService.Twitch, VideoId = id };
 			TwitchAPI = api;
+		}
+
+		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
+			node.AppendAttribute( document, "_type", "TwitchVideoJob" );
+			XmlNode n = base.Serialize( document, node );
+			n.AppendAttribute( document, "videoQuality", VideoQuality );
+			return n;
 		}
 
 		public override async Task<(bool success, string[] urls)> GetFileUrlsOfVod() {

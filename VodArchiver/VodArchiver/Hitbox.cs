@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace VodArchiver {
 	[Serializable]
@@ -18,6 +19,13 @@ namespace VodArchiver {
 			Url = (string)jt["url"];
 			Height = (int)jt["height"];
 			Bitrate = (int)jt["bitrate"];
+		}
+
+		public XmlNode Serialize( XmlDocument document, XmlNode node ) {
+			node.AppendAttribute( document, "url", Url );
+			node.AppendAttribute( document, "height", Height.ToString() );
+			node.AppendAttribute( document, "bitrate", Bitrate.ToString() );
+			return node;
 		}
 	}
 
@@ -56,6 +64,24 @@ namespace VodArchiver {
 				MediaProfiles[i] = new HitboxMediaProfile( profiles[i] );
 			}
 			MediaTypeId = (int)video["media_type_id"];
+		}
+
+		public XmlNode Serialize( XmlDocument document, XmlNode node ) {
+			node.AppendAttribute( document, "_type", "HitboxVideo" );
+			node.AppendAttribute( document, "mediaUserName", MediaUserName );
+			node.AppendAttribute( document, "mediaId", MediaId.ToString() );
+			node.AppendAttribute( document, "mediaFile", MediaFile );
+			node.AppendAttribute( document, "mediaUserId", MediaUserId.ToString() );
+			foreach ( HitboxMediaProfile profile in MediaProfiles ) {
+				node.AppendChild( profile.Serialize( document, document.CreateElement( "MediaProfile" ) ) );
+			}
+			node.AppendAttribute( document, "mediaDateAdded", MediaDateAdded.ToBinary().ToString() );
+			node.AppendAttribute( document, "mediaTitle", MediaTitle );
+			node.AppendAttribute( document, "mediaDescription", MediaDescription );
+			node.AppendAttribute( document, "mediaGame", MediaGame );
+			node.AppendAttribute( document, "mediaDuration", MediaDuration.ToString() );
+			node.AppendAttribute( document, "mediaTypeId", MediaTypeId.ToString() );
+			return node;
 		}
 	}
 

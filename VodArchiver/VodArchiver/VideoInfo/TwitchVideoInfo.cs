@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace VodArchiver.VideoInfo {
 	[Serializable]
@@ -15,6 +16,51 @@ namespace VodArchiver.VideoInfo {
 		public TwitchVideoInfo( TwixelAPI.Video video, StreamService service = StreamService.Twitch ) {
 			VideoInfo = video;
 			_Service = service;
+		}
+
+		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
+			node.AppendAttribute( document, "_type", "TwitchVideoInfo" );
+			node.AppendChild( SerializeTwixelVideo( VideoInfo, document, document.CreateElement( "VideoInfo" ) ) );
+			node.AppendAttribute( document, "service", _Service.ToString() );
+			return node;
+		}
+
+		public static XmlNode SerializeTwixelVideo( TwixelAPI.Video video, XmlDocument document, XmlNode node ) {
+			node.AppendAttribute( document, "_type", "TwixelAPI.Video" );
+			node.AppendAttribute( document, "_version", video.version.ToString() );
+			if ( video.title != null ) node.AppendAttribute( document, "title", video.title );
+			if ( video.description != null ) node.AppendAttribute( document, "description", video.description );
+			node.AppendAttribute( document, "broadcastId", video.broadcastId.ToString() );
+			if ( video.status != null ) node.AppendAttribute( document, "status", video.status );
+			if ( video.tagList != null ) node.AppendAttribute( document, "tagList", video.tagList );
+			if ( video.id != null ) node.AppendAttribute( document, "id", video.id );
+			if ( video.recordedAt != null ) node.AppendAttribute( document, "recordedAt", video.recordedAt.ToBinary().ToString() );
+			if ( video.game != null ) node.AppendAttribute( document, "game", video.game );
+			node.AppendAttribute( document, "length", video.length.ToString() );
+			if ( video.preview != null ) node.AppendAttribute( document, "preview", video.preview.OriginalString );
+			if ( video.url != null ) node.AppendAttribute( document, "url", video.url.OriginalString );
+			if ( video.fps != null ) node.AppendDictionary( document, "fps", video.fps, ( string s ) => s, ( double d ) => d.ToString() );
+			node.AppendAttribute( document, "views", video.views.ToString() );
+			if ( video.resolutions != null ) node.AppendDictionary( document, "resolutions", video.resolutions, ( string s ) => s, ( TwixelAPI.Resolution r ) => r.width + "x" + r.height );
+			if ( video.broadcastType != null ) node.AppendAttribute( document, "broadcastType", video.broadcastType );
+			if ( video.channel != null ) node.AppendDictionary( document, "channel", video.channel );
+			if ( video.baseLinks != null ) node.AppendDictionary( document, "baseLinks", video.baseLinks, ( string s ) => s, ( Uri u ) => u.OriginalString );
+			if ( video.previewv5 != null ) node.AppendDictionary( document, "previewv5", video.previewv5, ( string s ) => s, ( Uri u ) => u.OriginalString );
+			if ( video.embed != null ) node.AppendAttribute( document, "embed", video.embed );
+			if ( video.language != null ) node.AppendAttribute( document, "language", video.language );
+			if ( video.viewable != null ) node.AppendAttribute( document, "viewable", video.viewable );
+			if ( video.thumbnails != null ) {
+				XmlElement element = document.CreateElement( "thumbnails" );
+				foreach ( var kvp in video.thumbnails ) {
+					XmlElement e = document.CreateElement( "_" + kvp.Key );
+					e.AppendAttribute( document, "url", kvp.Value.url.OriginalString );
+					e.AppendAttribute( document, "type", kvp.Value.type );
+					element.AppendChild( e );
+				}
+				node.AppendChild( element );
+			}
+
+			return node;
 		}
 
 		public override StreamService Service {

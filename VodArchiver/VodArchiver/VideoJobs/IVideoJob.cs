@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace VodArchiver.VideoJobs {
 	public enum VideoJobStatus {
@@ -73,6 +74,17 @@ namespace VodArchiver.VideoJobs {
 		public DateTime JobFinishTimestamp;
 
 		public abstract Task<ResultType> Run();
+
+		public virtual XmlNode Serialize( XmlDocument document, XmlNode node ) {
+			node.AppendAttribute( document, "textStatus", _Status );
+			node.AppendAttribute( document, "jobStatus", JobStatus.ToString() );
+			node.AppendChild( VideoInfo.Serialize( document, document.CreateElement( "VideoInfo" ) ) );
+			node.AppendAttribute( document, "hasBeenValidated", HasBeenValidated.ToString() );
+			node.AppendAttribute( document, "notes", Notes );
+			node.AppendAttribute( document, "jobStartTimestamp", JobStartTimestamp.ToBinary().ToString() );
+			node.AppendAttribute( document, "jobFinishTimestamp", JobFinishTimestamp.ToBinary().ToString() );
+			return node;
+		}
 
 		public override bool Equals( object obj ) {
 			return Equals( obj as IVideoJob );

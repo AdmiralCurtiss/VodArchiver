@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace VodArchiver.VideoInfo {
 	[Serializable]
@@ -11,6 +12,12 @@ namespace VodArchiver.VideoInfo {
 
 		public HitboxVideoInfo( HitboxVideo video ) {
 			VideoInfo = video;
+		}
+
+		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
+			node.AppendAttribute( document, "_type", "HitboxVideoInfo" );
+			node.AppendChild( VideoInfo.Serialize( document, document.CreateElement( "VideoInfo" ) ) );
+			return node;
 		}
 
 		public override StreamService Service {

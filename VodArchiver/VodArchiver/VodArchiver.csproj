@@ -111,6 +111,7 @@
     <Compile Include="VodList.Designer.cs">
       <DependentUpon>VodList.cs</DependentUpon>
     </Compile>
+    <Compile Include="XmlUtil.cs" />
     <Compile Include="Youtube.cs" />
     <EmbeddedResource Include="DownloadForm.resx">
       <DependentUpon>DownloadForm.cs</DependentUpon>
