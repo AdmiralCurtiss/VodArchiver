@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using VodArchiver.VideoInfo;
 using TwixelAPI;
 using System.Xml;
+using Newtonsoft.Json.Linq;
 
 namespace VodArchiver.VideoJobs {
 	class TwitchChatReplayJob : IVideoJob {
@@ -27,7 +28,7 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public string GetTargetFilenameWithoutExtension() {
-			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoId + "_" + "chat";
+			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoId + "_" + "chat5";
 		}
 
 		public override async Task<ResultType> Run() {
@@ -35,46 +36,57 @@ namespace VodArchiver.VideoJobs {
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
 			VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ), StreamService.TwitchChatReplay );
+			if ( VideoInfo.VideoRecordingState == RecordingState.Live ) {
+				return ResultType.TemporarilyUnavailable;
+			}
 
 			string tempname = Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() + ".json" );
 			string filename = Path.Combine( Util.TargetFolderPath, GetTargetFilenameWithoutExtension() + ".json" );
+			string tempfolder = Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() );
+			Directory.CreateDirectory( tempfolder );
+			Random rng = new Random( int.Parse( VideoInfo.VideoId.Substring( 1 ) ) );
 
 			if ( !await Util.FileExists( filename ) ) {
 				if ( !await Util.FileExists( tempname ) ) {
-					Status = "Downloading files...";
-					string[] files;
+					Status = "Downloading chat (Initial)...";
+					StringBuilder concatJson = new StringBuilder();
+					string url = GetStartUrl( VideoInfo );
+					int attemptsLeft = 5;
 					while ( true ) {
-						string[] urls = GetUrls( VideoInfo );
-						if ( this.VideoInfo.VideoRecordingState == RecordingState.Live ) {
-							urls = urls.Take( Math.Max( urls.Length - 10, 0 ) ).ToArray();
-						}
-						ResultType result;
-						(result, files) = await TsVideoJob.Download( this, System.IO.Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() ), urls, 5000 );
-						if ( result != ResultType.Success ) {
-							return result;
-						}
-						if ( this.VideoInfo.VideoRecordingState == RecordingState.Live ) {
-							await Task.Delay( 90000 );
-							VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ), StreamService.TwitchChatReplay );
-						} else {
-							break;
+						using ( var client = new KeepAliveWebClient() ) {
+							try {
+								await Task.Delay( rng.Next( 90000, 270000 ) );
+								string commentJson = await Twixel.GetWebData( new Uri( url ), Twixel.APIVersion.v5 );
+								JObject responseObject = JObject.Parse( commentJson );
+								if ( responseObject["comments"] == null ) {
+									throw new Exception( "Nonsense JSON returned, no comments." );
+								}
+								concatJson.Append( commentJson );
+								if ( responseObject["_next"] != null ) {
+									string next = (string)responseObject["_next"];
+									attemptsLeft = 5;
+									Status = "Downloading chat (" + next + ")...";
+									url = GetNextUrl( VideoInfo, next );
+								} else {
+									// presumably done?
+									break;
+								}
+							} catch ( System.Net.WebException ex ) {
+								Console.WriteLine( ex.ToString() );
+								--attemptsLeft;
+								Status = "Downloading chat (Error; " + attemptsLeft + " attempts left)...";
+								if ( attemptsLeft <= 0 ) {
+									throw;
+								}
+								continue;
+							}
 						}
 					}
 
-					Status = "Waiting for free disk IO slot to combine...";
-					await Util.ExpensiveDiskIOSemaphore.WaitAsync();
-					try {
-						Status = "Combining downloaded chat parts...";
-						// this is not a valid way to combine json but whatever, this is trivially fixable later if I ever actually need it
-						await TsVideoJob.Combine( tempname, files );
-						await Util.DeleteFiles( files );
-						System.IO.Directory.Delete( System.IO.Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() ) );
-					} finally {
-						Util.ExpensiveDiskIOSemaphore.Release();
-					}
+					File.WriteAllText( tempname, concatJson.ToString() );
 				}
 
-				Status = "Waiting for free disk IO slot to remux...";
+				Status = "Waiting for free disk IO slot to move...";
 				await Util.ExpensiveDiskIOSemaphore.WaitAsync();
 				try {
 					Status = "Moving to final location...";
@@ -89,16 +101,12 @@ namespace VodArchiver.VideoJobs {
 			return ResultType.Success;
 		}
 
-		public string[] GetUrls( IVideoInfo info ) {
-			List<string> urls = new List<string>();
-			DateTime dt = info.VideoTimestamp;
-			while ( dt <= info.VideoTimestamp + info.VideoLength ) {
-				string url = @"https://rechat.twitch.tv/rechat-messages?start=" + dt.DateTimeToUnixTime() + "&video_id=" + info.VideoId;
-				urls.Add( url );
-				dt = dt.AddSeconds( 30.0 );
-			}
+		public string GetStartUrl( IVideoInfo info ) {
+			return "https://api.twitch.tv/v5/videos/" + info.VideoId.Substring( 1 ) + "/comments?content_offset_seconds=0";
+		}
 
-			return urls.ToArray();
+		public string GetNextUrl( IVideoInfo info, string next ) {
+			return "https://api.twitch.tv/v5/videos/" + info.VideoId.Substring( 1 ) + "/comments?cursor=" + next;
 		}
 	}
 }
