@@ -6,3 +6,6 @@
 	path = MediaToolkit
 	url = https://github.com/AdmiralCurtiss/MediaToolkit.git
 	branch = additional-options
+[submodule "Trexler"]
+	path = Trexler
+	url = https://github.com/AdmiralCurtiss/Trexler.git
