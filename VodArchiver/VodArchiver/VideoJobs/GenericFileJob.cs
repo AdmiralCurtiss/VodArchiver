@@ -31,8 +31,10 @@ namespace VodArchiver.VideoJobs {
 				extension = "bin";
 			}
 
-			string prefix = VideoInfo.Username.Trim();
+			string username = VideoInfo.Username.Trim();
 			string title = String.IsNullOrWhiteSpace( VideoInfo.VideoTitle ) ? "file" : VideoInfo.VideoTitle.Trim();
+			string datetime = VideoInfo.VideoTimestamp == null || VideoInfo.VideoTimestamp == new DateTime() ? null : VideoInfo.VideoTimestamp.ToString( "yyyy-MM-dd_HH-mm-ss" );
+			string prefix = String.IsNullOrWhiteSpace( username ) ? datetime : String.IsNullOrWhiteSpace( datetime ) ? username : username + "_" + datetime;
 			string basename = String.IsNullOrWhiteSpace( prefix ) ? title : ( prefix + "_" + title );
 
 			return StringToFilename( basename, extension );
