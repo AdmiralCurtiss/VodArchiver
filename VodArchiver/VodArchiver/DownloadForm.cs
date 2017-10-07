@@ -235,40 +235,11 @@ namespace VodArchiver {
 			new VodList( this, TwitchAPI ).Show();
 		}
 
-		private List<IVideoJob> LoadJobsInternal( System.IO.Stream fs ) {
-			List<IVideoJob> jobs = new List<IVideoJob>();
-			System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-			int jobCount = (int)formatter.Deserialize( fs );
-			for ( int i = 0; i < jobCount; ++i ) {
-				object obj = formatter.Deserialize( fs );
-				IVideoJob job = obj as IVideoJob;
-				if ( job != null ) {
-					if ( job.JobStatus == VideoJobStatus.Running ) {
-						job.JobStatus = VideoJobStatus.NotStarted;
-						job.StatusUpdater = new StatusUpdate.NullStatusUpdate();
-						job.Status = "Interrupted during: " + job.Status;
-					}
-					if ( job as TwitchVideoJob != null ) {
-						( job as TwitchVideoJob ).TwitchAPI = TwitchAPI;
-					} else if ( job as TwitchChatReplayJob != null ) {
-						( job as TwitchChatReplayJob ).TwitchAPI = TwitchAPI;
-					}
-					job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
-					if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
-						VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
-					}
-					jobs.Add( job );
-				}
-			}
-			return jobs;
-		}
-
 		private void LoadJobs() {
 			lock ( Util.JobFileLock ) {
 				List<IVideoJob> jobs = new List<IVideoJob>();
 
 				try {
-				  if ( File.Exists( Util.VodXmlPath ) ) {
 					XmlDocument doc = new XmlDocument();
 					using ( FileStream fs = System.IO.File.OpenRead( Util.VodXmlPath ) ) {
 						if ( fs.PeekUInt16() == 0x8B1F ) {
@@ -280,19 +251,25 @@ namespace VodArchiver {
 						}
 					}
 					foreach ( XmlNode node in doc.SelectNodes( "//root/Job" ) ) {
-						jobs.Add( IVideoJob.Deserialize( node ) );
-					}
-				  } else {
-					using ( FileStream fs = System.IO.File.OpenRead( Util.VodBinaryPath ) ) {
-						if ( fs.PeekUInt16() == 0x8B1F ) {
-							using ( System.IO.Compression.GZipStream gzs = new System.IO.Compression.GZipStream( fs, System.IO.Compression.CompressionMode.Decompress ) ) {
-								jobs = LoadJobsInternal( gzs );
+						IVideoJob job = IVideoJob.Deserialize( node );
+						if ( job != null ) {
+							if ( job.JobStatus == VideoJobStatus.Running ) {
+								job.JobStatus = VideoJobStatus.NotStarted;
+								job.StatusUpdater = new StatusUpdate.NullStatusUpdate();
+								job.Status = "Interrupted during: " + job.Status;
 							}
-						} else {
-							jobs = LoadJobsInternal( fs );
+							if ( job as TwitchVideoJob != null ) {
+								( job as TwitchVideoJob ).TwitchAPI = TwitchAPI;
+							} else if ( job as TwitchChatReplayJob != null ) {
+								( job as TwitchChatReplayJob ).TwitchAPI = TwitchAPI;
+							}
+							job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
+							if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
+								VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
+							}
+							jobs.Add( job );
 						}
 					}
-				  }
 				} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
 
 				foreach ( IVideoJob job in jobs ) {
