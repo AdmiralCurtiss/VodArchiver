@@ -59,11 +59,19 @@ namespace VodArchiver.VideoJobs {
 								if ( responseObject["comments"] == null ) {
 									throw new Exception( "Nonsense JSON returned, no comments." );
 								}
+
+								string offset = "Unknown";
+								try {
+									JToken c = ( (JArray)responseObject["comments"] ).Last;
+									double val = (double)c["content_offset_seconds"];
+									offset = TimeSpan.FromSeconds( val ).ToString();
+								} catch (Exception) { }
+
 								concatJson.Append( commentJson );
 								if ( responseObject["_next"] != null ) {
 									string next = (string)responseObject["_next"];
 									attemptsLeft = 5;
-									Status = "Downloading chat (" + next + ")...";
+									Status = "Downloading chat (Last offset: " + offset + "; next file: " + next + ")...";
 									url = GetNextUrl( VideoInfo, next );
 								} else {
 									// presumably done?
