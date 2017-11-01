@@ -42,8 +42,6 @@ namespace VodArchiver.VideoJobs {
 
 			string tempname = Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() + ".json" );
 			string filename = Path.Combine( Util.TargetFolderPath, GetTargetFilenameWithoutExtension() + ".json" );
-			string tempfolder = Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() );
-			Directory.CreateDirectory( tempfolder );
 			Random rng = new Random( int.Parse( VideoInfo.VideoId.Substring( 1 ) ) );
 
 			if ( !await Util.FileExists( filename ) ) {
