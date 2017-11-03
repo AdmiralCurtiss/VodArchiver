@@ -25,9 +25,11 @@ namespace VodArchiver {
 
 		Dictionary<StreamService, VideoTaskGroup> VideoTaskGroups;
 		Dictionary<ServiceVideoCategoryType, FetchTaskGroup> FetchTaskGroups;
+		CancellationTokenSource CancellationTokenSource;
 
 		public DownloadForm() {
 			InitializeComponent();
+			CancellationTokenSource = new CancellationTokenSource();
 			objectListViewDownloads.CellEditActivation = BrightIdeasSoftware.ObjectListView.CellEditActivateMode.DoubleClick;
 
 			comboBoxService.SelectedIndex = 0;
@@ -38,7 +40,7 @@ namespace VodArchiver {
 
 			VideoTaskGroups = new Dictionary<StreamService, VideoTaskGroup>();
 			foreach ( StreamService s in Enum.GetValues( typeof( StreamService ) ) ) {
-				VideoTaskGroups.Add( s, new VideoTaskGroup( s, () => InvokeSaveJobs(), () => InvokePowerEvent() ) );
+				VideoTaskGroups.Add( s, new VideoTaskGroup( s, () => InvokeSaveJobs(), () => InvokePowerEvent(), CancellationTokenSource.Token ) );
 			}
 
 			if ( !Util.AllowTimedAutoFetch ) {
@@ -356,7 +358,17 @@ namespace VodArchiver {
 			}
 		}
 
+		private void WaitForAllTasksToEnd() {
+			// TODO: wait for fetches to end too
+			foreach ( var group in VideoTaskGroups ) {
+				while ( !group.Value.IsJobRunnerThreadCompleted() ) {
+					Thread.Sleep( 0 );
+				}
+			}
+		}
+
 		private void DownloadForm_FormClosing( object sender, FormClosingEventArgs e ) {
+			CancellationTokenSource.Cancel();
 			SaveJobs();
 		}
 

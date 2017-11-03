@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using VodArchiver.VideoInfo;
 using VodArchiver.VideoJobs;
@@ -31,6 +32,7 @@ namespace VodArchiver.Tasks {
 		private List<WaitingVideoJob> WaitingJobs;
 		private object JobQueueLock;
 		private int MaxJobsRunningPerType;
+		private CancellationToken CancellationToken;
 
 		private Task JobRunnerThread;
 		private List<(IVideoJob job, Task<ResultType> task)> RunningTasks;
@@ -38,7 +40,7 @@ namespace VodArchiver.Tasks {
 		private RequestSaveJobsDelegate RequestSaveJobs;
 		private RequestPowerEventDelegate RequestPowerEvent;
 
-		public VideoTaskGroup( StreamService service, RequestSaveJobsDelegate saveJobsDelegate, RequestPowerEventDelegate powerEventDelegate ) {
+		public VideoTaskGroup( StreamService service, RequestSaveJobsDelegate saveJobsDelegate, RequestPowerEventDelegate powerEventDelegate, CancellationToken cancellationToken ) {
 			Service = service;
 			WaitingJobs = new List<WaitingVideoJob>();
 			JobQueueLock = new object();
@@ -46,20 +48,23 @@ namespace VodArchiver.Tasks {
 			RunningTasks = new List<(IVideoJob job, Task<ResultType> task)>( MaxJobsRunningPerType );
 			RequestSaveJobs = saveJobsDelegate;
 			RequestPowerEvent = powerEventDelegate;
+			CancellationToken = cancellationToken;
 
 			JobRunnerThread = RunJobRunnerThread();
 		}
 
 		public void Add( WaitingVideoJob wj ) {
 			lock ( JobQueueLock ) {
-				if ( IsJobWaiting( wj.Job ) ) {
-					WaitingVideoJob alreadyEnqueuedJob = WaitingJobs.Find( x => x.Job == wj.Job );
-					if ( alreadyEnqueuedJob != null ) {
-						alreadyEnqueuedJob.EarliestPossibleStartTime = wj.EarliestPossibleStartTime;
-						alreadyEnqueuedJob.StartImmediately = wj.StartImmediately;
-					} 
-				} else if ( !IsJobRunning( wj.Job ) ) {
-					WaitingJobs.Add( wj );
+				if ( !CancellationToken.IsCancellationRequested ) {
+					if ( IsJobWaiting( wj.Job ) ) {
+						WaitingVideoJob alreadyEnqueuedJob = WaitingJobs.Find( x => x.Job == wj.Job );
+						if ( alreadyEnqueuedJob != null ) {
+							alreadyEnqueuedJob.EarliestPossibleStartTime = wj.EarliestPossibleStartTime;
+							alreadyEnqueuedJob.StartImmediately = wj.StartImmediately;
+						}
+					} else if ( !IsJobRunning( wj.Job ) ) {
+						WaitingJobs.Add( wj );
+					}
 				}
 			}
 		}
@@ -136,22 +141,42 @@ namespace VodArchiver.Tasks {
 		}
 
 		private async Task RunJobRunnerThread() {
-			// TODO: This needs a regular exit path
 			while ( true ) {
+				if ( CancellationToken.IsCancellationRequested ) {
+					lock ( JobQueueLock ) {
+						if ( RunningTasks.Count == 0 ) {
+							break;
+						}
+					}
+				}
+
 				try {
-					await Task.Delay( 750 );
+					if ( !CancellationToken.IsCancellationRequested ) {
+						await Task.Delay( 750, CancellationToken );
+					}
 				} catch ( Exception ) { }
 
 				try {
-					lock ( JobQueueLock ) {
-						// find jobs we can start
-						IVideoJob job = null;
-						while ( ( job = DequeueVideoJobForTask() ) != null ) {
-							// and run them
-							RunningTasks.Add( (job, RunJob( job )) );
+					if ( !CancellationToken.IsCancellationRequested ) {
+						lock ( JobQueueLock ) {
+							// find jobs we can start
+							IVideoJob job = null;
+							while ( ( job = DequeueVideoJobForTask() ) != null ) {
+								// and run them
+								RunningTasks.Add( (job, RunJob( job )) );
+							}
+						}
+					} else {
+						lock ( JobQueueLock ) {
+							// stop all running tasks
+							foreach ( var t in RunningTasks ) {
+								t.job.Stop();
+							}
 						}
 					}
 				} catch ( Exception ) { }
+
+				// TODO: murder tasks that are unresponsive
 
 				try {
 					lock ( JobQueueLock ) {
@@ -208,6 +233,10 @@ namespace VodArchiver.Tasks {
 			}
 
 			return ResultType.Failure;
+		}
+
+		public bool IsJobRunnerThreadCompleted() {
+			return JobRunnerThread.IsCompleted;
 		}
 	}
 }
