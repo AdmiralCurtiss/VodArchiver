@@ -25,6 +25,8 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {
+			if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+
 			JobStatus = VideoJobStatus.Running;
 			if ( ( VideoInfo as YoutubeVideoInfo ) == null ) {
 				Status = "Retrieving video info...";
@@ -50,6 +52,8 @@ namespace VodArchiver.VideoJobs {
 
 			if ( !await Util.FileExists( finalFilepath ) ) {
 				if ( !await Util.FileExists( tempFilepath ) ) {
+					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+
 					Directory.CreateDirectory( tempFolder );
 					Status = "Running youtube-dl...";
 					var data = await ExternalProgramExecution.RunProgram(
@@ -71,11 +75,14 @@ namespace VodArchiver.VideoJobs {
 							}
 						}
 					);
-
 				}
 
 				Status = "Waiting for free disk IO slot to move...";
-				await Util.ExpensiveDiskIOSemaphore.WaitAsync();
+				try {
+					await Util.ExpensiveDiskIOSemaphore.WaitAsync();
+				} catch ( OperationCanceledException ) {
+					return ResultType.Cancelled;
+				}
 				try {
 					Status = "Moving...";
 					await Task.Run( () => Util.MoveFileOverwrite( tempFilepath, finalFilepath ) );

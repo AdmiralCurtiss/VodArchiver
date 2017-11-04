@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using VodArchiver.VideoInfo;
 using TwixelAPI;
 using System.Xml;
+using System.Threading;
 
 namespace VodArchiver.VideoJobs {
 	public class TwitchVideoJob : TsVideoJob {
@@ -31,7 +32,7 @@ namespace VodArchiver.VideoJobs {
 			return n;
 		}
 
-		public override async Task<(bool success, string[] urls)> GetFileUrlsOfVod() {
+		public override async Task<(ResultType result, string[] urls)> GetFileUrlsOfVod( CancellationToken cancellationToken ) {
 			VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ) );
 
 			string folderpath;
@@ -46,7 +47,11 @@ namespace VodArchiver.VideoJobs {
 				} catch ( TwitchException e ) {
 					if ( e.Status == 404 && VideoInfo.VideoRecordingState == RecordingState.Live ) {
 						// this can happen on streams that have just started, in this just wait a bit and retry
-						await Task.Delay( 20000 );
+						try {
+							await Task.Delay( 20000, cancellationToken );
+						} catch ( TaskCanceledException ) {
+							return (ResultType.Cancelled, null);
+						}
 						VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ) );
 						continue;
 					} else {
@@ -60,7 +65,7 @@ namespace VodArchiver.VideoJobs {
 			foreach ( var filename in filenames ) {
 				urls.Add( folderpath + filename );
 			}
-			return (true, urls.ToArray());
+			return (ResultType.Success, urls.ToArray());
 		}
 
 		public static string GetM3U8PathFromM3U( string m3u, string videoType ) {

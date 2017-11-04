@@ -33,6 +33,8 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {
+			if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
 			VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ), StreamService.TwitchChatReplay );
@@ -51,9 +53,15 @@ namespace VodArchiver.VideoJobs {
 					string url = GetStartUrl( VideoInfo );
 					int attemptsLeft = 5;
 					while ( true ) {
-						using ( var client = new KeepAliveWebClient() ) {
+						using ( var client = new KeepAliveWebClient() )
+						using ( var cancellationCallback = cancellationToken.Register( client.CancelAsync ) ) {
 							try {
-								await Task.Delay( rng.Next( 90000, 270000 ) );
+								try {
+									await Task.Delay( rng.Next( 90000, 270000 ), cancellationToken );
+								} catch ( TaskCanceledException ) {
+									return ResultType.Cancelled;
+								}
+
 								string commentJson = await Twixel.GetWebData( new Uri( url ), Twixel.APIVersion.v5 );
 								JObject responseObject = JObject.Parse( commentJson );
 								if ( responseObject["comments"] == null ) {
@@ -65,7 +73,7 @@ namespace VodArchiver.VideoJobs {
 									JToken c = ( (JArray)responseObject["comments"] ).Last;
 									double val = (double)c["content_offset_seconds"];
 									offset = TimeSpan.FromSeconds( val ).ToString();
-								} catch (Exception) { }
+								} catch ( Exception ) { }
 
 								concatJson.Append( commentJson );
 								if ( responseObject["_next"] != null ) {
@@ -92,9 +100,16 @@ namespace VodArchiver.VideoJobs {
 					File.WriteAllText( tempname, concatJson.ToString() );
 				}
 
+				if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+
 				Status = "Waiting for free disk IO slot to move...";
-				await Util.ExpensiveDiskIOSemaphore.WaitAsync();
 				try {
+					await Util.ExpensiveDiskIOSemaphore.WaitAsync( cancellationToken );
+				} catch ( OperationCanceledException ) {
+					return ResultType.Cancelled;
+				}
+				try {
+					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 					Status = "Moving to final location...";
 					Util.MoveFileOverwrite( tempname, filename );
 				} finally {

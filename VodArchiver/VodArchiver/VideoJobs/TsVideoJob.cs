@@ -14,10 +14,12 @@ namespace VodArchiver.VideoJobs {
 		public TsVideoJob( XmlNode node ) : base( node ) { }
 
 		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {
+			if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
-			(bool getFileUrlsSuccess, string[] urls) = await GetFileUrlsOfVod();
-			if (!getFileUrlsSuccess) {
+			(ResultType getFileUrlsResult, string[] urls) = await GetFileUrlsOfVod( cancellationToken );
+			if ( getFileUrlsResult != ResultType.Success ) {
 				Status = "Failed retrieving file URLs.";
 				return ResultType.Failure;
 			}
@@ -28,9 +30,13 @@ namespace VodArchiver.VideoJobs {
 
 			if ( !await Util.FileExists( remuxedFilename ) ) {
 				if ( !await Util.FileExists( combinedFilename ) ) {
+					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+
 					Status = "Downloading files...";
 					string[] files;
 					while ( true ) {
+						if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+
 						System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
 						timer.Start();
 						var downloadResult = await Download( this, cancellationToken, GetTempFolderForParts(), urls );
@@ -47,10 +53,14 @@ namespace VodArchiver.VideoJobs {
 							if ( timer.Elapsed.TotalMinutes < 2.5 ) {
 								TimeSpan ts = TimeSpan.FromMinutes( 2.5 ) - timer.Elapsed;
 								Status = "Waiting " + ts.TotalSeconds + " seconds for stream to update...";
-								await Task.Delay( ts );
+								try {
+									await Task.Delay( ts, cancellationToken );
+								} catch ( TaskCanceledException ) {
+									return ResultType.Cancelled;
+								}
 							}
-							(getFileUrlsSuccess, urls) = await GetFileUrlsOfVod();
-							if (!getFileUrlsSuccess) {
+							(getFileUrlsResult, urls) = await GetFileUrlsOfVod( cancellationToken );
+							if ( getFileUrlsResult != ResultType.Success ) {
 								Status = "Failed retrieving file URLs.";
 								return ResultType.Failure;
 							}
@@ -58,7 +68,11 @@ namespace VodArchiver.VideoJobs {
 					}
 
 					Status = "Waiting for free disk IO slot to combine...";
-					await Util.ExpensiveDiskIOSemaphore.WaitAsync();
+					try {
+						await Util.ExpensiveDiskIOSemaphore.WaitAsync( cancellationToken );
+					} catch ( OperationCanceledException ) {
+						return ResultType.Cancelled;
+					}
 					try {
 						Status = "Combining downloaded video parts...";
 						await TsVideoJob.Combine( combinedFilename, files );
@@ -70,7 +84,11 @@ namespace VodArchiver.VideoJobs {
 				}
 
 				Status = "Waiting for free disk IO slot to remux...";
-				await Util.ExpensiveDiskIOSemaphore.WaitAsync();
+				try {
+					await Util.ExpensiveDiskIOSemaphore.WaitAsync( cancellationToken );
+				} catch ( OperationCanceledException ) {
+					return ResultType.Cancelled;
+				}
 				try {
 					Status = "Remuxing to MP4...";
 					await Task.Run( () => TsVideoJob.Remux( remuxedFilename, combinedFilename, remuxedTempname ) );
@@ -84,7 +102,7 @@ namespace VodArchiver.VideoJobs {
 			return ResultType.Success;
 		}
 
-		public abstract Task<(bool success, string[] urls)> GetFileUrlsOfVod();
+		public abstract Task<(ResultType result, string[] urls)> GetFileUrlsOfVod( CancellationToken cancellationToken );
 
 		public virtual string GetTempFolder() {
 			return Util.TempFolderPath;
@@ -129,12 +147,12 @@ namespace VodArchiver.VideoJobs {
 			while ( files.Count < urls.Length ) {
 				if ( triesLeft <= 0 ) {
 					job.Status = "Failed to download individual parts after " + MaxTries + " tries, aborting.";
-					return ( ResultType.Failure, null );
+					return (ResultType.Failure, null);
 				}
 				files.Clear();
 				for ( int i = 0; i < urls.Length; ++i ) {
 					if ( cancellationToken.IsCancellationRequested ) {
-						return ( ResultType.Cancelled, null );
+						return (ResultType.Cancelled, null);
 					}
 
 					string url = urls[i];
@@ -188,17 +206,25 @@ namespace VodArchiver.VideoJobs {
 					}
 
 					if ( delayPerDownload > 0 ) {
-						await Task.Delay( delayPerDownload );
+						try {
+							await Task.Delay( delayPerDownload, cancellationToken );
+						} catch ( TaskCanceledException ) {
+							return (ResultType.Cancelled, null);
+						}
 					}
 				}
 
 				if ( files.Count < urls.Length ) {
-					await Task.Delay( 60000 );
+					try {
+						await Task.Delay( 60000, cancellationToken );
+					} catch ( TaskCanceledException ) {
+						return (ResultType.Cancelled, null);
+					}
 					--triesLeft;
 				}
 			}
 
-			return ( ResultType.Success, files.ToArray() );
+			return (ResultType.Success, files.ToArray());
 		}
 
 		public static async Task Combine( string combinedFilename, string[] files ) {

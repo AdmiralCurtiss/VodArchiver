@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using VodArchiver.VideoInfo;
@@ -24,10 +25,10 @@ namespace VodArchiver.VideoJobs {
 			return base.Serialize( document, node );
 		}
 
-		public override async Task<(bool success, string[] urls)> GetFileUrlsOfVod() {
+		public override async Task<(ResultType result, string[] urls)> GetFileUrlsOfVod( CancellationToken cancellationToken ) {
 			(bool retrieveVideoSuccess, HitboxVideo video) = await Hitbox.RetrieveVideo( VideoInfo.VideoId );
 			if ( !retrieveVideoSuccess ) {
-				return (false, null);
+				return (ResultType.Failure, null);
 			}
 
 			VideoInfo = new HitboxVideoInfo( video );
@@ -42,7 +43,7 @@ namespace VodArchiver.VideoJobs {
 			if ( response.StatusCode == System.Net.HttpStatusCode.OK ) {
 				m3u8 = await response.Content.ReadAsStringAsync();
 			} else {
-				return (false, null);
+				return (ResultType.Failure, null);
 			}
 
 			string[] filenames = TsVideoJob.GetFilenamesFromM3U8( m3u8 );
@@ -50,7 +51,7 @@ namespace VodArchiver.VideoJobs {
 			foreach ( var filename in filenames ) {
 				urls.Add( folderpath + filename );
 			}
-			return (true, urls.ToArray());
+			return (ResultType.Success, urls.ToArray());
 		}
 
 		public static string GetM3U8PathFromM3U( string m3u ) {
