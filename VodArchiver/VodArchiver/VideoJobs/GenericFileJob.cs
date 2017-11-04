@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using VodArchiver.VideoInfo;
@@ -47,8 +49,7 @@ namespace VodArchiver.VideoJobs {
 			return StringToFilename( basename, extension );
 		}
 
-		public override async Task<ResultType> Run() {
-			Stopped = false;
+		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {
 			JobStatus = VideoJobStatus.Running;
 			Status = "Downloading...";
 
@@ -62,12 +63,20 @@ namespace VodArchiver.VideoJobs {
 						await Util.DeleteFile( tempFilename );
 					}
 
+					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+
 					bool success = false;
-					using ( var client = new KeepAliveWebClient() ) {
-						byte[] data = await client.DownloadDataTaskAsync( VideoInfo.VideoId );
-						using ( FileStream fs = File.Create( tempFilename ) ) {
-							await fs.WriteAsync( data, 0, data.Length );
-							success = true;
+					using ( var client = new KeepAliveWebClient() )
+					using ( var cancellationCallback = cancellationToken.Register( client.CancelAsync ) ) {
+						try {
+							byte[] data = await client.DownloadDataTaskAsync( VideoInfo.VideoId );
+							using ( FileStream fs = File.Create( tempFilename ) ) {
+								await fs.WriteAsync( data, 0, data.Length );
+								success = true;
+							}
+						} catch ( WebException ) {
+							if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+							throw;
 						}
 					}
 
@@ -76,6 +85,7 @@ namespace VodArchiver.VideoJobs {
 					}
 				}
 
+				if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 				File.Move( movedFilename, targetFilename );
 			}
 

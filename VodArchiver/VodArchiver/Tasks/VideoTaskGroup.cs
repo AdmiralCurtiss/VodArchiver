@@ -35,7 +35,7 @@ namespace VodArchiver.Tasks {
 		private CancellationToken CancellationToken;
 
 		private Task JobRunnerThread;
-		private List<(IVideoJob job, Task<ResultType> task)> RunningTasks;
+		private List<(IVideoJob job, Task<ResultType> task, CancellationTokenSource cancellationTokenSource)> RunningTasks;
 
 		private RequestSaveJobsDelegate RequestSaveJobs;
 		private RequestPowerEventDelegate RequestPowerEvent;
@@ -45,7 +45,7 @@ namespace VodArchiver.Tasks {
 			WaitingJobs = new List<WaitingVideoJob>();
 			JobQueueLock = new object();
 			MaxJobsRunningPerType = ( service == StreamService.Youtube || service == StreamService.RawUrl ) ? 1 : 3;
-			RunningTasks = new List<(IVideoJob job, Task<ResultType> task)>( MaxJobsRunningPerType );
+			RunningTasks = new List<(IVideoJob job, Task<ResultType> task, CancellationTokenSource cancellationTokenSource)>( MaxJobsRunningPerType );
 			RequestSaveJobs = saveJobsDelegate;
 			RequestPowerEvent = powerEventDelegate;
 			CancellationToken = cancellationToken;
@@ -97,7 +97,7 @@ namespace VodArchiver.Tasks {
 		private void ProcessFinishedTasks() {
 			lock ( JobQueueLock ) {
 				for ( int i = RunningTasks.Count - 1; i >= 0; --i ) {
-					(IVideoJob taskJob, Task<ResultType> task) = RunningTasks[i];
+					(IVideoJob taskJob, Task<ResultType> task, CancellationTokenSource cancellationTokenSource) = RunningTasks[i];
 					if ( task.IsCompleted ) {
 						// need to remove the task first, as otherwise the Add() still detects it as running
 						RunningTasks.RemoveAt( i );
@@ -163,14 +163,15 @@ namespace VodArchiver.Tasks {
 							IVideoJob job = null;
 							while ( ( job = DequeueVideoJobForTask() ) != null ) {
 								// and run them
-								RunningTasks.Add( (job, RunJob( job )) );
+								CancellationTokenSource cts = new CancellationTokenSource();
+								RunningTasks.Add( (job, RunJob( job, cts.Token ), cts) );
 							}
 						}
 					} else {
 						lock ( JobQueueLock ) {
 							// stop all running tasks
 							foreach ( var t in RunningTasks ) {
-								t.job.Stop();
+								t.cancellationTokenSource.Cancel();
 							}
 						}
 					}
@@ -187,13 +188,13 @@ namespace VodArchiver.Tasks {
 			}
 		}
 
-		private static async Task<ResultType> RunJob( IVideoJob job ) {
+		private static async Task<ResultType> RunJob( IVideoJob job, CancellationToken cancellationToken ) {
 			if ( job != null ) {
 				bool wasDead = job.JobStatus == VideoJobStatus.Dead;
 				try {
 					if ( job.JobStatus != VideoJobStatus.Finished ) {
 						job.JobStartTimestamp = DateTime.UtcNow;
-						ResultType result = await job.Run();
+						ResultType result = await job.Run( cancellationToken );
 						if ( result == ResultType.Success ) {
 							job.JobFinishTimestamp = DateTime.UtcNow;
 							job.JobStatus = VideoJobStatus.Finished;
@@ -237,6 +238,17 @@ namespace VodArchiver.Tasks {
 
 		public bool IsJobRunnerThreadCompleted() {
 			return JobRunnerThread.IsCompleted;
+		}
+
+		public bool CancelJob( IVideoJob job ) {
+			lock ( JobQueueLock ) {
+				bool cancelled = false;
+				foreach ( var rt in RunningTasks.Where( x => x.job == job ) ) {
+					rt.cancellationTokenSource.Cancel();
+					cancelled = true;
+				}
+				return cancelled;
+			}
 		}
 	}
 }

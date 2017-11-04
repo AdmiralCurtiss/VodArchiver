@@ -430,7 +430,7 @@ namespace VodArchiver {
 					ToolStripItem item = menu.Items.Add( "Stop" );
 					item.Click += ( sender, e ) => {
 						if ( job.JobStatus == VideoJobStatus.Running ) {
-							job.Stop();
+							VideoTaskGroups[job.VideoInfo.Service].CancelJob( job );
 						}
 					};
 				}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using VodArchiver.VideoInfo;
@@ -23,8 +24,7 @@ namespace VodArchiver.VideoJobs {
 			return base.Serialize( document, node );
 		}
 
-		public override async Task<ResultType> Run() {
-			Stopped = false;
+		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {
 			JobStatus = VideoJobStatus.Running;
 			if ( ( VideoInfo as YoutubeVideoInfo ) == null ) {
 				Status = "Retrieving video info...";

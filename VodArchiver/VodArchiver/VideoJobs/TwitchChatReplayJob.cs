@@ -8,6 +8,7 @@ using VodArchiver.VideoInfo;
 using TwixelAPI;
 using System.Xml;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace VodArchiver.VideoJobs {
 	class TwitchChatReplayJob : IVideoJob {
@@ -31,8 +32,7 @@ namespace VodArchiver.VideoJobs {
 			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoId + "_" + "chat5";
 		}
 
-		public override async Task<ResultType> Run() {
-			Stopped = false;
+		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
 			VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ), StreamService.TwitchChatReplay );

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using VodArchiver.VideoInfo;
@@ -50,8 +51,6 @@ namespace VodArchiver.VideoJobs {
 
 		public StatusUpdate.IStatusUpdate StatusUpdater;
 
-		protected bool Stopped;
-
 		public long Index;
 
 		public VideoJobStatus JobStatus;
@@ -78,7 +77,7 @@ namespace VodArchiver.VideoJobs {
 			JobFinishTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["jobFinishTimestamp"].Value ) );
 		}
 
-		public abstract Task<ResultType> Run();
+		public abstract Task<ResultType> Run( CancellationToken cancellationToken );
 
 		public virtual XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "textStatus", _Status );
@@ -113,14 +112,6 @@ namespace VodArchiver.VideoJobs {
 
 		public override int GetHashCode() {
 			return VideoInfo.GetHashCode();
-		}
-
-		public void Stop() {
-			Stopped = true;
-		}
-
-		public bool IsStopped() {
-			return Stopped;
 		}
 	}
 }

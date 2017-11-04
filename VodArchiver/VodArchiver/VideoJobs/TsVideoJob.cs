@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using VodArchiver.VideoInfo;
@@ -12,8 +13,7 @@ namespace VodArchiver.VideoJobs {
 		public TsVideoJob() : base() { }
 		public TsVideoJob( XmlNode node ) : base( node ) { }
 
-		public override async Task<ResultType> Run() {
-			Stopped = false;
+		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
 			(bool getFileUrlsSuccess, string[] urls) = await GetFileUrlsOfVod();
@@ -33,7 +33,7 @@ namespace VodArchiver.VideoJobs {
 					while ( true ) {
 						System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
 						timer.Start();
-						var downloadResult = await Download( this, GetTempFolderForParts(), urls );
+						var downloadResult = await Download( this, cancellationToken, GetTempFolderForParts(), urls );
 						if ( downloadResult.result != ResultType.Success ) {
 							return downloadResult.result;
 						}
@@ -120,7 +120,7 @@ namespace VodArchiver.VideoJobs {
 			return filenames.ToArray();
 		}
 
-		public static async Task<(ResultType result, string[] files)> Download( IVideoJob job, string targetFolder, string[] urls, int delayPerDownload = 0 ) {
+		public static async Task<(ResultType result, string[] files)> Download( IVideoJob job, CancellationToken cancellationToken, string targetFolder, string[] urls, int delayPerDownload = 0 ) {
 			Directory.CreateDirectory( targetFolder );
 
 			List<string> files = new List<string>( urls.Length );
@@ -133,7 +133,7 @@ namespace VodArchiver.VideoJobs {
 				}
 				files.Clear();
 				for ( int i = 0; i < urls.Length; ++i ) {
-					if ( job.IsStopped() ) {
+					if ( cancellationToken.IsCancellationRequested ) {
 						job.Status = "Stopped.";
 						return ( ResultType.Cancelled, null );
 					}
