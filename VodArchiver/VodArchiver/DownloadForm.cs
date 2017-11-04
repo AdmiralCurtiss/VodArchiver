@@ -358,18 +358,25 @@ namespace VodArchiver {
 			}
 		}
 
-		private void WaitForAllTasksToEnd() {
+		private async Task WaitForAllTasksToEnd() {
 			// TODO: wait for fetches to end too
 			foreach ( var group in VideoTaskGroups ) {
-				while ( !group.Value.IsJobRunnerThreadCompleted() ) {
-					Thread.Sleep( 0 );
-				}
+				await group.Value.WaitForJobRunnerThreadToEnd();
 			}
 		}
 
-		private void DownloadForm_FormClosing( object sender, FormClosingEventArgs e ) {
-			CancellationTokenSource.Cancel();
-			SaveJobs();
+		private bool closingAlready = false;
+		private async void DownloadForm_FormClosing( object sender, FormClosingEventArgs e ) {
+			// workaround; without this, the form can close before the SaveJobs() executes because, as I understand it, the await gives control back to the callee, which procedes to shut down the application
+			if ( !closingAlready ) {
+				closingAlready = true;
+				Enabled = false;
+				e.Cancel = true;
+				CancellationTokenSource.Cancel();
+				await WaitForAllTasksToEnd();
+				SaveJobs();
+				Close();
+			}
 		}
 
 		private void objectListViewDownloads_CellEditStarting( object sender, BrightIdeasSoftware.CellEditEventArgs e ) {

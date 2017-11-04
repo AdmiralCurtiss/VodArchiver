@@ -153,6 +153,8 @@ namespace VodArchiver.Tasks {
 				try {
 					if ( !CancellationToken.IsCancellationRequested ) {
 						await Task.Delay( 750, CancellationToken );
+					} else {
+						await Task.Delay( 50 );
 					}
 				} catch ( Exception ) { }
 
@@ -205,6 +207,10 @@ namespace VodArchiver.Tasks {
 							job.JobStatus = wasDead ? VideoJobStatus.Dead : VideoJobStatus.NotStarted;
 						}
 
+						if ( result == ResultType.Cancelled ) {
+							job.Status = "Cancelled during: " + job.Status;
+						}
+
 						if ( result == ResultType.TemporarilyUnavailable ) {
 							job.Status = "Temporarily unavailable, retrying later.";
 						}
@@ -236,8 +242,8 @@ namespace VodArchiver.Tasks {
 			return ResultType.Failure;
 		}
 
-		public bool IsJobRunnerThreadCompleted() {
-			return JobRunnerThread.IsCompleted;
+		public async Task WaitForJobRunnerThreadToEnd() {
+			await JobRunnerThread;
 		}
 
 		public bool CancelJob( IVideoJob job ) {

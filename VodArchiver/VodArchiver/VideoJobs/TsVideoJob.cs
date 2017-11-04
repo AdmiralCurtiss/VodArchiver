@@ -134,7 +134,6 @@ namespace VodArchiver.VideoJobs {
 				files.Clear();
 				for ( int i = 0; i < urls.Length; ++i ) {
 					if ( cancellationToken.IsCancellationRequested ) {
-						job.Status = "Stopped.";
 						return ( ResultType.Cancelled, null );
 					}
 
