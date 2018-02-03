@@ -256,5 +256,17 @@ namespace VodArchiver.Tasks {
 				return cancelled;
 			}
 		}
+
+		public bool IsInQueue( IVideoJob job ) {
+			lock ( JobQueueLock ) {
+				return IsJobWaiting( job );
+			}
+		}
+
+		public bool Dequeue( IVideoJob job ) {
+			lock ( JobQueueLock ) {
+				return WaitingJobs.RemoveAll( x => x.Job == job ) > 0;
+			}
+		}
 	}
 }

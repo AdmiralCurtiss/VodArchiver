@@ -423,13 +423,34 @@ namespace VodArchiver {
 				IVideoJob job = model as IVideoJob;
 				ContextMenuStrip menu = new ContextMenuStrip();
 
+				bool queueOptionsAvailable = false;
+				if ( ( job.JobStatus == VideoJobStatus.NotStarted || job.JobStatus == VideoJobStatus.Dead ) && !VideoTaskGroups[job.VideoInfo.Service].IsInQueue( job ) ) {
+					queueOptionsAvailable = true;
+					ToolStripItem item = menu.Items.Add( "Enqueue" );
+					item.Click += ( sender, e ) => {
+						VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
+					};
+				}
+
+				if ( ( job.JobStatus == VideoJobStatus.NotStarted || job.JobStatus == VideoJobStatus.Dead ) && VideoTaskGroups[job.VideoInfo.Service].IsInQueue( job ) ) {
+					queueOptionsAvailable = true;
+					ToolStripItem item = menu.Items.Add( "Dequeue" );
+					item.Click += ( sender, e ) => {
+						VideoTaskGroups[job.VideoInfo.Service].Dequeue( job );
+					};
+				}
+
 				if ( job.JobStatus == VideoJobStatus.NotStarted || job.JobStatus == VideoJobStatus.Dead ) {
+					queueOptionsAvailable = true;
 					ToolStripItem item = menu.Items.Add( "Download now" );
 					item.Click += ( sender, e ) => {
 						if ( job.JobStatus == VideoJobStatus.NotStarted || job.JobStatus == VideoJobStatus.Dead ) {
 							VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job, true ) );
 						}
 					};
+				}
+
+				if ( queueOptionsAvailable ) {
 					menu.Items.Add( new ToolStripSeparator() );
 				}
 
