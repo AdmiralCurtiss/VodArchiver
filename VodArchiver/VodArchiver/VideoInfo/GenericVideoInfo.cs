@@ -16,7 +16,11 @@ namespace VodArchiver.VideoInfo {
 			VideoTitle = node.Attributes["videoTitle"].Value;
 			VideoGame = node.Attributes["videoTags"].Value;
 			VideoTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["videoTimestamp"].Value ) );
-			VideoLength = TimeSpan.FromSeconds( double.Parse( node.Attributes["videoLength"].Value ) );
+			try {
+				VideoLength = TimeSpan.FromSeconds( double.Parse( node.Attributes["videoLength"].Value ) );
+			} catch (OverflowException) {
+				VideoLength = TimeSpan.MaxValue;
+			}
 			VideoRecordingState = (RecordingState)Enum.Parse( typeof( RecordingState ), node.Attributes["videoRecordingState"].Value );
 			VideoType = (VideoFileType)Enum.Parse( typeof( VideoFileType ), node.Attributes["videoType"].Value );
 		}
