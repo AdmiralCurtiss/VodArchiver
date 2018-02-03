@@ -79,7 +79,7 @@ namespace VodArchiver.VideoJobs {
 
 				Status = "Waiting for free disk IO slot to move...";
 				try {
-					await Util.ExpensiveDiskIOSemaphore.WaitAsync();
+					await Util.ExpensiveDiskIOSemaphore.WaitAsync( cancellationToken );
 				} catch ( OperationCanceledException ) {
 					return ResultType.Cancelled;
 				}
