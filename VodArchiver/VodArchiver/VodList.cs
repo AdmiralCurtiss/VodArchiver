@@ -68,6 +68,7 @@ namespace VodArchiver {
 					case "Youtube (User)": userInfo.Service = ServiceVideoCategoryType.YoutubeUser; break;
 					case "Youtube (Channel)": userInfo.Service = ServiceVideoCategoryType.YoutubeChannel; break;
 					case "RSS Feed": userInfo.Service = ServiceVideoCategoryType.RssFeed; break;
+					case "FFMpeg Reencode": userInfo.Service = ServiceVideoCategoryType.FFMpegJob; break;
 					default: return new FetchReturnValue { Success = false, HasMore = false };
 				}
 				userInfo.Persistable = checkBoxSaveForLater.Checked;
@@ -179,6 +180,14 @@ namespace VodArchiver {
 						videosToAdd.Add( m );
 					}
 					currentVideos = rssFeedMedia.Count;
+					break;
+				case ServiceVideoCategoryType.FFMpegJob:
+					List<IVideoInfo> reencodableFiles = ReencodeFetcher.FetchReencodeableFiles( userInfo.Username );
+					hasMore = false;
+					foreach ( var m in reencodableFiles ) {
+						videosToAdd.Add( m );
+					}
+					currentVideos = reencodableFiles.Count;
 					break;
 				default:
 					return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };

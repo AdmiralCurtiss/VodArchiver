@@ -13,6 +13,7 @@ namespace VodArchiver.VideoInfo {
 		TwitchChatReplay,
 		Youtube,
 		RawUrl,
+		FFMpegJob,
 	}
 
 	public enum RecordingState {

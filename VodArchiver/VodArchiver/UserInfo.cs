@@ -14,6 +14,7 @@ namespace VodArchiver {
 		YoutubeChannel,
 		YoutubePlaylist,
 		RssFeed,
+		FFMpegJob,
 	}
 
 	public static class ServiceVideoCategoryGroups {
@@ -34,6 +35,9 @@ namespace VodArchiver {
 					},
 					new List<ServiceVideoCategoryType> {
 						ServiceVideoCategoryType.RssFeed,
+					},
+					new List<ServiceVideoCategoryType> {
+						ServiceVideoCategoryType.FFMpegJob,
 					},
 				};
 			}

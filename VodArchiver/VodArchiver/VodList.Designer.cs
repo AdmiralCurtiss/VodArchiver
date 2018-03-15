@@ -76,8 +76,6 @@
             this.columnType,
             this.downloadButton});
 			this.objectListViewVideos.Cursor = System.Windows.Forms.Cursors.Default;
-			this.objectListViewVideos.HighlightBackgroundColor = System.Drawing.Color.Empty;
-			this.objectListViewVideos.HighlightForegroundColor = System.Drawing.Color.Empty;
 			this.objectListViewVideos.Location = new System.Drawing.Point(12, 38);
 			this.objectListViewVideos.Name = "objectListViewVideos";
 			this.objectListViewVideos.Size = new System.Drawing.Size(959, 403);
@@ -171,7 +169,8 @@
             "Youtube (User)",
             "Youtube (Channel)",
             "Youtube (Playlist)",
-            "RSS Feed"});
+            "RSS Feed",
+            "FFMpeg Reencode"});
 			this.comboBoxService.Location = new System.Drawing.Point(250, 12);
 			this.comboBoxService.Name = "comboBoxService";
 			this.comboBoxService.Size = new System.Drawing.Size(133, 21);

@@ -98,6 +98,7 @@ namespace VodArchiver.VideoJobs {
 				case "TwitchChatReplayJob": return new TwitchChatReplayJob( node );
 				case "TwitchVideoJob": return new TwitchVideoJob( node );
 				case "YoutubeVideoJob": return new YoutubeVideoJob( node );
+				case "FFMpegReencodeJob": return new FFMpegReencodeJob( node );
 				default: throw new Exception( "Unknown video job type: " + type );
 			}
 		}
