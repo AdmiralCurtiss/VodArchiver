@@ -245,13 +245,15 @@ namespace VodArchiver.VideoJobs {
 		public static void Remux( string targetName, string sourceName, string tempName ) {
 			Directory.CreateDirectory( Path.GetDirectoryName( targetName ) );
 			Console.WriteLine( "Remuxing to " + targetName + "..." );
-			var inputFile = new MediaToolkit.Model.MediaFile( sourceName );
-			var outputFile = new MediaToolkit.Model.MediaFile( tempName );
-			using ( var engine = new MediaToolkit.Engine( "ffmpeg.exe" ) ) {
-				MediaToolkit.Options.ConversionOptions options = new MediaToolkit.Options.ConversionOptions();
-				options.AdditionalOptions = "-codec copy -bsf:a aac_adtstoasc";
-				engine.Convert( inputFile, outputFile, options );
-			}
+			VodArchiver.ExternalProgramExecution.RunProgramSynchronous(
+				"ffmpeg",
+				new string[] {
+					"-i", sourceName,
+					"-codec", "copy",
+					"-bsf:a", "aac_adtstoasc",
+					tempName
+				}
+			);
 			Util.MoveFileOverwrite( tempName, targetName );
 			Console.WriteLine( "Created " + targetName + "!" );
 		}
