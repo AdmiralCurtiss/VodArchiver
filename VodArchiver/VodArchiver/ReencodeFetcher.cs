@@ -10,7 +10,7 @@ using VodArchiver.VideoInfo;
 
 namespace VodArchiver {
 	class ReencodeFetcher {
-		public static List<IVideoInfo> FetchReencodeableFiles( string path ) {
+		public async static Task<List<IVideoInfo>> FetchReencodeableFiles( string path ) {
 			string chunked = "_chunked";
 			string postfix = "_x264crf23";
 
@@ -30,17 +30,7 @@ namespace VodArchiver {
 
 			List<IVideoInfo> rv = new List<IVideoInfo>();
 			foreach ( string f in reencodeFiles ) {
-				GenericVideoInfo info = new GenericVideoInfo {
-					Service = StreamService.FFMpegJob,
-					VideoTitle = Path.GetFileName( f ),
-					VideoGame = postfix,
-					VideoTimestamp = File.GetCreationTimeUtc( f ),
-					VideoType = VideoFileType.Unknown,
-					VideoRecordingState = RecordingState.Recorded,
-					Username = Path.GetFileNameWithoutExtension( f ),
-					VideoId = f,
-					VideoLength = TimeSpan.FromSeconds( 0.0 )
-				};
+				IVideoInfo info = await VideoJobs.FFMpegReencodeJob.Probe( f );
 				rv.Add( info );
 			}
 			return rv;
