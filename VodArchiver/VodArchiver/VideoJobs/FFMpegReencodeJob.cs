@@ -32,15 +32,30 @@ namespace VodArchiver.VideoJobs {
 
 			if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 
-			string chunked = "_chunked";
-			string postfix = "_x264crf23";
 			string file = VideoInfo.VideoId;
+
+			GenericVideoInfo probe = await Probe( file );
+			if ( VideoInfo is FFMpegReencodeJobVideoInfo ) {
+				FFMpegReencodeJobVideoInfo ffvi = VideoInfo as FFMpegReencodeJobVideoInfo;
+				VideoInfo = new FFMpegReencodeJobVideoInfo( probe, ffvi.FFMpegOptions, ffvi.PostfixOld, ffvi.PostfixNew );
+			} else {
+				List<string> options = new List<string>() {
+					"-c:v", "libx264",
+					"-preset", "slower",
+					"-crf", "23",
+					"-g", "2000",
+					"-c:a", "copy",
+				};
+				VideoInfo = new FFMpegReencodeJobVideoInfo( probe, options, "_chunked", "_x264crf23" );
+			}
+
+			FFMpegReencodeJobVideoInfo ffmpegVideoInfo = VideoInfo as FFMpegReencodeJobVideoInfo;
+			string chunked = ffmpegVideoInfo.PostfixOld;
+			string postfix = ffmpegVideoInfo.PostfixNew;
 			string path = Path.GetDirectoryName( file );
 			string name = Path.GetFileNameWithoutExtension( file );
 			string ext = Path.GetExtension( file );
 			string postfixdir = Path.Combine( path, postfix );
-
-			VideoInfo = await Probe( file );
 
 			string newfile = Path.Combine( path, postfix, name.Substring( 0, name.Length - chunked.Length ) + postfix + ext );
 			string tempfile = Path.Combine( path, name.Substring( 0, name.Length - chunked.Length ) + postfix + "_TEMP" + ext );
@@ -54,7 +69,7 @@ namespace VodArchiver.VideoJobs {
 
 				Status = "Encoding " + newfile + "...";
 				Directory.CreateDirectory( postfixdir );
-				await Reencode( newfile, file, tempfile );
+				await Reencode( newfile, file, tempfile, ffmpegVideoInfo.FFMpegOptions );
 
 				string chunkeddir = Path.Combine( path, chunked );
 				Directory.CreateDirectory( chunkeddir );
@@ -66,7 +81,7 @@ namespace VodArchiver.VideoJobs {
 			return ResultType.Success;
 		}
 
-		public static async Task<IVideoInfo> Probe( string filename ) {
+		public static async Task<GenericVideoInfo> Probe( string filename ) {
 			ExternalProgramExecution.RunProgramReturnValue retval = await VodArchiver.ExternalProgramExecution.RunProgram(
 				"ffprobe",
 				new string[] {
@@ -97,18 +112,16 @@ namespace VodArchiver.VideoJobs {
 			return info;
 		}
 
-		private async Task Reencode( string targetName, string sourceName, string tempName ) {
+		private async Task Reencode( string targetName, string sourceName, string tempName, List<string> options ) {
+			List<string> args = new List<string>();
+			args.Add( "-i" );
+			args.Add( sourceName );
+			args.AddRange( options );
+			args.Add( tempName );
+
 			await VodArchiver.ExternalProgramExecution.RunProgram(
 				"ffmpeg",
-				new string[] {
-					"-i", sourceName,
-					"-c:v", "libx264",
-					"-preset", "slower",
-					"-crf", "23",
-					"-g", "2000",
-					"-c:a", "copy",
-					tempName
-				},
+				args.ToArray(),
 				stderrCallbacks: new System.Diagnostics.DataReceivedEventHandler[1] {
 					( sender, received ) => {
 						if ( !String.IsNullOrEmpty( received.Data ) ) {

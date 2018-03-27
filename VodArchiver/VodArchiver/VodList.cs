@@ -182,7 +182,7 @@ namespace VodArchiver {
 					currentVideos = rssFeedMedia.Count;
 					break;
 				case ServiceVideoCategoryType.FFMpegJob:
-					List<IVideoInfo> reencodableFiles = await ReencodeFetcher.FetchReencodeableFiles( userInfo.Username );
+					List<IVideoInfo> reencodableFiles = await ReencodeFetcher.FetchReencodeableFiles( userInfo.Username, userInfo.AdditionalOptions );
 					hasMore = false;
 					foreach ( var m in reencodableFiles ) {
 						videosToAdd.Add( m );

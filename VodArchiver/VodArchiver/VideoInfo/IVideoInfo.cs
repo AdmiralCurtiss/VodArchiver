@@ -48,6 +48,7 @@ namespace VodArchiver.VideoInfo {
 				case "HitboxVideoInfo": return new HitboxVideoInfo( node );
 				case "TwitchVideoInfo": return new TwitchVideoInfo( node );
 				case "YoutubeVideoInfo": return new YoutubeVideoInfo( node );
+				case "FFMpegReencodeJobVideoInfo": return new FFMpegReencodeJobVideoInfo( node );
 				default: throw new Exception( "Unknown video job type: " + type );
 			}
 		}

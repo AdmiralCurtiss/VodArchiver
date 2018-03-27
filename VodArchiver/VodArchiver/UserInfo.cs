@@ -46,12 +46,13 @@ namespace VodArchiver {
 
 
 	public class UserInfo : IEquatable<UserInfo>, IEqualityComparer<UserInfo>, IComparable<UserInfo> {
-		public static int SerializeDataCount = 5;
+		public static int SerializeDataCount = 6;
 		public ServiceVideoCategoryType Service;
 		public bool Persistable;
 		public string Username;
 		public bool AutoDownload;
 		public long? UserID;
+		public string AdditionalOptions = "";
 		public DateTime LastRefreshedOn = Util.DateTimeFromUnixTime( 0 );
 
 		public bool Equals( UserInfo other ) {
@@ -75,6 +76,7 @@ namespace VodArchiver {
 			s += UserID == null ? "?" : UserID.ToString();
 			s += "/";
 			s += LastRefreshedOn == null ? "?" : LastRefreshedOn.DateTimeToUnixTime().ToString();
+			s += "/" + AdditionalOptions;
 			s += "/" + Username;
 			return s;
 		}
@@ -97,6 +99,10 @@ namespace VodArchiver {
 			if ( parts.Length > 4 ) {
 				string tmp = parts[partnum++];
 				u.LastRefreshedOn = Util.DateTimeFromUnixTime( tmp == "?" ? 0 : ulong.Parse( tmp ) );
+			}
+			if ( parts.Length > 5 ) {
+				string tmp = parts[partnum++];
+				u.AdditionalOptions = tmp;
 			}
 			u.Username = parts[partnum];
 			u.Persistable = true;

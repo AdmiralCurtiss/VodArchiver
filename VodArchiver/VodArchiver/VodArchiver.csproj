@@ -121,6 +121,7 @@
     <Compile Include="ToastUtil.cs" />
     <Compile Include="UserInfo.cs" />
     <Compile Include="Util.cs" />
+    <Compile Include="VideoInfo\FFMpegReencodeJobVideoInfo.cs" />
     <Compile Include="VideoInfo\GenericVideoInfo.cs" />
     <Compile Include="VideoInfo\HitboxVideoInfo.cs" />
     <Compile Include="VideoInfo\IVideoInfo.cs" />

@@ -10,7 +10,7 @@ using VodArchiver.VideoInfo;
 
 namespace VodArchiver {
 	class ReencodeFetcher {
-		public async static Task<List<IVideoInfo>> FetchReencodeableFiles( string path ) {
+		public async static Task<List<IVideoInfo>> FetchReencodeableFiles( string path, string additionalOptions ) {
 			string chunked = "_chunked";
 			string postfix = "_x264crf23";
 
@@ -30,8 +30,19 @@ namespace VodArchiver {
 
 			List<IVideoInfo> rv = new List<IVideoInfo>();
 			foreach ( string f in reencodeFiles ) {
-				IVideoInfo info = await VideoJobs.FFMpegReencodeJob.Probe( f );
-				rv.Add( info );
+				GenericVideoInfo info = await VideoJobs.FFMpegReencodeJob.Probe( f );
+
+				// super hacky... probably should improve this stuff
+				IVideoInfo retval;
+				if ( additionalOptions.Contains( "rescale720" ) ) {
+					retval = new FFMpegReencodeJobVideoInfo( info, new List<string>() {
+						"-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-sws_flags", "lanczos", "-vf", "\"scale=-2:720\"", "-c:a", "copy"
+					}, "_chunked", "_x264crf23scaled720p" );
+				} else {
+					retval = info;
+				}
+
+				rv.Add( retval );
 			}
 			return rv;
 		}
