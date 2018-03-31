@@ -13,6 +13,7 @@ using System.Windows.Forms;
 using System.Xml;
 using TwixelAPI;
 using VodArchiver.Tasks;
+using VodArchiver.UserInfo;
 using VodArchiver.VideoInfo;
 using VodArchiver.VideoJobs;
 
@@ -87,7 +88,7 @@ namespace VodArchiver {
 					FetchTaskGroup ftg = new FetchTaskGroup( TwitchAPI, this );
 					foreach ( ServiceVideoCategoryType svc in types ) {
 						FetchTaskGroups.Add( svc, ftg );
-						foreach ( UserInfo ui in UserInfoPersister.GetKnownUsers() ) {
+						foreach ( GenericUserInfo ui in UserInfoPersister.GetKnownUsers() ) {
 							if ( ui.AutoDownload && ui.Service == svc ) {
 								ftg.Add( ui );
 							}

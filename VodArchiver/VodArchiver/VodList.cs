@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TwixelAPI;
+using VodArchiver.UserInfo;
 using VodArchiver.VideoInfo;
 
 namespace VodArchiver {
@@ -15,7 +16,7 @@ namespace VodArchiver {
 		DownloadForm DownloadWindow;
 		Twixel TwitchAPI;
 		int Offset = 0;
-		UserInfo selectedUserInfo = null;
+		GenericUserInfo selectedUserInfo = null;
 
 		public VodList( DownloadForm parent, Twixel twixel ) {
 			InitializeComponent();
@@ -57,9 +58,9 @@ namespace VodArchiver {
 
 		struct FetchReturnValue { public bool Success; public bool HasMore; public long TotalVideos; public int VideoCountThisFetch; public List<IVideoInfo> Videos; }
 		private async Task<FetchReturnValue> Fetch() {
-			UserInfo userInfo;
+			GenericUserInfo userInfo;
 			if ( selectedUserInfo == null ) {
-				userInfo = new UserInfo();
+				userInfo = new GenericUserInfo();
 				switch ( comboBoxService.Text ) {
 					case "Twitch (Recordings)": userInfo.Service = ServiceVideoCategoryType.TwitchRecordings; break;
 					case "Twitch (Highlights)": userInfo.Service = ServiceVideoCategoryType.TwitchHighlights; break;
@@ -106,7 +107,7 @@ namespace VodArchiver {
 			return rv;
 		}
 
-		private static async Task<FetchReturnValue> Fetch( Twixel twitchApi, UserInfo userInfo, int offset, bool flat ) {
+		private static async Task<FetchReturnValue> Fetch( Twixel twitchApi, GenericUserInfo userInfo, int offset, bool flat ) {
 			List<IVideoInfo> videosToAdd = new List<IVideoInfo>();
 			bool hasMore = true;
 			long maxVideos = -1;
@@ -224,10 +225,10 @@ namespace VodArchiver {
 		}
 
 		private void ProcessSelectedPreset() {
-			ProcessPreset( comboBoxKnownUsers.SelectedItem as UserInfo );
+			ProcessPreset( comboBoxKnownUsers.SelectedItem as GenericUserInfo );
 		}
 
-		private void ProcessPreset( UserInfo u ) {
+		private void ProcessPreset( GenericUserInfo u ) {
 			selectedUserInfo = u;
 			if ( u != null ) {
 				comboBoxService.SelectedIndex = (int)u.Service;
@@ -290,10 +291,10 @@ namespace VodArchiver {
 		}
 
 		private async void buttonDownloadAllKnown_Click( object sender, EventArgs e ) {
-			List<UserInfo> users = new List<UserInfo>( comboBoxKnownUsers.Items.Count - 1 );
+			List<GenericUserInfo> users = new List<GenericUserInfo>( comboBoxKnownUsers.Items.Count - 1 );
 			for ( int i = 1; i < comboBoxKnownUsers.Items.Count; ++i ) {
 				comboBoxKnownUsers.SelectedIndex = i;
-				var userInfo = comboBoxKnownUsers.SelectedItem as UserInfo;
+				var userInfo = comboBoxKnownUsers.SelectedItem as GenericUserInfo;
 				if ( userInfo != null ) {
 					users.Add( userInfo );
 				}
@@ -301,7 +302,7 @@ namespace VodArchiver {
 			await AutoDownload( users.ToArray(), TwitchAPI, DownloadWindow );
 		}
 
-		public static async Task AutoDownload( UserInfo[] users, Twixel twitchApi, DownloadForm downloadWindow ) {
+		public static async Task AutoDownload( GenericUserInfo[] users, Twixel twitchApi, DownloadForm downloadWindow ) {
 			Random rng = new Random();
 			for ( int i = 0; i < users.Length; ++i ) {
 				var userInfo = users[i];
@@ -340,7 +341,7 @@ namespace VodArchiver {
 		}
 
 		private void checkBoxAutoDownload_CheckedChanged( object sender, EventArgs e ) {
-			UserInfo u = comboBoxKnownUsers.SelectedItem as UserInfo;
+			GenericUserInfo u = comboBoxKnownUsers.SelectedItem as GenericUserInfo;
 			if ( u != null ) {
 				if ( u.AutoDownload != checkBoxAutoDownload.Checked ) {
 					u.AutoDownload = checkBoxAutoDownload.Checked;

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace VodArchiver {
+namespace VodArchiver.UserInfo {
 	// terrible name but I can't think of a good one
 	public enum ServiceVideoCategoryType {
 		TwitchRecordings,
@@ -47,7 +47,7 @@ namespace VodArchiver {
 	}
 
 
-	public class UserInfo : IEquatable<UserInfo>, IEqualityComparer<UserInfo>, IComparable<UserInfo> {
+	public class GenericUserInfo : IUserInfo {
 		public static int SerializeDataCount = 6;
 		public ServiceVideoCategoryType Service;
 		public bool Persistable;
@@ -57,15 +57,17 @@ namespace VodArchiver {
 		public string AdditionalOptions = "";
 		public DateTime LastRefreshedOn = Util.DateTimeFromUnixTime( 0 );
 
-		public bool Equals( UserInfo other ) {
-			return this.Service == other.Service && this.Username == other.Username;
+		public override ServiceVideoCategoryType Type => Service;
+
+		public override bool Equals( IUserInfo other ) {
+			return other is GenericUserInfo && this.Service == ( other as GenericUserInfo ).Service && this.Username == ( other as GenericUserInfo ).Username;
 		}
 
-		public bool Equals( UserInfo x, UserInfo y ) {
+		public override bool Equals( IUserInfo x, IUserInfo y ) {
 			return x.Equals( y );
 		}
 
-		public int GetHashCode( UserInfo obj ) {
+		public override int GetHashCode( IUserInfo obj ) {
 			return obj.GetHashCode();
 		}
 
@@ -98,8 +100,8 @@ namespace VodArchiver {
 			return node;
 		}
 
-		public static UserInfo FromXmlNode( XmlNode node ) {
-			UserInfo u = new UserInfo();
+		public static GenericUserInfo FromXmlNode( XmlNode node ) {
+			GenericUserInfo u = new GenericUserInfo();
 			u.Service = (ServiceVideoCategoryType)Enum.Parse( typeof( ServiceVideoCategoryType ), node.Attributes["_type"].Value );
 			u.AutoDownload = node.Attributes["autoDownload"].Value == "true";
 			u.UserID = node.Attributes["userID"].Value == "?" ? null : (long?)long.Parse( node.Attributes["userID"].Value );
@@ -110,8 +112,8 @@ namespace VodArchiver {
 			return u;
 		}
 
-		public static UserInfo FromSerializableString( string s, int splitcount ) {
-			UserInfo u = new UserInfo();
+		public static GenericUserInfo FromSerializableString( string s, int splitcount ) {
+			GenericUserInfo u = new GenericUserInfo();
 
 			string[] parts = s.Split( new char[] { '/' }, splitcount );
 			int partnum = 0;
@@ -142,19 +144,23 @@ namespace VodArchiver {
 			return this.Username.GetHashCode() ^ this.Service.GetHashCode();
 		}
 
-		public int CompareTo( UserInfo other ) {
-			if ( this.Service != other.Service ) {
-				return this.Service.CompareTo( other.Service );
+		public override int CompareTo( IUserInfo other ) {
+			if ( this.Type != other.Type ) {
+				return this.Type.CompareTo( other.Type );
 			}
 
-			return this.Username.CompareTo( other.Username );
+			if ( !( other is GenericUserInfo ) ) {
+				throw new Exception(); // if this happens something broke
+			}
+
+			return this.Username.CompareTo( ( other as GenericUserInfo ).Username );
 		}
 	}
 
 	public class UserInfoPersister {
 		private static object _KnownUsersLock = new object();
-		private static SortedSet<UserInfo> _KnownUsers = null;
-		private static SortedSet<UserInfo> KnownUsers {
+		private static SortedSet<GenericUserInfo> _KnownUsers = null;
+		private static SortedSet<GenericUserInfo> KnownUsers {
 			get {
 				lock ( _KnownUsersLock ) {
 					if ( _KnownUsers == null ) {
@@ -167,7 +173,7 @@ namespace VodArchiver {
 
 		public static void Load() {
 			lock ( _KnownUsersLock ) {
-				_KnownUsers = new SortedSet<UserInfo>();
+				_KnownUsers = new SortedSet<GenericUserInfo>();
 				if ( System.IO.File.Exists( Util.UserSerializationXmlPath ) ) {
 					try {
 						XmlDocument doc = new XmlDocument();
@@ -175,7 +181,7 @@ namespace VodArchiver {
 							doc.Load( fs );
 						}
 						foreach ( XmlNode node in doc.SelectNodes( "//root/UserInfo" ) ) {
-							_KnownUsers.Add( UserInfo.FromXmlNode( node ) );
+							_KnownUsers.Add( GenericUserInfo.FromXmlNode( node ) );
 						}
 					} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
 				} else if ( System.IO.File.Exists( Util.UserSerializationPath ) ) {
@@ -191,14 +197,14 @@ namespace VodArchiver {
 							}
 							continue;
 						}
-						_KnownUsers.Add( UserInfo.FromSerializableString( s, expectedAmountOfSections ) );
+						_KnownUsers.Add( GenericUserInfo.FromSerializableString( s, expectedAmountOfSections ) );
 					}
 					Save(); // convert to the new format
 				}
 			}
 		}
 
-		private static void SaveInternal( Stream fs, IEnumerable<UserInfo> userInfos ) {
+		private static void SaveInternal( Stream fs, IEnumerable<GenericUserInfo> userInfos ) {
 			XmlDocument document = new XmlDocument();
 			XmlNode node = document.CreateElement( "root" );
 			foreach ( var userInfo in userInfos ) {
@@ -231,21 +237,21 @@ namespace VodArchiver {
 			}
 		}
 
-		public static bool Add( UserInfo ui ) {
+		public static bool Add( GenericUserInfo ui ) {
 			lock ( _KnownUsersLock ) {
 				return KnownUsers.Add( ui );
 			}
 		}
 
-		public static bool AddOrUpdate( UserInfo ui ) {
+		public static bool AddOrUpdate( GenericUserInfo ui ) {
 			lock ( _KnownUsersLock ) {
 				return KnownUsers.AddOrUpdate( ui );
 			}
 		}
 
-		public static List<UserInfo> GetKnownUsers() {
+		public static List<GenericUserInfo> GetKnownUsers() {
 			lock ( _KnownUsersLock ) {
-				return new List<UserInfo>( KnownUsers );
+				return new List<GenericUserInfo>( KnownUsers );
 			}
 		}
 	}

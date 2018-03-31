@@ -119,7 +119,8 @@
     <Compile Include="Tasks\FetchTaskGroup.cs" />
     <Compile Include="Tasks\VideoTaskGroup.cs" />
     <Compile Include="ToastUtil.cs" />
-    <Compile Include="UserInfo.cs" />
+    <Compile Include="UserInfo\UserInfo.cs" />
+    <Compile Include="UserInfo\IUserInfo.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="VideoInfo\FFMpegReencodeJobVideoInfo.cs" />
     <Compile Include="VideoInfo\GenericVideoInfo.cs" />
