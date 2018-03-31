@@ -30,9 +30,32 @@ namespace VodArchiver.UserInfo {
 
 		public abstract Task<FetchReturnValue> Fetch( TwixelAPI.Twixel twitchApi, int offset, bool flat );
 
-		public abstract int CompareTo( IUserInfo other );
-		public abstract bool Equals( IUserInfo other );
-		public abstract bool Equals( IUserInfo x, IUserInfo y );
-		public abstract int GetHashCode( IUserInfo obj );
+		public virtual int CompareTo( IUserInfo other ) {
+			if ( this.Type != other.Type ) {
+				return this.Type.CompareTo( other.Type );
+			}
+
+			return this.UserIdentifier.CompareTo( other.UserIdentifier );
+		}
+
+		public virtual bool Equals( IUserInfo other ) {
+			return this.Type == other.Type && this.UserIdentifier == other.UserIdentifier;
+		}
+
+		public virtual bool Equals( IUserInfo x, IUserInfo y ) {
+			return x.Equals( y );
+		}
+
+		public override int GetHashCode() {
+			return this.UserIdentifier.GetHashCode() ^ this.Type.GetHashCode();
+		}
+
+		public virtual int GetHashCode( IUserInfo obj ) {
+			return obj.GetHashCode();
+		}
+
+		public override string ToString() {
+			return Type + ": " + UserIdentifier;
+		}
 	}
 }

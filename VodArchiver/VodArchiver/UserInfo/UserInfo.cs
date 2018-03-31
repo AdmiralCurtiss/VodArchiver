@@ -64,22 +64,6 @@ namespace VodArchiver.UserInfo {
 		public override bool AutoDownload { get => _AutoDownload; set => _AutoDownload = value; }
 		public override DateTime LastRefreshedOn { get => _LastRefreshedOn; set => _LastRefreshedOn = value; }
 
-		public override bool Equals( IUserInfo other ) {
-			return other is GenericUserInfo && this.Service == ( other as GenericUserInfo ).Service && this.Username == ( other as GenericUserInfo ).Username;
-		}
-
-		public override bool Equals( IUserInfo x, IUserInfo y ) {
-			return x.Equals( y );
-		}
-
-		public override int GetHashCode( IUserInfo obj ) {
-			return obj.GetHashCode();
-		}
-
-		public override string ToString() {
-			return Service + ": " + Username;
-		}
-
 		public string ToSerializableString() {
 			String s = Service + "/" + AutoDownload + "/";
 			s += UserID == null ? "?" : UserID.ToString();
@@ -241,22 +225,6 @@ namespace VodArchiver.UserInfo {
 			}
 
 			return new FetchReturnValue { Success = true, HasMore = hasMore, TotalVideos = maxVideos, VideoCountThisFetch = currentVideos, Videos = videosToAdd };
-		}
-
-		public override int GetHashCode() {
-			return this.Username.GetHashCode() ^ this.Service.GetHashCode();
-		}
-
-		public override int CompareTo( IUserInfo other ) {
-			if ( this.Type != other.Type ) {
-				return this.Type.CompareTo( other.Type );
-			}
-
-			if ( !( other is GenericUserInfo ) ) {
-				throw new Exception(); // if this happens something broke
-			}
-
-			return this.Username.CompareTo( ( other as GenericUserInfo ).Username );
 		}
 	}
 
