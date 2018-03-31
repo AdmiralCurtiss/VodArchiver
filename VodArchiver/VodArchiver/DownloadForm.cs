@@ -88,8 +88,8 @@ namespace VodArchiver {
 					FetchTaskGroup ftg = new FetchTaskGroup( TwitchAPI, this );
 					foreach ( ServiceVideoCategoryType svc in types ) {
 						FetchTaskGroups.Add( svc, ftg );
-						foreach ( GenericUserInfo ui in UserInfoPersister.GetKnownUsers() ) {
-							if ( ui.AutoDownload && ui.Service == svc ) {
+						foreach ( IUserInfo ui in UserInfoPersister.GetKnownUsers() ) {
+							if ( ui.AutoDownload && ui.Type == svc ) {
 								ftg.Add( ui );
 							}
 						}

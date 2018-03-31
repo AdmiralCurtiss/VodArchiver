@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using VodArchiver.VideoInfo;
 
 namespace VodArchiver.UserInfo {
 	// terrible name but I can't think of a good one
@@ -50,14 +51,18 @@ namespace VodArchiver.UserInfo {
 	public class GenericUserInfo : IUserInfo {
 		public static int SerializeDataCount = 6;
 		public ServiceVideoCategoryType Service;
-		public bool Persistable;
+		private bool _Persistable;
 		public string Username;
-		public bool AutoDownload;
+		private bool _AutoDownload;
 		public long? UserID;
 		public string AdditionalOptions = "";
-		public DateTime LastRefreshedOn = Util.DateTimeFromUnixTime( 0 );
+		private DateTime _LastRefreshedOn = Util.DateTimeFromUnixTime( 0 );
 
 		public override ServiceVideoCategoryType Type => Service;
+		public override string UserIdentifier => Username;
+		public override bool Persistable { get => _Persistable; set => _Persistable = value; }
+		public override bool AutoDownload { get => _AutoDownload; set => _AutoDownload = value; }
+		public override DateTime LastRefreshedOn { get => _LastRefreshedOn; set => _LastRefreshedOn = value; }
 
 		public override bool Equals( IUserInfo other ) {
 			return other is GenericUserInfo && this.Service == ( other as GenericUserInfo ).Service && this.Username == ( other as GenericUserInfo ).Username;
@@ -85,7 +90,7 @@ namespace VodArchiver.UserInfo {
 			return s;
 		}
 
-		public XmlNode Serialize( XmlDocument document, XmlNode node ) {
+		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			// this looks somewhat stupid but is to ensure that a type-specific deserializer can find the attributes at logical names instead of having to check legacy stuff
 			node.AppendAttribute( document, "_type", Service.ToString() );
 			node.AppendAttribute( document, "autoDownload", AutoDownload ? "true" : "false" );
@@ -140,6 +145,104 @@ namespace VodArchiver.UserInfo {
 			return u;
 		}
 
+		public override async Task<FetchReturnValue> Fetch( TwixelAPI.Twixel twitchApi, int offset, bool flat ) {
+			return await Fetch( twitchApi, this, offset, flat );
+		}
+
+		private static async Task<FetchReturnValue> Fetch( TwixelAPI.Twixel twitchApi, GenericUserInfo userInfo, int offset, bool flat ) {
+			List<IVideoInfo> videosToAdd = new List<IVideoInfo>();
+			bool hasMore = true;
+			long maxVideos = -1;
+			int currentVideos = -1;
+			bool forceReSave = false;
+
+			switch ( userInfo.Type ) {
+				case ServiceVideoCategoryType.TwitchRecordings:
+				case ServiceVideoCategoryType.TwitchHighlights:
+					if ( userInfo.UserID == null ) {
+						userInfo.UserID = await twitchApi.GetUserId( userInfo.UserIdentifier, TwixelAPI.Twixel.APIVersion.v5 );
+						if ( userInfo.UserID != null ) {
+							forceReSave = true;
+						}
+					}
+					TwixelAPI.Total<List<TwixelAPI.Video>> broadcasts = await twitchApi.RetrieveVideos(
+						channel: userInfo.UserID == null ? userInfo.UserIdentifier : userInfo.UserID.ToString(),
+						offset: offset, limit: 25, broadcasts: userInfo.Type == ServiceVideoCategoryType.TwitchRecordings, hls: false,
+						version: userInfo.UserID == null ? TwixelAPI.Twixel.APIVersion.v3 : TwixelAPI.Twixel.APIVersion.v5
+					);
+					if ( broadcasts.total.HasValue ) {
+						hasMore = offset + broadcasts.wrapped.Count < broadcasts.total;
+						maxVideos = (long)broadcasts.total;
+					} else {
+						hasMore = broadcasts.wrapped.Count == 25;
+					}
+					foreach ( var v in broadcasts.wrapped ) {
+						videosToAdd.Add( new TwitchVideoInfo( v, StreamService.Twitch ) );
+						videosToAdd.Add( new TwitchVideoInfo( v, StreamService.TwitchChatReplay ) );
+					}
+					currentVideos = broadcasts.wrapped.Count;
+					break;
+				case ServiceVideoCategoryType.HitboxRecordings:
+					(bool success, List<HitboxVideo> videos) = await Hitbox.RetrieveVideos( userInfo.UserIdentifier, offset: offset, limit: 100 );
+					if ( success ) {
+						hasMore = videos.Count == 100;
+						foreach ( var v in videos ) {
+							videosToAdd.Add( new HitboxVideoInfo( v ) );
+						}
+						currentVideos = videos.Count;
+					}
+					break;
+				case ServiceVideoCategoryType.YoutubePlaylist:
+					List<IVideoInfo> playlistVideos = await Youtube.RetrieveVideosFromPlaylist( userInfo.UserIdentifier, flat );
+					hasMore = false;
+					foreach ( var v in playlistVideos ) {
+						videosToAdd.Add( v );
+					}
+					currentVideos = playlistVideos.Count;
+					break;
+				case ServiceVideoCategoryType.YoutubeChannel:
+					List<IVideoInfo> channelVideos = await Youtube.RetrieveVideosFromChannel( userInfo.UserIdentifier, flat );
+					hasMore = false;
+					foreach ( var v in channelVideos ) {
+						videosToAdd.Add( v );
+					}
+					currentVideos = channelVideos.Count;
+					break;
+				case ServiceVideoCategoryType.YoutubeUser:
+					List<IVideoInfo> userVideos = await Youtube.RetrieveVideosFromUser( userInfo.UserIdentifier, flat );
+					hasMore = false;
+					foreach ( var v in userVideos ) {
+						videosToAdd.Add( v );
+					}
+					currentVideos = userVideos.Count;
+					break;
+				case ServiceVideoCategoryType.RssFeed:
+					List<IVideoInfo> rssFeedMedia = Rss.GetMediaFromFeed( userInfo.UserIdentifier );
+					hasMore = false;
+					foreach ( var m in rssFeedMedia ) {
+						videosToAdd.Add( m );
+					}
+					currentVideos = rssFeedMedia.Count;
+					break;
+				case ServiceVideoCategoryType.FFMpegJob:
+					List<IVideoInfo> reencodableFiles = await ReencodeFetcher.FetchReencodeableFiles( userInfo.UserIdentifier, userInfo.AdditionalOptions );
+					hasMore = false;
+					foreach ( var m in reencodableFiles ) {
+						videosToAdd.Add( m );
+					}
+					currentVideos = reencodableFiles.Count;
+					break;
+				default:
+					return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };
+			}
+
+			if ( videosToAdd.Count <= 0 ) {
+				return new FetchReturnValue { Success = true, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };
+			}
+
+			return new FetchReturnValue { Success = true, HasMore = hasMore, TotalVideos = maxVideos, VideoCountThisFetch = currentVideos, Videos = videosToAdd };
+		}
+
 		public override int GetHashCode() {
 			return this.Username.GetHashCode() ^ this.Service.GetHashCode();
 		}
@@ -159,8 +262,8 @@ namespace VodArchiver.UserInfo {
 
 	public class UserInfoPersister {
 		private static object _KnownUsersLock = new object();
-		private static SortedSet<GenericUserInfo> _KnownUsers = null;
-		private static SortedSet<GenericUserInfo> KnownUsers {
+		private static SortedSet<IUserInfo> _KnownUsers = null;
+		private static SortedSet<IUserInfo> KnownUsers {
 			get {
 				lock ( _KnownUsersLock ) {
 					if ( _KnownUsers == null ) {
@@ -173,7 +276,7 @@ namespace VodArchiver.UserInfo {
 
 		public static void Load() {
 			lock ( _KnownUsersLock ) {
-				_KnownUsers = new SortedSet<GenericUserInfo>();
+				_KnownUsers = new SortedSet<IUserInfo>();
 				if ( System.IO.File.Exists( Util.UserSerializationXmlPath ) ) {
 					try {
 						XmlDocument doc = new XmlDocument();
@@ -181,7 +284,7 @@ namespace VodArchiver.UserInfo {
 							doc.Load( fs );
 						}
 						foreach ( XmlNode node in doc.SelectNodes( "//root/UserInfo" ) ) {
-							_KnownUsers.Add( GenericUserInfo.FromXmlNode( node ) );
+							_KnownUsers.Add( IUserInfo.Deserialize( node ) );
 						}
 					} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
 				} else if ( System.IO.File.Exists( Util.UserSerializationPath ) ) {
@@ -204,7 +307,7 @@ namespace VodArchiver.UserInfo {
 			}
 		}
 
-		private static void SaveInternal( Stream fs, IEnumerable<GenericUserInfo> userInfos ) {
+		private static void SaveInternal( Stream fs, IEnumerable<IUserInfo> userInfos ) {
 			XmlDocument document = new XmlDocument();
 			XmlNode node = document.CreateElement( "root" );
 			foreach ( var userInfo in userInfos ) {
@@ -237,21 +340,21 @@ namespace VodArchiver.UserInfo {
 			}
 		}
 
-		public static bool Add( GenericUserInfo ui ) {
+		public static bool Add( IUserInfo ui ) {
 			lock ( _KnownUsersLock ) {
 				return KnownUsers.Add( ui );
 			}
 		}
 
-		public static bool AddOrUpdate( GenericUserInfo ui ) {
+		public static bool AddOrUpdate( IUserInfo ui ) {
 			lock ( _KnownUsersLock ) {
 				return KnownUsers.AddOrUpdate( ui );
 			}
 		}
 
-		public static List<GenericUserInfo> GetKnownUsers() {
+		public static List<IUserInfo> GetKnownUsers() {
 			lock ( _KnownUsersLock ) {
-				return new List<GenericUserInfo>( KnownUsers );
+				return new List<IUserInfo>( KnownUsers );
 			}
 		}
 	}

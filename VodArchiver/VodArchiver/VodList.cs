@@ -16,7 +16,7 @@ namespace VodArchiver {
 		DownloadForm DownloadWindow;
 		Twixel TwitchAPI;
 		int Offset = 0;
-		GenericUserInfo selectedUserInfo = null;
+		IUserInfo selectedUserInfo = null;
 
 		public VodList( DownloadForm parent, Twixel twixel ) {
 			InitializeComponent();
@@ -56,28 +56,28 @@ namespace VodArchiver {
 			}
 		}
 
-		struct FetchReturnValue { public bool Success; public bool HasMore; public long TotalVideos; public int VideoCountThisFetch; public List<IVideoInfo> Videos; }
 		private async Task<FetchReturnValue> Fetch() {
-			GenericUserInfo userInfo;
+			IUserInfo userInfo;
 			if ( selectedUserInfo == null ) {
-				userInfo = new GenericUserInfo();
+				GenericUserInfo ui = new GenericUserInfo();
 				switch ( comboBoxService.Text ) {
-					case "Twitch (Recordings)": userInfo.Service = ServiceVideoCategoryType.TwitchRecordings; break;
-					case "Twitch (Highlights)": userInfo.Service = ServiceVideoCategoryType.TwitchHighlights; break;
-					case "Hitbox": userInfo.Service = ServiceVideoCategoryType.HitboxRecordings; break;
-					case "Youtube (Playlist)": userInfo.Service = ServiceVideoCategoryType.YoutubePlaylist; break;
-					case "Youtube (User)": userInfo.Service = ServiceVideoCategoryType.YoutubeUser; break;
-					case "Youtube (Channel)": userInfo.Service = ServiceVideoCategoryType.YoutubeChannel; break;
-					case "RSS Feed": userInfo.Service = ServiceVideoCategoryType.RssFeed; break;
-					case "FFMpeg Reencode": userInfo.Service = ServiceVideoCategoryType.FFMpegJob; break;
+					case "Twitch (Recordings)": ui.Service = ServiceVideoCategoryType.TwitchRecordings; break;
+					case "Twitch (Highlights)": ui.Service = ServiceVideoCategoryType.TwitchHighlights; break;
+					case "Hitbox": ui.Service = ServiceVideoCategoryType.HitboxRecordings; break;
+					case "Youtube (Playlist)": ui.Service = ServiceVideoCategoryType.YoutubePlaylist; break;
+					case "Youtube (User)": ui.Service = ServiceVideoCategoryType.YoutubeUser; break;
+					case "Youtube (Channel)": ui.Service = ServiceVideoCategoryType.YoutubeChannel; break;
+					case "RSS Feed": ui.Service = ServiceVideoCategoryType.RssFeed; break;
+					case "FFMpeg Reencode": ui.Service = ServiceVideoCategoryType.FFMpegJob; break;
 					default: return new FetchReturnValue { Success = false, HasMore = false };
 				}
-				userInfo.Persistable = checkBoxSaveForLater.Checked;
-				userInfo.Username = textboxUsername.Text.Trim();
+				ui.Persistable = checkBoxSaveForLater.Checked;
+				ui.Username = textboxUsername.Text.Trim();
 			
-				if ( userInfo.Service == ServiceVideoCategoryType.YoutubePlaylist && ( userInfo.Username.StartsWith( "http://" ) || userInfo.Username.StartsWith( "https://" ) ) ) {
-					userInfo.Username = Util.GetParameterFromUri( new Uri( userInfo.Username ), "list" );
+				if ( ui.Service == ServiceVideoCategoryType.YoutubePlaylist && ( ui.Username.StartsWith( "http://" ) || ui.Username.StartsWith( "https://" ) ) ) {
+					ui.Username = Util.GetParameterFromUri( new Uri( ui.Username ), "list" );
 				}
+				userInfo = ui;
 			} else {
 				userInfo = selectedUserInfo;
 			}
@@ -107,112 +107,21 @@ namespace VodArchiver {
 			return rv;
 		}
 
-		private static async Task<FetchReturnValue> Fetch( Twixel twitchApi, GenericUserInfo userInfo, int offset, bool flat ) {
-			List<IVideoInfo> videosToAdd = new List<IVideoInfo>();
-			bool hasMore = true;
-			long maxVideos = -1;
-			int currentVideos = -1;
-			bool forceReSave = false;
+		private static async Task<FetchReturnValue> Fetch( Twixel twitchApi, IUserInfo userInfo, int offset, bool flat ) {
+			FetchReturnValue frv = await userInfo.Fetch( twitchApi, offset, flat );
 
-			switch ( userInfo.Service ) {
-				case ServiceVideoCategoryType.TwitchRecordings:
-				case ServiceVideoCategoryType.TwitchHighlights:
-					if ( userInfo.UserID == null ) {
-						userInfo.UserID = await twitchApi.GetUserId( userInfo.Username, Twixel.APIVersion.v5 );
-						if ( userInfo.UserID != null ) {
-							forceReSave = true;
-						}
-					}
-					Total<List<Video>> broadcasts = await twitchApi.RetrieveVideos(
-						channel: userInfo.UserID == null ? userInfo.Username : userInfo.UserID.ToString(),
-						offset: offset, limit: 25, broadcasts: userInfo.Service == ServiceVideoCategoryType.TwitchRecordings, hls: false,
-						version: userInfo.UserID == null ? Twixel.APIVersion.v3 : Twixel.APIVersion.v5
-					);
-					if ( broadcasts.total.HasValue ) {
-						hasMore = offset + broadcasts.wrapped.Count < broadcasts.total;
-						maxVideos = (long)broadcasts.total;
-					} else {
-						hasMore = broadcasts.wrapped.Count == 25;
-					}
-					foreach ( var v in broadcasts.wrapped ) {
-						videosToAdd.Add( new TwitchVideoInfo( v, StreamService.Twitch ) );
-						videosToAdd.Add( new TwitchVideoInfo( v, StreamService.TwitchChatReplay ) );
-					}
-					currentVideos = broadcasts.wrapped.Count;
-					break;
-				case ServiceVideoCategoryType.HitboxRecordings:
-					( bool success, List<HitboxVideo> videos ) = await Hitbox.RetrieveVideos( userInfo.Username, offset: offset, limit: 100 );
-					if ( success ) {
-						hasMore = videos.Count == 100;
-						foreach ( var v in videos ) {
-							videosToAdd.Add( new HitboxVideoInfo( v ) );
-						}
-						currentVideos = videos.Count;
-					}
-					break;
-				case ServiceVideoCategoryType.YoutubePlaylist:
-					List<IVideoInfo> playlistVideos = await Youtube.RetrieveVideosFromPlaylist( userInfo.Username, flat );
-					hasMore = false;
-					foreach ( var v in playlistVideos ) {
-						videosToAdd.Add( v );
-					}
-					currentVideos = playlistVideos.Count;
-					break;
-				case ServiceVideoCategoryType.YoutubeChannel:
-					List<IVideoInfo> channelVideos = await Youtube.RetrieveVideosFromChannel( userInfo.Username, flat );
-					hasMore = false;
-					foreach ( var v in channelVideos ) {
-						videosToAdd.Add( v );
-					}
-					currentVideos = channelVideos.Count;
-					break;
-				case ServiceVideoCategoryType.YoutubeUser:
-					List<IVideoInfo> userVideos = await Youtube.RetrieveVideosFromUser( userInfo.Username, flat );
-					hasMore = false;
-					foreach ( var v in userVideos ) {
-						videosToAdd.Add( v );
-					}
-					currentVideos = userVideos.Count;
-					break;
-				case ServiceVideoCategoryType.RssFeed:
-					List<IVideoInfo> rssFeedMedia = Rss.GetMediaFromFeed( userInfo.Username );
-					hasMore = false;
-					foreach ( var m in rssFeedMedia ) {
-						videosToAdd.Add( m );
-					}
-					currentVideos = rssFeedMedia.Count;
-					break;
-				case ServiceVideoCategoryType.FFMpegJob:
-					List<IVideoInfo> reencodableFiles = await ReencodeFetcher.FetchReencodeableFiles( userInfo.Username, userInfo.AdditionalOptions );
-					hasMore = false;
-					foreach ( var m in reencodableFiles ) {
-						videosToAdd.Add( m );
-					}
-					currentVideos = reencodableFiles.Count;
-					break;
-				default:
-					return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };
+			if ( !frv.Success ) {
+				return frv;
 			}
 
 			userInfo.LastRefreshedOn = DateTime.UtcNow;
-			forceReSave = true;
 
-			if ( userInfo.Persistable && forceReSave ) {
+			if ( userInfo.Persistable ) {
 				UserInfoPersister.AddOrUpdate( userInfo );
 				UserInfoPersister.Save();
 			}
 
-			if ( videosToAdd.Count <= 0 ) {
-				return new FetchReturnValue { Success = true, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };
-			}
-
-			if ( userInfo.Persistable && !forceReSave ) {
-				if ( UserInfoPersister.Add( userInfo ) ) {
-					UserInfoPersister.Save();
-				}
-			}
-
-			return new FetchReturnValue { Success = true, HasMore = hasMore, TotalVideos = maxVideos, VideoCountThisFetch = currentVideos, Videos = videosToAdd };
+			return frv;
 		}
 
 		private void objectListViewVideos_ButtonClick( object sender, BrightIdeasSoftware.CellClickEventArgs e ) {
@@ -225,14 +134,14 @@ namespace VodArchiver {
 		}
 
 		private void ProcessSelectedPreset() {
-			ProcessPreset( comboBoxKnownUsers.SelectedItem as GenericUserInfo );
+			ProcessPreset( comboBoxKnownUsers.SelectedItem as IUserInfo );
 		}
 
-		private void ProcessPreset( GenericUserInfo u ) {
+		private void ProcessPreset( IUserInfo u ) {
 			selectedUserInfo = u;
 			if ( u != null ) {
-				comboBoxService.SelectedIndex = (int)u.Service;
-				textboxUsername.Text = u.Username;
+				comboBoxService.SelectedIndex = (int)u.Type;
+				textboxUsername.Text = u.UserIdentifier;
 
 				comboBoxService.Enabled = false;
 				textboxUsername.Enabled = false;
@@ -291,10 +200,10 @@ namespace VodArchiver {
 		}
 
 		private async void buttonDownloadAllKnown_Click( object sender, EventArgs e ) {
-			List<GenericUserInfo> users = new List<GenericUserInfo>( comboBoxKnownUsers.Items.Count - 1 );
+			List<IUserInfo> users = new List<IUserInfo>( comboBoxKnownUsers.Items.Count - 1 );
 			for ( int i = 1; i < comboBoxKnownUsers.Items.Count; ++i ) {
 				comboBoxKnownUsers.SelectedIndex = i;
-				var userInfo = comboBoxKnownUsers.SelectedItem as GenericUserInfo;
+				var userInfo = comboBoxKnownUsers.SelectedItem as IUserInfo;
 				if ( userInfo != null ) {
 					users.Add( userInfo );
 				}
@@ -302,7 +211,7 @@ namespace VodArchiver {
 			await AutoDownload( users.ToArray(), TwitchAPI, DownloadWindow );
 		}
 
-		public static async Task AutoDownload( GenericUserInfo[] users, Twixel twitchApi, DownloadForm downloadWindow ) {
+		public static async Task AutoDownload( IUserInfo[] users, Twixel twitchApi, DownloadForm downloadWindow ) {
 			Random rng = new Random();
 			for ( int i = 0; i < users.Length; ++i ) {
 				var userInfo = users[i];
@@ -341,7 +250,7 @@ namespace VodArchiver {
 		}
 
 		private void checkBoxAutoDownload_CheckedChanged( object sender, EventArgs e ) {
-			GenericUserInfo u = comboBoxKnownUsers.SelectedItem as GenericUserInfo;
+			IUserInfo u = comboBoxKnownUsers.SelectedItem as IUserInfo;
 			if ( u != null ) {
 				if ( u.AutoDownload != checkBoxAutoDownload.Checked ) {
 					u.AutoDownload = checkBoxAutoDownload.Checked;

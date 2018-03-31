@@ -11,7 +11,7 @@ namespace VodArchiver.Tasks {
 	public class FetchTaskGroup {
 		private Task Runner;
 		private object ContainerLock;
-		private List<GenericUserInfo> UserInfos;
+		private List<IUserInfo> UserInfos;
 
 		private Twixel TwitchAPI;
 		private DownloadForm Form;
@@ -20,12 +20,12 @@ namespace VodArchiver.Tasks {
 			TwitchAPI = twitchApi;
 			Form = form;
 			ContainerLock = new Object();
-			UserInfos = new List<GenericUserInfo>();
+			UserInfos = new List<IUserInfo>();
 
 			Runner = Run();
 		}
 
-		public void Add( GenericUserInfo userInfo ) {
+		public void Add( IUserInfo userInfo ) {
 			lock ( ContainerLock ) {
 				if ( userInfo.AutoDownload ) {
 					UserInfos.Add( userInfo );
@@ -40,9 +40,9 @@ namespace VodArchiver.Tasks {
 				} catch ( Exception ) { }
 
 				try {
-					GenericUserInfo earliestUserInfo = null;
+					IUserInfo earliestUserInfo = null;
 					lock ( ContainerLock ) {
-						foreach ( GenericUserInfo u in UserInfos ) {
+						foreach ( IUserInfo u in UserInfos ) {
 							if ( u.AutoDownload && ( earliestUserInfo == null || u.LastRefreshedOn < earliestUserInfo.LastRefreshedOn ) ) {
 								earliestUserInfo = u;
 							}
@@ -53,7 +53,7 @@ namespace VodArchiver.Tasks {
 						DateTime earliestStartTime = earliestUserInfo.LastRefreshedOn.AddHours( 7.0 );
 						if ( earliestStartTime <= DateTime.UtcNow ) {
 							// hacky, TODO: refactor
-							await VodList.AutoDownload( new GenericUserInfo[] { earliestUserInfo }, TwitchAPI, Form );
+							await VodList.AutoDownload( new IUserInfo[] { earliestUserInfo }, TwitchAPI, Form );
 						}
 					}
 				} catch ( Exception ) { }
