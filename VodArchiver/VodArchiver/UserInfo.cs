@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace VodArchiver {
 	// terrible name but I can't think of a good one
@@ -81,6 +83,33 @@ namespace VodArchiver {
 			return s;
 		}
 
+		public XmlNode Serialize( XmlDocument document, XmlNode node ) {
+			// this looks somewhat stupid but is to ensure that a type-specific deserializer can find the attributes at logical names instead of having to check legacy stuff
+			node.AppendAttribute( document, "_type", Service.ToString() );
+			node.AppendAttribute( document, "autoDownload", AutoDownload ? "true" : "false" );
+			node.AppendAttribute( document, "userID", UserID == null ? "?" : UserID.ToString() );
+			node.AppendAttribute( document, "lastRefreshedOn", LastRefreshedOn.DateTimeToUnixTime().ToString() );
+			node.AppendAttribute( document, "preset", AdditionalOptions );
+			node.AppendAttribute( document, "username", Username.ToString() );
+			node.AppendAttribute( document, "channel", Username.ToString() );
+			node.AppendAttribute( document, "playlist", Username.ToString() );
+			node.AppendAttribute( document, "url", Username.ToString() );
+			node.AppendAttribute( document, "path", Username.ToString() );
+			return node;
+		}
+
+		public static UserInfo FromXmlNode( XmlNode node ) {
+			UserInfo u = new UserInfo();
+			u.Service = (ServiceVideoCategoryType)Enum.Parse( typeof( ServiceVideoCategoryType ), node.Attributes["_type"].Value );
+			u.AutoDownload = node.Attributes["autoDownload"].Value == "true";
+			u.UserID = node.Attributes["userID"].Value == "?" ? null : (long?)long.Parse( node.Attributes["userID"].Value );
+			u.LastRefreshedOn = Util.DateTimeFromUnixTime( ulong.Parse( node.Attributes["lastRefreshedOn"].Value ) );
+			u.AdditionalOptions = node.Attributes["preset"].Value;
+			u.Username = node.Attributes["username"].Value;
+			u.Persistable = true;
+			return u;
+		}
+
 		public static UserInfo FromSerializableString( string s, int splitcount ) {
 			UserInfo u = new UserInfo();
 
@@ -139,7 +168,17 @@ namespace VodArchiver {
 		public static void Load() {
 			lock ( _KnownUsersLock ) {
 				_KnownUsers = new SortedSet<UserInfo>();
-				if ( System.IO.File.Exists( Util.UserSerializationPath ) ) {
+				if ( System.IO.File.Exists( Util.UserSerializationXmlPath ) ) {
+					try {
+						XmlDocument doc = new XmlDocument();
+						using ( FileStream fs = System.IO.File.OpenRead( Util.UserSerializationXmlPath ) ) {
+							doc.Load( fs );
+						}
+						foreach ( XmlNode node in doc.SelectNodes( "//root/UserInfo" ) ) {
+							_KnownUsers.Add( UserInfo.FromXmlNode( node ) );
+						}
+					} catch ( System.Runtime.Serialization.SerializationException ) { } catch ( FileNotFoundException ) { }
+				} else if ( System.IO.File.Exists( Util.UserSerializationPath ) ) {
 					string[] userList = System.IO.File.ReadAllLines( Util.UserSerializationPath );
 					int expectedAmountOfSections = 4; // if no #datacount label in file assume 4, that was the amount at the time the label was implemented
 					foreach ( var s in userList ) {
@@ -154,18 +193,41 @@ namespace VodArchiver {
 						}
 						_KnownUsers.Add( UserInfo.FromSerializableString( s, expectedAmountOfSections ) );
 					}
+					Save(); // convert to the new format
 				}
+			}
+		}
+
+		private static void SaveInternal( Stream fs, IEnumerable<UserInfo> userInfos ) {
+			XmlDocument document = new XmlDocument();
+			XmlNode node = document.CreateElement( "root" );
+			foreach ( var userInfo in userInfos ) {
+				node.AppendChild( userInfo.Serialize( document, document.CreateElement( "UserInfo" ) ) );
+			}
+			document.AppendChild( node );
+			using ( StreamWriter sw = new StreamWriter( fs, new UTF8Encoding( false, true ), 1024 * 1024, true ) ) {
+				document.Save( XmlWriter.Create( sw, new XmlWriterSettings() { Indent = true } ) );
 			}
 		}
 
 		public static void Save() {
 			lock ( _KnownUsersLock ) {
-				List<string> userList = new List<string>( KnownUsers.Count );
-				userList.Add( "#datacount" + UserInfo.SerializeDataCount );
-				foreach ( var u in KnownUsers ) {
-					userList.Add( u.ToSerializableString() );
+				using ( MemoryStream memoryStream = new MemoryStream() ) {
+					SaveInternal( memoryStream, KnownUsers );
+					long count = memoryStream.Position;
+					memoryStream.Position = 0;
+					using ( FileStream fs = File.Create( Util.UserSerializationXmlTempPath ) ) {
+						Util.CopyStream( memoryStream, fs, count );
+						fs.Close();
+					}
+					if ( File.Exists( Util.UserSerializationXmlPath ) ) {
+						System.Threading.Thread.Sleep( 100 );
+						File.Delete( Util.UserSerializationXmlPath );
+						System.Threading.Thread.Sleep( 100 );
+					}
+					File.Move( Util.UserSerializationXmlTempPath, Util.UserSerializationXmlPath );
+					System.Threading.Thread.Sleep( 100 );
 				}
-				System.IO.File.WriteAllLines( Util.UserSerializationPath, userList );
 			}
 		}
 
