@@ -76,6 +76,18 @@ namespace VodArchiver.VideoJobs {
 					try {
 						Status = "Combining downloaded video parts...";
 						await TsVideoJob.Combine( combinedFilename, files );
+
+						// sanity check
+						Status = "Sanity check on combined video...";
+						TimeSpan actualVideoLength = ( await FFMpegReencodeJob.Probe( combinedFilename ) ).VideoLength;
+						TimeSpan expectedVideoLength = VideoInfo.VideoLength;
+						if ( actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
+							// if difference is bigger than 5 seconds something is off, report
+							Status = "Large time difference between expected (" + expectedVideoLength.ToString() + ") and combined (" + actualVideoLength.ToString() + "), stopping.";
+							await Util.DeleteFile( combinedFilename ); // TODO: Better way to prevent continuation...?
+							return ResultType.Failure;
+						}
+
 						await Util.DeleteFiles( files );
 						System.IO.Directory.Delete( GetTempFolderForParts() );
 					} finally {
@@ -92,6 +104,17 @@ namespace VodArchiver.VideoJobs {
 				try {
 					Status = "Remuxing to MP4...";
 					await Task.Run( () => TsVideoJob.Remux( remuxedFilename, combinedFilename, remuxedTempname ) );
+
+					// sanity check
+					Status = "Sanity check on remuxed video...";
+					TimeSpan actualVideoLength = ( await FFMpegReencodeJob.Probe( remuxedFilename ) ).VideoLength;
+					TimeSpan expectedVideoLength = VideoInfo.VideoLength;
+					if ( actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
+						// if difference is bigger than 5 seconds something is off, report
+						Status = "Large time difference between expected (" + expectedVideoLength.ToString() + ") and remuxed (" + actualVideoLength.ToString() + "), stopping.";
+						await Util.DeleteFile( remuxedFilename ); // TODO: Better way to prevent continuation...?
+						return ResultType.Failure;
+					}
 				} finally {
 					Util.ExpensiveDiskIOSemaphore.Release();
 				}

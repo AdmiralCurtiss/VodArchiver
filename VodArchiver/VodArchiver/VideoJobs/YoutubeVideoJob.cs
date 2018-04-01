@@ -84,6 +84,16 @@ namespace VodArchiver.VideoJobs {
 					return ResultType.Cancelled;
 				}
 				try {
+					// sanity check
+					Status = "Sanity check on downloaded video...";
+					TimeSpan actualVideoLength = ( await FFMpegReencodeJob.Probe( tempFilepath ) ).VideoLength;
+					TimeSpan expectedVideoLength = VideoInfo.VideoLength;
+					if ( actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
+						// if difference is bigger than 5 seconds something is off, report
+						Status = "Large time difference between expected (" + expectedVideoLength.ToString() + ") and actual (" + actualVideoLength.ToString() + "), stopping.";
+						return ResultType.Failure;
+					}
+
 					Status = "Moving...";
 					await Task.Run( () => Util.MoveFileOverwrite( tempFilepath, finalFilepath ) );
 					await Task.Run( () => Directory.Delete( tempFolder ) );
