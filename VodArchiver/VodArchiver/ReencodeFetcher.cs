@@ -38,6 +38,10 @@ namespace VodArchiver {
 					retval = new FFMpegReencodeJobVideoInfo( info, new List<string>() {
 						"-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-sws_flags", "lanczos", "-vf", "\"scale=-2:720\"", "-c:a", "copy"
 					}, "_chunked", "_x264crf23scaled720p" );
+				} else if ( additionalOptions.Contains( "rescale480" ) ) {
+					retval = new FFMpegReencodeJobVideoInfo( info, new List<string>() {
+						"-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-sws_flags", "lanczos", "-vf", "\"scale=-2:480\"", "-c:a", "copy"
+					}, "_chunked", "_x264crf23scaled480p" );
 				} else {
 					retval = info;
 				}
