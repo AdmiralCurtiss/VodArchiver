@@ -119,8 +119,15 @@
     <Compile Include="Tasks\FetchTaskGroup.cs" />
     <Compile Include="Tasks\VideoTaskGroup.cs" />
     <Compile Include="ToastUtil.cs" />
+    <Compile Include="UserInfo\FFMpegJobUserInfo.cs" />
+    <Compile Include="UserInfo\HitboxUserInfo.cs" />
+    <Compile Include="UserInfo\RssFeedUserInfo.cs" />
+    <Compile Include="UserInfo\TwitchUserInfo.cs" />
     <Compile Include="UserInfo\UserInfo.cs" />
     <Compile Include="UserInfo\IUserInfo.cs" />
+    <Compile Include="UserInfo\YoutubeChannelUserInfo.cs" />
+    <Compile Include="UserInfo\YoutubePlaylistUserInfo.cs" />
+    <Compile Include="UserInfo\YoutubeUserUserInfo.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="VideoInfo\FFMpegReencodeJobVideoInfo.cs" />
     <Compile Include="VideoInfo\GenericVideoInfo.cs" />

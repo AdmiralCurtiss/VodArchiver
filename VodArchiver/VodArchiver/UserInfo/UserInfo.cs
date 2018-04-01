@@ -134,97 +134,7 @@ namespace VodArchiver.UserInfo {
 		}
 
 		private static async Task<FetchReturnValue> Fetch( TwixelAPI.Twixel twitchApi, GenericUserInfo userInfo, int offset, bool flat ) {
-			List<IVideoInfo> videosToAdd = new List<IVideoInfo>();
-			bool hasMore = true;
-			long maxVideos = -1;
-			int currentVideos = -1;
-			bool forceReSave = false;
-
-			switch ( userInfo.Type ) {
-				case ServiceVideoCategoryType.TwitchRecordings:
-				case ServiceVideoCategoryType.TwitchHighlights:
-					if ( userInfo.UserID == null ) {
-						userInfo.UserID = await twitchApi.GetUserId( userInfo.UserIdentifier, TwixelAPI.Twixel.APIVersion.v5 );
-						if ( userInfo.UserID != null ) {
-							forceReSave = true;
-						}
-					}
-					TwixelAPI.Total<List<TwixelAPI.Video>> broadcasts = await twitchApi.RetrieveVideos(
-						channel: userInfo.UserID == null ? userInfo.UserIdentifier : userInfo.UserID.ToString(),
-						offset: offset, limit: 25, broadcasts: userInfo.Type == ServiceVideoCategoryType.TwitchRecordings, hls: false,
-						version: userInfo.UserID == null ? TwixelAPI.Twixel.APIVersion.v3 : TwixelAPI.Twixel.APIVersion.v5
-					);
-					if ( broadcasts.total.HasValue ) {
-						hasMore = offset + broadcasts.wrapped.Count < broadcasts.total;
-						maxVideos = (long)broadcasts.total;
-					} else {
-						hasMore = broadcasts.wrapped.Count == 25;
-					}
-					foreach ( var v in broadcasts.wrapped ) {
-						videosToAdd.Add( new TwitchVideoInfo( v, StreamService.Twitch ) );
-						videosToAdd.Add( new TwitchVideoInfo( v, StreamService.TwitchChatReplay ) );
-					}
-					currentVideos = broadcasts.wrapped.Count;
-					break;
-				case ServiceVideoCategoryType.HitboxRecordings:
-					(bool success, List<HitboxVideo> videos) = await Hitbox.RetrieveVideos( userInfo.UserIdentifier, offset: offset, limit: 100 );
-					if ( success ) {
-						hasMore = videos.Count == 100;
-						foreach ( var v in videos ) {
-							videosToAdd.Add( new HitboxVideoInfo( v ) );
-						}
-						currentVideos = videos.Count;
-					}
-					break;
-				case ServiceVideoCategoryType.YoutubePlaylist:
-					List<IVideoInfo> playlistVideos = await Youtube.RetrieveVideosFromPlaylist( userInfo.UserIdentifier, flat );
-					hasMore = false;
-					foreach ( var v in playlistVideos ) {
-						videosToAdd.Add( v );
-					}
-					currentVideos = playlistVideos.Count;
-					break;
-				case ServiceVideoCategoryType.YoutubeChannel:
-					List<IVideoInfo> channelVideos = await Youtube.RetrieveVideosFromChannel( userInfo.UserIdentifier, flat );
-					hasMore = false;
-					foreach ( var v in channelVideos ) {
-						videosToAdd.Add( v );
-					}
-					currentVideos = channelVideos.Count;
-					break;
-				case ServiceVideoCategoryType.YoutubeUser:
-					List<IVideoInfo> userVideos = await Youtube.RetrieveVideosFromUser( userInfo.UserIdentifier, flat );
-					hasMore = false;
-					foreach ( var v in userVideos ) {
-						videosToAdd.Add( v );
-					}
-					currentVideos = userVideos.Count;
-					break;
-				case ServiceVideoCategoryType.RssFeed:
-					List<IVideoInfo> rssFeedMedia = Rss.GetMediaFromFeed( userInfo.UserIdentifier );
-					hasMore = false;
-					foreach ( var m in rssFeedMedia ) {
-						videosToAdd.Add( m );
-					}
-					currentVideos = rssFeedMedia.Count;
-					break;
-				case ServiceVideoCategoryType.FFMpegJob:
-					List<IVideoInfo> reencodableFiles = await ReencodeFetcher.FetchReencodeableFiles( userInfo.UserIdentifier, userInfo.AdditionalOptions );
-					hasMore = false;
-					foreach ( var m in reencodableFiles ) {
-						videosToAdd.Add( m );
-					}
-					currentVideos = reencodableFiles.Count;
-					break;
-				default:
-					return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };
-			}
-
-			if ( videosToAdd.Count <= 0 ) {
-				return new FetchReturnValue { Success = true, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };
-			}
-
-			return new FetchReturnValue { Success = true, HasMore = hasMore, TotalVideos = maxVideos, VideoCountThisFetch = currentVideos, Videos = videosToAdd };
+			return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = 0, VideoCountThisFetch = 0, Videos = new List<IVideoInfo>() };
 		}
 	}
 
@@ -271,6 +181,7 @@ namespace VodArchiver.UserInfo {
 						_KnownUsers.Add( GenericUserInfo.FromSerializableString( s, expectedAmountOfSections ) );
 					}
 					Save(); // convert to the new format
+					Load(); // load from new format so the objects have the correct classes instead of the generic one
 				}
 			}
 		}

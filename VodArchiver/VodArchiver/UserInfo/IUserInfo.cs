@@ -22,9 +22,23 @@ namespace VodArchiver.UserInfo {
 		public static IUserInfo Deserialize( XmlNode node ) {
 			ServiceVideoCategoryType type = (ServiceVideoCategoryType)Enum.Parse( typeof( ServiceVideoCategoryType ), node.Attributes["_type"].Value );
 			switch ( type ) {
+				case ServiceVideoCategoryType.TwitchRecordings:
+				case ServiceVideoCategoryType.TwitchHighlights:
+					return new TwitchUserInfo( node );
+				case ServiceVideoCategoryType.HitboxRecordings:
+					return new HitboxUserInfo( node );
+				case ServiceVideoCategoryType.YoutubeUser:
+					return new YoutubeUserUserInfo( node );
+				case ServiceVideoCategoryType.YoutubeChannel:
+					return new YoutubeChannelUserInfo( node );
+				case ServiceVideoCategoryType.YoutubePlaylist:
+					return new YoutubePlaylistUserInfo( node );
+				case ServiceVideoCategoryType.RssFeed:
+					return new RssFeedUserInfo( node );
+				case ServiceVideoCategoryType.FFMpegJob:
+					return new FFMpegJobUserInfo( node );
 				default:
-					return GenericUserInfo.FromXmlNode( node );
-					//throw new Exception( "Unknown user info type: " + type );
+					throw new Exception( "Unknown user info type: " + type );
 			}
 		}
 
