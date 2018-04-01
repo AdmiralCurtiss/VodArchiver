@@ -22,6 +22,14 @@ namespace VodArchiver.UserInfo {
 		private long? UserID;
 		private bool Highlights;
 
+		public TwitchUserInfo( string username, bool highlights ) {
+			Username = username;
+			UserID = null;
+			Highlights = highlights;
+			_Persistable = false;
+			_AutoDownload = false;
+		}
+
 		public TwitchUserInfo( XmlNode node ) {
 			ServiceVideoCategoryType t = ( ServiceVideoCategoryType)Enum.Parse( typeof( ServiceVideoCategoryType ), node.Attributes["_type"].Value );
 			if ( t == ServiceVideoCategoryType.TwitchRecordings ) {

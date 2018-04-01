@@ -59,25 +59,19 @@ namespace VodArchiver {
 		private async Task<FetchReturnValue> Fetch() {
 			IUserInfo userInfo;
 			if ( selectedUserInfo == null ) {
-				GenericUserInfo ui = new GenericUserInfo();
+				string userIdentifier = textboxUsername.Text.Trim();
 				switch ( comboBoxService.Text ) {
-					case "Twitch (Recordings)": ui.Service = ServiceVideoCategoryType.TwitchRecordings; break;
-					case "Twitch (Highlights)": ui.Service = ServiceVideoCategoryType.TwitchHighlights; break;
-					case "Hitbox": ui.Service = ServiceVideoCategoryType.HitboxRecordings; break;
-					case "Youtube (Playlist)": ui.Service = ServiceVideoCategoryType.YoutubePlaylist; break;
-					case "Youtube (User)": ui.Service = ServiceVideoCategoryType.YoutubeUser; break;
-					case "Youtube (Channel)": ui.Service = ServiceVideoCategoryType.YoutubeChannel; break;
-					case "RSS Feed": ui.Service = ServiceVideoCategoryType.RssFeed; break;
-					case "FFMpeg Reencode": ui.Service = ServiceVideoCategoryType.FFMpegJob; break;
+					case "Twitch (Recordings)": userInfo = new TwitchUserInfo( userIdentifier, false ); break;
+					case "Twitch (Highlights)": userInfo = new TwitchUserInfo( userIdentifier, true ); break;
+					case "Hitbox": userInfo = new HitboxUserInfo( userIdentifier ); break;
+					case "Youtube (Playlist)": userInfo = new YoutubePlaylistUserInfo( userIdentifier ); break;
+					case "Youtube (User)": userInfo = new YoutubeUserUserInfo( userIdentifier ); break;
+					case "Youtube (Channel)": userInfo = new YoutubeChannelUserInfo( userIdentifier ); break;
+					case "RSS Feed": userInfo = new RssFeedUserInfo( userIdentifier ); break;
+					case "FFMpeg Reencode": userInfo = new FFMpegJobUserInfo( userIdentifier ); break;
 					default: return new FetchReturnValue { Success = false, HasMore = false };
 				}
-				ui.Persistable = checkBoxSaveForLater.Checked;
-				ui.Username = textboxUsername.Text.Trim();
-			
-				if ( ui.Service == ServiceVideoCategoryType.YoutubePlaylist && ( ui.Username.StartsWith( "http://" ) || ui.Username.StartsWith( "https://" ) ) ) {
-					ui.Username = Util.GetParameterFromUri( new Uri( ui.Username ), "list" );
-				}
-				userInfo = ui;
+				userInfo.Persistable = checkBoxSaveForLater.Checked;
 			} else {
 				userInfo = selectedUserInfo;
 			}

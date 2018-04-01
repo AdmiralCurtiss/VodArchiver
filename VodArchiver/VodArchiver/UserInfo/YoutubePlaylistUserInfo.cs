@@ -20,6 +20,16 @@ namespace VodArchiver.UserInfo {
 
 		private string Playlist;
 
+		public YoutubePlaylistUserInfo( string playlist ) {
+			if ( playlist.StartsWith( "http://" ) || playlist.StartsWith( "https://" ) ) {
+				Playlist = Util.GetParameterFromUri( new Uri( playlist ), "list" );
+			} else {
+				Playlist = playlist;
+			}
+			_Persistable = false;
+			_AutoDownload = false;
+		}
+
 		public YoutubePlaylistUserInfo( XmlNode node ) {
 			_AutoDownload = node.Attributes["autoDownload"].Value == "true";
 			_LastRefreshedOn = Util.DateTimeFromUnixTime( ulong.Parse( node.Attributes["lastRefreshedOn"].Value ) );

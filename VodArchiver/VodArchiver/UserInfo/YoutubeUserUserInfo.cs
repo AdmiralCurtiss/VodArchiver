@@ -20,6 +20,12 @@ namespace VodArchiver.UserInfo {
 
 		private string Username;
 
+		public YoutubeUserUserInfo( string username ) {
+			Username = username;
+			_Persistable = false;
+			_AutoDownload = false;
+		}
+
 		public YoutubeUserUserInfo( XmlNode node ) {
 			_AutoDownload = node.Attributes["autoDownload"].Value == "true";
 			_LastRefreshedOn = Util.DateTimeFromUnixTime( ulong.Parse( node.Attributes["lastRefreshedOn"].Value ) );

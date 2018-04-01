@@ -21,6 +21,13 @@ namespace VodArchiver.UserInfo {
 		private string Path;
 		private string Preset;
 
+		public FFMpegJobUserInfo( string path, string preset = "" ) {
+			Path = path;
+			Preset = preset;
+			_Persistable = false;
+			_AutoDownload = false;
+		}
+
 		public FFMpegJobUserInfo( XmlNode node ) {
 			_AutoDownload = node.Attributes["autoDownload"].Value == "true";
 			_LastRefreshedOn = Util.DateTimeFromUnixTime( ulong.Parse( node.Attributes["lastRefreshedOn"].Value ) );

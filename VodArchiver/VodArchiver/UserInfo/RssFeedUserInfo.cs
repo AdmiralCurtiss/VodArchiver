@@ -20,6 +20,12 @@ namespace VodArchiver.UserInfo {
 
 		private string Url;
 
+		public RssFeedUserInfo( string url ) {
+			Url = url;
+			_Persistable = false;
+			_AutoDownload = false;
+		}
+
 		public RssFeedUserInfo( XmlNode node ) {
 			_AutoDownload = node.Attributes["autoDownload"].Value == "true";
 			_LastRefreshedOn = Util.DateTimeFromUnixTime( ulong.Parse( node.Attributes["lastRefreshedOn"].Value ) );
