@@ -491,5 +491,82 @@ namespace VodArchiver {
 			}
 			return null;
 		}
+
+		private async void SanityCheckYoutube() {
+			List<string> paths = new List<string>();
+			foreach ( string path in paths ) {
+				foreach ( string file in Directory.EnumerateFiles( path, "youtube_*.mkv", SearchOption.AllDirectories ) ) {
+					try {
+						string filepart = Path.GetFileNameWithoutExtension( file );
+						string id = filepart.Substring( filepart.Length - 11, 11 );
+
+						List<IVideoJob> jobs = new List<IVideoJob>();
+						foreach ( var item in objectListViewDownloads.Objects ) {
+							IVideoJob job = item as IVideoJob;
+							if ( job != null ) {
+								if ( job.VideoInfo.Service == StreamService.Youtube && job.VideoInfo.VideoId == id && job.JobStatus == VideoJobStatus.Finished ) {
+									try {
+										// sanity check
+										TimeSpan actualVideoLength = ( await FFMpegReencodeJob.Probe( file ) ).VideoLength;
+										TimeSpan expectedVideoLength = job.VideoInfo.VideoLength;
+										if ( actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
+											// if difference is bigger than 5 seconds something is off, report
+											job.Status = "Large time difference between expected (" + expectedVideoLength.ToString() + ") and actual (" + actualVideoLength.ToString() + "), reenqueueing. (" + file + ")";
+											job.JobStatus = VideoJobStatus.NotStarted;
+										} else {
+											job.Status = "Sane.";
+										}
+									} catch ( Exception ex ) {
+										job.Status = "Exception while sanity checking: " + ex.ToString();
+										job.JobStatus = VideoJobStatus.NotStarted;
+									}
+								}
+							}
+						}
+
+					} catch ( Exception ) {
+					}
+				}
+			}
+		}
+
+		private async void SanityCheckTwitch() {
+			List<string> paths = new List<string>();
+			foreach ( string path in paths ) {
+				foreach ( string file in Directory.EnumerateFiles( path, "twitch_*.mp4", SearchOption.AllDirectories ) ) {
+					try {
+						string filepart = Path.GetFileNameWithoutExtension( file );
+						long tmp;
+						string id = filepart.Split( '_' ).Where( x => x.StartsWith( "v" ) && long.TryParse( x.Substring( 1 ), out tmp ) ).First();
+
+						List<IVideoJob> jobs = new List<IVideoJob>();
+						foreach ( var item in objectListViewDownloads.Objects ) {
+							IVideoJob job = item as IVideoJob;
+							if ( job != null ) {
+								if ( job.VideoInfo.Service == StreamService.Twitch && job.VideoInfo.VideoId == id && job.JobStatus == VideoJobStatus.Finished ) {
+									try {
+										// sanity check
+										TimeSpan actualVideoLength = ( await FFMpegReencodeJob.Probe( file ) ).VideoLength;
+										TimeSpan expectedVideoLength = job.VideoInfo.VideoLength;
+										if ( actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
+											// if difference is bigger than 5 seconds something is off, report
+											job.Status = "Large time difference between expected (" + expectedVideoLength.ToString() + ") and actual (" + actualVideoLength.ToString() + "), reenqueueing. (" + file + ")";
+											job.JobStatus = VideoJobStatus.NotStarted;
+										} else {
+											job.Status = "Sane.";
+										}
+									} catch ( Exception ex ) {
+										job.Status = "Exception while sanity checking: " + ex.ToString();
+										job.JobStatus = VideoJobStatus.NotStarted;
+									}
+								}
+							}
+						}
+
+					} catch ( Exception ) {
+					}
+				}
+			}
+		}
 	}
 }
