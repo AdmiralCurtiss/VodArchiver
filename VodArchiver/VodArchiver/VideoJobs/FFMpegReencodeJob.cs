@@ -34,20 +34,28 @@ namespace VodArchiver.VideoJobs {
 
 			string file = VideoInfo.VideoId;
 
-			GenericVideoInfo probe = await Probe( file );
+			FFProbeResult probe = await FFMpegUtil.Probe( file );
+			List<string> ffmpegOptions;
+			string postfixOld;
+			string postfixNew;
 			if ( VideoInfo is FFMpegReencodeJobVideoInfo ) {
 				FFMpegReencodeJobVideoInfo ffvi = VideoInfo as FFMpegReencodeJobVideoInfo;
-				VideoInfo = new FFMpegReencodeJobVideoInfo( probe, ffvi.FFMpegOptions, ffvi.PostfixOld, ffvi.PostfixNew );
+				ffmpegOptions = ffvi.FFMpegOptions;
+				postfixOld = ffvi.PostfixOld;
+				postfixNew = ffvi.PostfixNew;
 			} else {
-				List<string> options = new List<string>() {
+				ffmpegOptions = new List<string>() {
 					"-c:v", "libx264",
 					"-preset", "slower",
 					"-crf", "23",
 					"-g", "2000",
 					"-c:a", "copy",
 				};
-				VideoInfo = new FFMpegReencodeJobVideoInfo( probe, options, "_chunked", "_x264crf23" );
+				postfixOld = "_chunked";
+				postfixNew = "_x264crf23";
 			}
+
+			VideoInfo = new FFMpegReencodeJobVideoInfo( file, probe, ffmpegOptions, postfixOld, postfixNew );
 
 			FFMpegReencodeJobVideoInfo ffmpegVideoInfo = VideoInfo as FFMpegReencodeJobVideoInfo;
 			string chunked = ffmpegVideoInfo.PostfixOld;
@@ -79,37 +87,6 @@ namespace VodArchiver.VideoJobs {
 			Status = "Done!";
 			JobStatus = VideoJobStatus.Finished;
 			return ResultType.Success;
-		}
-
-		public static async Task<GenericVideoInfo> Probe( string filename ) {
-			ExternalProgramExecution.RunProgramReturnValue retval = await VodArchiver.ExternalProgramExecution.RunProgram(
-				"ffprobe",
-				new string[] {
-					"-show_format",
-					"-print_format", "json",
-					filename
-				}
-			);
-
-			JObject jo = JObject.Parse( retval.StdOut );
-			var jsonFormat = jo["format"];
-
-			ulong filesize = (ulong)jsonFormat["size"];
-			ulong bitrate = (ulong)jsonFormat["bit_rate"];
-
-			GenericVideoInfo info = new GenericVideoInfo {
-				Service = StreamService.FFMpegJob,
-				VideoTitle = Path.GetFileName( filename ),
-				VideoGame = String.Format( "{0:#,#} MB; {1:#,#} kbps", filesize / 1000000, bitrate / 1000 ),
-				VideoTimestamp = File.GetCreationTimeUtc( filename ),
-				VideoType = VideoFileType.Unknown,
-				VideoRecordingState = RecordingState.Recorded,
-				Username = Path.GetFileNameWithoutExtension( filename ),
-				VideoId = filename,
-				VideoLength = TimeSpan.FromSeconds( (double)jsonFormat["duration"] )
-			};
-
-			return info;
 		}
 
 		private async Task Reencode( string targetName, string sourceName, string tempName, List<string> options ) {

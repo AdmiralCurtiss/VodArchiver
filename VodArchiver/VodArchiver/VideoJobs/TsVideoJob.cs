@@ -79,7 +79,7 @@ namespace VodArchiver.VideoJobs {
 
 						// sanity check
 						Status = "Sanity check on combined video...";
-						TimeSpan actualVideoLength = ( await FFMpegReencodeJob.Probe( combinedFilename ) ).VideoLength;
+						TimeSpan actualVideoLength = ( await FFMpegUtil.Probe( combinedFilename ) ).Duration;
 						TimeSpan expectedVideoLength = VideoInfo.VideoLength;
 						if ( actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
 							// if difference is bigger than 5 seconds something is off, report
@@ -107,7 +107,7 @@ namespace VodArchiver.VideoJobs {
 
 					// sanity check
 					Status = "Sanity check on remuxed video...";
-					TimeSpan actualVideoLength = ( await FFMpegReencodeJob.Probe( remuxedFilename ) ).VideoLength;
+					TimeSpan actualVideoLength = ( await FFMpegUtil.Probe( remuxedFilename ) ).Duration;
 					TimeSpan expectedVideoLength = VideoInfo.VideoLength;
 					if ( actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
 						// if difference is bigger than 5 seconds something is off, report

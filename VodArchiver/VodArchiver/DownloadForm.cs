@@ -507,7 +507,7 @@ namespace VodArchiver {
 								if ( job.VideoInfo.Service == StreamService.Youtube && job.VideoInfo.VideoId == id && job.JobStatus == VideoJobStatus.Finished ) {
 									try {
 										// sanity check
-										TimeSpan actualVideoLength = ( await FFMpegReencodeJob.Probe( file ) ).VideoLength;
+										TimeSpan actualVideoLength = ( await FFMpegUtil.Probe( file ) ).Duration;
 										TimeSpan expectedVideoLength = job.VideoInfo.VideoLength;
 										if ( actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
 											// if difference is bigger than 5 seconds something is off, report
@@ -546,7 +546,7 @@ namespace VodArchiver {
 								if ( job.VideoInfo.Service == StreamService.Twitch && job.VideoInfo.VideoId == id && job.JobStatus == VideoJobStatus.Finished ) {
 									try {
 										// sanity check
-										TimeSpan actualVideoLength = ( await FFMpegReencodeJob.Probe( file ) ).VideoLength;
+										TimeSpan actualVideoLength = ( await FFMpegUtil.Probe( file ) ).Duration;
 										TimeSpan expectedVideoLength = job.VideoInfo.VideoLength;
 										if ( actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
 											// if difference is bigger than 5 seconds something is off, report

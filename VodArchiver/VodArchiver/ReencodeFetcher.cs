@@ -30,21 +30,27 @@ namespace VodArchiver {
 
 			List<IVideoInfo> rv = new List<IVideoInfo>();
 			foreach ( string f in reencodeFiles ) {
-				GenericVideoInfo info = await VideoJobs.FFMpegReencodeJob.Probe( f );
+				FFProbeResult probe = await FFMpegUtil.Probe( f );
 
 				// super hacky... probably should improve this stuff
-				IVideoInfo retval;
+				List<string> ffmpegOptions;
+				string postfixOld;
+				string postfixNew;
 				if ( additionalOptions.Contains( "rescale720" ) ) {
-					retval = new FFMpegReencodeJobVideoInfo( info, new List<string>() {
-						"-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-sws_flags", "lanczos", "-vf", "\"scale=-2:720\"", "-c:a", "copy"
-					}, "_chunked", "_x264crf23scaled720p" );
+					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-sws_flags", "lanczos", "-vf", "\"scale=-2:720\"", "-c:a", "copy" };
+					postfixOld = "_chunked";
+					postfixNew = "_x264crf23scaled720p";
 				} else if ( additionalOptions.Contains( "rescale480" ) ) {
-					retval = new FFMpegReencodeJobVideoInfo( info, new List<string>() {
-						"-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-sws_flags", "lanczos", "-vf", "\"scale=-2:480\"", "-c:a", "copy"
-					}, "_chunked", "_x264crf23scaled480p" );
+					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-sws_flags", "lanczos", "-vf", "\"scale=-2:480\"", "-c:a", "copy" };
+					postfixOld = "_chunked";
+					postfixNew = "_x264crf23scaled480p";
 				} else {
-					retval = info;
+					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-c:a", "copy" };
+					postfixOld = "_chunked";
+					postfixNew = "_x264crf23";
 				}
+
+				IVideoInfo retval = new FFMpegReencodeJobVideoInfo( f, probe, ffmpegOptions, postfixOld, postfixNew );
 
 				rv.Add( retval );
 			}

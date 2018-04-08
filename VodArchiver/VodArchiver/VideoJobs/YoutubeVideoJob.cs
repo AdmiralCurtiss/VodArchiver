@@ -86,7 +86,7 @@ namespace VodArchiver.VideoJobs {
 				try {
 					// sanity check
 					Status = "Sanity check on downloaded video...";
-					TimeSpan actualVideoLength = ( await FFMpegReencodeJob.Probe( tempFilepath ) ).VideoLength;
+					TimeSpan actualVideoLength = ( await FFMpegUtil.Probe( tempFilepath ) ).Duration;
 					TimeSpan expectedVideoLength = VideoInfo.VideoLength;
 					if ( actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
 						// if difference is bigger than 5 seconds something is off, report

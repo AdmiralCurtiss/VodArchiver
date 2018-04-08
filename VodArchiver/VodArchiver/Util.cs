@@ -114,6 +114,17 @@ namespace VodArchiver {
 			return new DateTime( 1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc ).AddSeconds( time );
 		}
 
+		public static uint ParseDecOrHex( string s ) {
+			s = s.Trim();
+
+			if ( s.StartsWith( "0x" ) ) {
+				s = s.Substring( 2 );
+				return UInt32.Parse( s, System.Globalization.NumberStyles.HexNumber );
+			} else {
+				return UInt32.Parse( s );
+			}
+		}
+
 		public static string GetParameterFromUri( Uri uri, string parameter ) {
 			foreach ( string q in uri.Query.Substring( 1 ).Split( '&' ) ) {
 				var kvp = q.Split( new char[] { '=' }, 2 );

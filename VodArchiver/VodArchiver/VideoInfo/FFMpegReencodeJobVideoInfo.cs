@@ -16,12 +16,12 @@ namespace VodArchiver.VideoInfo {
 		public string PostfixOld;
 		public string PostfixNew;
 
-		public FFMpegReencodeJobVideoInfo( GenericVideoInfo videoInfo, List<string> ffmpegOptions, string postfixOld, string postfixNew ) {
-			VideoTitle = videoInfo.Username;
-			VideoId = videoInfo.VideoId;
-			VideoGame = videoInfo.VideoGame;
-			VideoTimestamp = videoInfo.VideoTimestamp;
-			VideoLength = videoInfo.VideoLength;
+		public FFMpegReencodeJobVideoInfo( string filename, FFProbeResult probe, List<string> ffmpegOptions, string postfixOld, string postfixNew ) {
+			VideoTitle = System.IO.Path.GetFileNameWithoutExtension( filename );
+			VideoId = System.IO.Path.GetFullPath( filename );
+			VideoGame = String.Format( "{0:#,#} MB; {1:#,#} kbps", probe.Filesize / 1000000, probe.Bitrate / 1000 );
+			VideoTimestamp = probe.Timestamp;
+			VideoLength = probe.Duration;
 			FFMpegOptions = ffmpegOptions;
 			PostfixOld = postfixOld;
 			PostfixNew = postfixNew;
