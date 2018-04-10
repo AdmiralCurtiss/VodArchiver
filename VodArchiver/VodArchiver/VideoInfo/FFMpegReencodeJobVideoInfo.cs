@@ -11,15 +11,20 @@ namespace VodArchiver.VideoInfo {
 		public override RecordingState VideoRecordingState { get => RecordingState.Recorded; set => throw new Exception(); }
 		public override VideoFileType VideoType { get => VideoFileType.Unknown; set => throw new Exception(); }
 		public override string Username { get => PostfixNew; set => throw new Exception(); }
+		public override string VideoGame { get => String.Format( "{0:#,#} MB; {1:#,#} kbps", Filesize / 1000000, Bitrate / 1000 ); set => throw new Exception(); }
 
 		public List<string> FFMpegOptions;
 		public string PostfixOld;
 		public string PostfixNew;
 
+		private ulong Filesize;
+		private ulong Bitrate;
+
 		public FFMpegReencodeJobVideoInfo( string filename, FFProbeResult probe, List<string> ffmpegOptions, string postfixOld, string postfixNew ) {
 			VideoTitle = System.IO.Path.GetFileNameWithoutExtension( filename );
 			VideoId = System.IO.Path.GetFullPath( filename );
-			VideoGame = String.Format( "{0:#,#} MB; {1:#,#} kbps", probe.Filesize / 1000000, probe.Bitrate / 1000 );
+			Filesize = probe.Filesize;
+			Bitrate = probe.Bitrate;
 			VideoTimestamp = probe.Timestamp;
 			VideoLength = probe.Duration;
 			FFMpegOptions = ffmpegOptions;
@@ -30,7 +35,20 @@ namespace VodArchiver.VideoInfo {
 		public FFMpegReencodeJobVideoInfo( XmlNode node ) {
 			VideoTitle = node.Attributes["username"].Value;
 			VideoId = node.Attributes["videoId"].Value;
-			VideoGame = node.Attributes["videoTags"].Value;
+			try {
+				Filesize = ulong.Parse( node.Attributes["filesize"].Value );
+				Bitrate = ulong.Parse( node.Attributes["bitrate"].Value );
+			} catch ( Exception ) {
+				try {
+					// old format just stored these directly as a string, so try parsing that
+					string[] tags = node.Attributes["videoTags"].Value.Split( ';' );
+					Filesize = (ulong)( double.Parse( tags[0].Trim().Split( ' ' )[0].Trim() ) * 1000000 );
+					Bitrate = (ulong)( double.Parse( tags[1].Trim().Split( ' ' )[0].Trim() ) * 1000 );
+				} catch ( Exception ) {
+					Filesize = 0;
+					Bitrate = 0;
+				}
+			}
 			VideoTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["videoTimestamp"].Value ) );
 			try {
 				VideoLength = TimeSpan.FromSeconds( double.Parse( node.Attributes["videoLength"].Value ) );
@@ -51,7 +69,8 @@ namespace VodArchiver.VideoInfo {
 			node.AppendAttribute( document, "_type", "FFMpegReencodeJobVideoInfo" );
 			node.AppendAttribute( document, "username", VideoTitle );
 			node.AppendAttribute( document, "videoId", VideoId );
-			node.AppendAttribute( document, "videoTags", VideoGame );
+			node.AppendAttribute( document, "filesize", Filesize.ToString() );
+			node.AppendAttribute( document, "bitrate", Bitrate.ToString() );
 			node.AppendAttribute( document, "videoTimestamp", VideoTimestamp.ToBinary().ToString() );
 			node.AppendAttribute( document, "videoLength", VideoLength.TotalSeconds.ToString() );
 			node.AppendAttribute( document, "postfixOld", PostfixOld );
