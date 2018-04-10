@@ -33,8 +33,10 @@ namespace VodArchiver.VideoJobs {
 			if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 
 			string file = VideoInfo.VideoId;
+			string path = Path.GetDirectoryName( file );
+			string name = Path.GetFileNameWithoutExtension( file );
+			string ext = Path.GetExtension( file );
 
-			FFProbeResult probe = await FFMpegUtil.Probe( file );
 			List<string> ffmpegOptions;
 			string postfixOld;
 			string postfixNew;
@@ -55,20 +57,37 @@ namespace VodArchiver.VideoJobs {
 				postfixNew = "_x264crf23";
 			}
 
-			VideoInfo = new FFMpegReencodeJobVideoInfo( file, probe, ffmpegOptions, postfixOld, postfixNew );
-
-			FFMpegReencodeJobVideoInfo ffmpegVideoInfo = VideoInfo as FFMpegReencodeJobVideoInfo;
-			string chunked = ffmpegVideoInfo.PostfixOld;
-			string postfix = ffmpegVideoInfo.PostfixNew;
-			string path = Path.GetDirectoryName( file );
-			string name = Path.GetFileNameWithoutExtension( file );
-			string ext = Path.GetExtension( file );
-			string postfixdir = Path.Combine( path, postfix );
-
+			string chunked = postfixOld;
+			string postfix = postfixNew;
 			string newfile = Path.Combine( path, postfix, name.Substring( 0, name.Length - chunked.Length ) + postfix + ext );
 			string tempfile = Path.Combine( path, name.Substring( 0, name.Length - chunked.Length ) + postfix + "_TEMP" + ext );
+			string chunkeddir = Path.Combine( path, chunked );
+			string postfixdir = Path.Combine( path, postfix );
+			string oldfileinchunked = Path.Combine( chunkeddir, Path.GetFileName( file ) );
+
+			FFProbeResult probe = null;
+			string encodeinput = null;
+			if ( await Util.FileExists( file ) ) {
+				probe = await FFMpegUtil.Probe( file );
+				encodeinput = file;
+			} else if ( await Util.FileExists( oldfileinchunked ) ) {
+				probe = await FFMpegUtil.Probe( oldfileinchunked );
+				encodeinput = oldfileinchunked;
+			}
+
+			if ( probe != null ) {
+				VideoInfo = new FFMpegReencodeJobVideoInfo( file, probe, ffmpegOptions, postfixOld, postfixNew );
+			}
+
+			// if the input file doesn't exist we might still be in a state where we can set this to finished if the output file already exists, so continue anyway
 
 			if ( !await Util.FileExists( newfile ) ) {
+				if ( encodeinput == null ) {
+					// neither input nor output exist, bail
+					Status = "Missing!";
+					return ResultType.Failure;
+				}
+
 				if ( await Util.FileExists( tempfile ) ) {
 					await Util.DeleteFile( tempfile );
 				}
@@ -77,11 +96,13 @@ namespace VodArchiver.VideoJobs {
 
 				Status = "Encoding " + newfile + "...";
 				Directory.CreateDirectory( postfixdir );
-				await Reencode( newfile, file, tempfile, ffmpegVideoInfo.FFMpegOptions );
+				FFMpegReencodeJobVideoInfo ffmpegVideoInfo = VideoInfo as FFMpegReencodeJobVideoInfo;
+				await Reencode( newfile, encodeinput, tempfile, ffmpegVideoInfo.FFMpegOptions );
+			}
 
-				string chunkeddir = Path.Combine( path, chunked );
+			if ( await Util.FileExists( file ) && !await Util.FileExists( oldfileinchunked ) ) {
 				Directory.CreateDirectory( chunkeddir );
-				File.Move( file, Path.Combine( chunkeddir, Path.GetFileName( file ) ) );
+				File.Move( file, oldfileinchunked );
 			}
 
 			Status = "Done!";
