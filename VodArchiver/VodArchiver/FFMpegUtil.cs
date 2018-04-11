@@ -33,7 +33,7 @@ namespace VodArchiver {
 					Index = (uint)jsonStream["index"],
 					CodecTag = Util.ParseDecOrHex( jsonStream["codec_tag"].ToString() ),
 					CodecType = jsonStream["codec_type"].ToString(),
-					Duration = TimeSpan.FromSeconds( (double)jsonStream["duration"] ),
+					Duration = jsonStream["duration"] != null ? TimeSpan.FromSeconds( (double)jsonStream["duration"] ) : (TimeSpan?)null,
 				} );
 			}
 
@@ -61,6 +61,6 @@ namespace VodArchiver {
 		public uint Index;
 		public uint CodecTag;
 		public string CodecType;
-		public TimeSpan Duration;
+		public TimeSpan? Duration;
 	}
 }
