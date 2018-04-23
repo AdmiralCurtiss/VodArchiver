@@ -52,6 +52,7 @@ namespace VodArchiver.VideoJobs {
 					"-crf", "23",
 					"-g", "2000",
 					"-c:a", "copy",
+					"-max_muxing_queue_size", "100000",
 				};
 				postfixOld = "_chunked";
 				postfixNew = "_x264crf23";

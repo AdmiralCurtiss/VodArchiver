@@ -37,15 +37,15 @@ namespace VodArchiver {
 				string postfixOld;
 				string postfixNew;
 				if ( additionalOptions.Contains( "rescale720" ) ) {
-					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-sws_flags", "lanczos", "-vf", "\"scale=-2:720\"", "-c:a", "copy" };
+					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-sws_flags", "lanczos", "-vf", "\"scale=-2:720\"", "-c:a", "copy", "-max_muxing_queue_size", "100000" };
 					postfixOld = "_chunked";
 					postfixNew = "_x264crf23scaled720p";
 				} else if ( additionalOptions.Contains( "rescale480" ) ) {
-					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-sws_flags", "lanczos", "-vf", "\"scale=-2:480\"", "-c:a", "copy" };
+					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-sws_flags", "lanczos", "-vf", "\"scale=-2:480\"", "-c:a", "copy", "-max_muxing_queue_size", "100000" };
 					postfixOld = "_chunked";
 					postfixNew = "_x264crf23scaled480p";
 				} else {
-					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-c:a", "copy" };
+					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-g", "2000", "-c:a", "copy", "-max_muxing_queue_size", "100000" };
 					postfixOld = "_chunked";
 					postfixNew = "_x264crf23";
 				}
