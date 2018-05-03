@@ -67,8 +67,12 @@ namespace VodArchiver.VideoJobs {
 			throw new Exception( m3u + " contains no valid url" );
 		}
 
-		public override string GetTargetFilenameWithoutExtension() {
+		public override string GetTempFilenameWithoutExtension() {
 			return "hitbox_" + VideoInfo.Username + "_" + VideoInfo.VideoId;
+		}
+
+		public override string GetFinalFilenameWithoutExtension() {
+			return GetTempFilenameWithoutExtension();
 		}
 	}
 }

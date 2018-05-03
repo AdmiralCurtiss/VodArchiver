@@ -83,8 +83,29 @@ namespace VodArchiver.VideoJobs {
 			throw new Exception( m3u + " contains no valid url" );
 		}
 
-		public override string GetTargetFilenameWithoutExtension() {
+		public override string GetTempFilenameWithoutExtension() {
 			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoId + "_" + VideoQuality;
+		}
+
+		public override string GetFinalFilenameWithoutExtension() {
+			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoId + "_" + CleanGamenameForFilename( VideoInfo.VideoGame ) + "_" + VideoQuality;
+		}
+
+		private static string ToUpperFirstChar( string s ) {
+			if ( s.Length > 0 ) {
+				bool maybeRomanNumeral = s.All( c => "IVX".Contains( c ) );
+				if ( maybeRomanNumeral ) {
+					return s;
+				} else {
+					return s.Substring( 0, 1 ).ToUpperInvariant() + s.Substring( 1 ).ToLowerInvariant();
+				}
+			} else {
+				return s;
+			}
+		}
+		private static string CleanGamenameForFilename( string gamename ) {
+			string safename = Util.MakeStringFileSystemSafeBaseName( gamename ).Replace( "-", "_" );
+			return string.Join( "", safename.Split( new char[] { '_' }, StringSplitOptions.RemoveEmptyEntries ).Select( x => ToUpperFirstChar( x ) ) );
 		}
 	}
 }

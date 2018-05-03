@@ -24,9 +24,9 @@ namespace VodArchiver.VideoJobs {
 				return ResultType.Failure;
 			}
 
-			string combinedFilename = Path.Combine( GetTempFolder(), GetTargetFilenameWithoutExtension() + "_combined.ts" );
-			string remuxedTempname = Path.Combine( GetTempFolder(), GetTargetFilenameWithoutExtension() + "_combined.mp4" );
-			string remuxedFilename = Path.Combine( GetTargetFolder(), GetTargetFilenameWithoutExtension() + ".mp4" );
+			string combinedFilename = Path.Combine( GetTempFolder(), GetFinalFilenameWithoutExtension() + ".ts" );
+			string remuxedTempname = Path.Combine( GetTempFolder(), GetTempFilenameWithoutExtension() + "_combined.mp4" );
+			string remuxedFilename = Path.Combine( GetTargetFolder(), GetFinalFilenameWithoutExtension() + ".mp4" );
 
 			if ( !await Util.FileExists( remuxedFilename ) ) {
 				if ( !await Util.FileExists( combinedFilename ) ) {
@@ -132,14 +132,16 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public virtual string GetTempFolderForParts() {
-			return System.IO.Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() );
+			return System.IO.Path.Combine( Util.TempFolderPath, GetTempFilenameWithoutExtension() );
 		}
 
 		public virtual string GetTargetFolder() {
 			return Util.TargetFolderPath;
 		}
 
-		public abstract string GetTargetFilenameWithoutExtension();
+		public abstract string GetTempFilenameWithoutExtension();
+
+		public abstract string GetFinalFilenameWithoutExtension();
 
 		public static string GetFolder( string m3u8path ) {
 			var urlParts = m3u8path.Trim().Split( '/' );
