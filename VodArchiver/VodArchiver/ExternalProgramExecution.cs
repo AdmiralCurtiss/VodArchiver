@@ -74,6 +74,7 @@ namespace VodArchiver {
 
 				exeProcess.StartInfo = startInfo;
 				exeProcess.Start();
+				exeProcess.PriorityClass = System.Diagnostics.ProcessPriorityClass.Idle;
 				exeProcess.BeginOutputReadLine();
 				exeProcess.BeginErrorReadLine();
 				exeProcess.WaitForExit();
