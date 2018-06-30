@@ -61,6 +61,7 @@ namespace VodArchiver.VideoJobs {
 			string chunked = postfixOld;
 			string postfix = postfixNew;
 			string newfile = Path.Combine( path, postfix, name.Substring( 0, name.Length - chunked.Length ) + postfix + ext );
+			string newfileinlocal = Path.Combine( path, name.Substring( 0, name.Length - chunked.Length ) + postfix + ext );
 			string tempfile = Path.Combine( path, name.Substring( 0, name.Length - chunked.Length ) + postfix + "_TEMP" + ext );
 			string chunkeddir = Path.Combine( path, chunked );
 			string postfixdir = Path.Combine( path, postfix );
@@ -82,7 +83,9 @@ namespace VodArchiver.VideoJobs {
 
 			// if the input file doesn't exist we might still be in a state where we can set this to finished if the output file already exists, so continue anyway
 
-			if ( !await Util.FileExists( newfile ) ) {
+			bool newfileexists = await Util.FileExists( newfile );
+			bool newfilelocalexists = await Util.FileExists( newfileinlocal );
+			if ( !newfileexists && !newfilelocalexists ) {
 				if ( encodeinput == null ) {
 					// neither input nor output exist, bail
 					Status = "Missing!";
@@ -99,6 +102,11 @@ namespace VodArchiver.VideoJobs {
 				Directory.CreateDirectory( postfixdir );
 				FFMpegReencodeJobVideoInfo ffmpegVideoInfo = VideoInfo as FFMpegReencodeJobVideoInfo;
 				await Reencode( newfile, encodeinput, tempfile, ffmpegVideoInfo.FFMpegOptions );
+			}
+
+			if ( !newfileexists && newfilelocalexists ) {
+				Directory.CreateDirectory( postfixdir );
+				File.Move( newfileinlocal, newfile );
 			}
 
 			if ( await Util.FileExists( file ) && !await Util.FileExists( oldfileinchunked ) ) {
