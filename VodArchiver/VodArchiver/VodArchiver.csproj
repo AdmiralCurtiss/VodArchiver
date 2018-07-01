@@ -92,6 +92,12 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AutoRenameWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AutoRenameWindow.Designer.cs">
+      <DependentUpon>AutoRenameWindow.cs</DependentUpon>
+    </Compile>
     <Compile Include="DownloadForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -152,6 +158,9 @@
     </Compile>
     <Compile Include="XmlUtil.cs" />
     <Compile Include="Youtube.cs" />
+    <EmbeddedResource Include="AutoRenameWindow.resx">
+      <DependentUpon>AutoRenameWindow.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DownloadForm.resx">
       <DependentUpon>DownloadForm.cs</DependentUpon>
     </EmbeddedResource>

@@ -124,8 +124,6 @@
             this.columnNotes,
             this.columnStatus});
 			this.objectListViewDownloads.Cursor = System.Windows.Forms.Cursors.Default;
-			this.objectListViewDownloads.HighlightBackgroundColor = System.Drawing.SystemColors.Highlight;
-			this.objectListViewDownloads.HighlightForegroundColor = System.Drawing.Color.Empty;
 			this.objectListViewDownloads.Location = new System.Drawing.Point(12, 41);
 			this.objectListViewDownloads.Name = "objectListViewDownloads";
 			this.objectListViewDownloads.SelectedBackColor = System.Drawing.SystemColors.Highlight;
@@ -234,6 +232,7 @@
 			this.buttonSettings.TabIndex = 5;
 			this.buttonSettings.UseVisualStyleBackColor = true;
 			this.buttonSettings.Click += new System.EventHandler(this.buttonSettings_Click);
+			this.buttonSettings.MouseUp += new System.Windows.Forms.MouseEventHandler(this.buttonSettings_MouseUp);
 			// 
 			// buttonFetchUser
 			// 
