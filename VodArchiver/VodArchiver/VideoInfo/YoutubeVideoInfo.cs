@@ -27,8 +27,8 @@ namespace VodArchiver.VideoInfo {
 			VideoId = node.Attributes["videoId"].Value;
 			VideoTitle = node.Attributes["videoTitle"].Value;
 			VideoGame = node.Attributes["videoTags"].Value;
-			VideoTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["videoTimestamp"].Value ) );
-			VideoLength = TimeSpan.FromSeconds( double.Parse( node.Attributes["videoLength"].Value ) );
+			VideoTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["videoTimestamp"].Value, Util.SerializationFormatProvider ) );
+			VideoLength = TimeSpan.FromSeconds( double.Parse( node.Attributes["videoLength"].Value, Util.SerializationFormatProvider ) );
 			VideoRecordingState = (RecordingState)Enum.Parse( typeof( RecordingState ), node.Attributes["videoRecordingState"].Value );
 			VideoType = (VideoFileType)Enum.Parse( typeof( VideoFileType ), node.Attributes["videoType"].Value );
 			UserDisplayName = node.Attributes["userDisplayName"].Value;
@@ -41,8 +41,8 @@ namespace VodArchiver.VideoInfo {
 			node.AppendAttribute( document, "videoId", VideoId );
 			node.AppendAttribute( document, "videoTitle", VideoTitle );
 			node.AppendAttribute( document, "videoTags", VideoGame );
-			node.AppendAttribute( document, "videoTimestamp", VideoTimestamp.ToBinary().ToString() );
-			node.AppendAttribute( document, "videoLength", VideoLength.TotalSeconds.ToString() );
+			node.AppendAttribute( document, "videoTimestamp", VideoTimestamp.ToBinary().ToString( Util.SerializationFormatProvider ) );
+			node.AppendAttribute( document, "videoLength", VideoLength.TotalSeconds.ToString( Util.SerializationFormatProvider ) );
 			node.AppendAttribute( document, "videoRecordingState", VideoRecordingState.ToString() );
 			node.AppendAttribute( document, "videoType", VideoType.ToString() );
 			node.AppendAttribute( document, "userDisplayName", UserDisplayName );

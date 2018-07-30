@@ -22,14 +22,14 @@ namespace VodArchiver {
 
 		public HitboxMediaProfile( XmlNode node ) {
 			Url = node.Attributes["url"].Value;
-			Height = int.Parse( node.Attributes["height"].Value );
-			Bitrate = int.Parse( node.Attributes["bitrate"].Value );
+			Height = int.Parse( node.Attributes["height"].Value, Util.SerializationFormatProvider );
+			Bitrate = int.Parse( node.Attributes["bitrate"].Value, Util.SerializationFormatProvider );
 		}
 
 		public XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "url", Url );
-			node.AppendAttribute( document, "height", Height.ToString() );
-			node.AppendAttribute( document, "bitrate", Bitrate.ToString() );
+			node.AppendAttribute( document, "height", Height.ToString( Util.SerializationFormatProvider ) );
+			node.AppendAttribute( document, "bitrate", Bitrate.ToString( Util.SerializationFormatProvider ) );
 			return node;
 		}
 	}
@@ -72,37 +72,37 @@ namespace VodArchiver {
 
 		public HitboxVideo( XmlNode node ) {
 			MediaUserName = node.Attributes["mediaUserName"].Value;
-			MediaId = int.Parse( node.Attributes["mediaId"].Value );
+			MediaId = int.Parse( node.Attributes["mediaId"].Value, Util.SerializationFormatProvider );
 			MediaFile = node.Attributes["mediaFile"].Value;
-			MediaUserId = int.Parse( node.Attributes["mediaUserId"].Value );
+			MediaUserId = int.Parse( node.Attributes["mediaUserId"].Value, Util.SerializationFormatProvider );
 			List<HitboxMediaProfile> profiles = new List<HitboxMediaProfile>();
 			foreach ( XmlNode p in node.SelectNodes( "MediaProfile" ) ) {
 				profiles.Add( new HitboxMediaProfile( p ) );
 			}
 			MediaProfiles = profiles.ToArray();
-			MediaDateAdded = DateTime.FromBinary( long.Parse( node.Attributes["mediaDateAdded"].Value ) );
+			MediaDateAdded = DateTime.FromBinary( long.Parse( node.Attributes["mediaDateAdded"].Value, Util.SerializationFormatProvider ) );
 			MediaTitle = node.Attributes["mediaTitle"].Value;
 			MediaDescription = node.Attributes["mediaDescription"].Value;
 			MediaGame = node.Attributes["mediaGame"].Value;
-			MediaDuration = double.Parse( node.Attributes["mediaDuration"].Value );
-			MediaTypeId = int.Parse( node.Attributes["mediaTypeId"].Value );
+			MediaDuration = double.Parse( node.Attributes["mediaDuration"].Value, Util.SerializationFormatProvider );
+			MediaTypeId = int.Parse( node.Attributes["mediaTypeId"].Value, Util.SerializationFormatProvider );
 		}
 
 		public XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "_type", "HitboxVideo" );
 			node.AppendAttribute( document, "mediaUserName", MediaUserName );
-			node.AppendAttribute( document, "mediaId", MediaId.ToString() );
+			node.AppendAttribute( document, "mediaId", MediaId.ToString( Util.SerializationFormatProvider ) );
 			node.AppendAttribute( document, "mediaFile", MediaFile );
-			node.AppendAttribute( document, "mediaUserId", MediaUserId.ToString() );
+			node.AppendAttribute( document, "mediaUserId", MediaUserId.ToString( Util.SerializationFormatProvider ) );
 			foreach ( HitboxMediaProfile profile in MediaProfiles ) {
 				node.AppendChild( profile.Serialize( document, document.CreateElement( "MediaProfile" ) ) );
 			}
-			node.AppendAttribute( document, "mediaDateAdded", MediaDateAdded.ToBinary().ToString() );
+			node.AppendAttribute( document, "mediaDateAdded", MediaDateAdded.ToBinary().ToString( Util.SerializationFormatProvider ) );
 			node.AppendAttribute( document, "mediaTitle", MediaTitle );
 			node.AppendAttribute( document, "mediaDescription", MediaDescription );
 			node.AppendAttribute( document, "mediaGame", MediaGame );
-			node.AppendAttribute( document, "mediaDuration", MediaDuration.ToString() );
-			node.AppendAttribute( document, "mediaTypeId", MediaTypeId.ToString() );
+			node.AppendAttribute( document, "mediaDuration", MediaDuration.ToString( Util.SerializationFormatProvider ) );
+			node.AppendAttribute( document, "mediaTypeId", MediaTypeId.ToString( Util.SerializationFormatProvider ) );
 			return node;
 		}
 	}

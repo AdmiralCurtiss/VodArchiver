@@ -73,8 +73,8 @@ namespace VodArchiver.VideoJobs {
 			VideoInfo = IVideoInfo.Deserialize( node.SelectSingleNode( "VideoInfo" ) );
 			HasBeenValidated = bool.Parse( node.Attributes["hasBeenValidated"].Value );
 			Notes =  node.Attributes["notes"].Value;
-			JobStartTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["jobStartTimestamp"].Value ) );
-			JobFinishTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["jobFinishTimestamp"].Value ) );
+			JobStartTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["jobStartTimestamp"].Value, Util.SerializationFormatProvider ) );
+			JobFinishTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["jobFinishTimestamp"].Value, Util.SerializationFormatProvider ) );
 		}
 
 		public abstract Task<ResultType> Run( CancellationToken cancellationToken );
@@ -83,10 +83,10 @@ namespace VodArchiver.VideoJobs {
 			node.AppendAttribute( document, "textStatus", _Status );
 			node.AppendAttribute( document, "jobStatus", JobStatus.ToString() );
 			node.AppendChild( VideoInfo.Serialize( document, document.CreateElement( "VideoInfo" ) ) );
-			node.AppendAttribute( document, "hasBeenValidated", HasBeenValidated.ToString() );
+			node.AppendAttribute( document, "hasBeenValidated", HasBeenValidated.ToString( Util.SerializationFormatProvider ) );
 			node.AppendAttribute( document, "notes", Notes );
-			node.AppendAttribute( document, "jobStartTimestamp", JobStartTimestamp.ToBinary().ToString() );
-			node.AppendAttribute( document, "jobFinishTimestamp", JobFinishTimestamp.ToBinary().ToString() );
+			node.AppendAttribute( document, "jobStartTimestamp", JobStartTimestamp.ToBinary().ToString( Util.SerializationFormatProvider ) );
+			node.AppendAttribute( document, "jobFinishTimestamp", JobFinishTimestamp.ToBinary().ToString( Util.SerializationFormatProvider ) );
 			return node;
 		}
 

@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace VodArchiver {
 	public static class Util {
+		public static readonly IFormatProvider SerializationFormatProvider = System.Globalization.CultureInfo.InvariantCulture;
+
 		public static string TargetFolderPath {
 			get {
 				if ( String.IsNullOrWhiteSpace( Properties.Settings.Default.TargetFolder ) ) {

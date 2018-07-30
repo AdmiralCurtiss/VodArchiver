@@ -36,8 +36,8 @@ namespace VodArchiver.VideoInfo {
 			VideoTitle = node.Attributes["username"].Value;
 			VideoId = node.Attributes["videoId"].Value;
 			try {
-				Filesize = ulong.Parse( node.Attributes["filesize"].Value );
-				Bitrate = ulong.Parse( node.Attributes["bitrate"].Value );
+				Filesize = ulong.Parse( node.Attributes["filesize"].Value, Util.SerializationFormatProvider );
+				Bitrate = ulong.Parse( node.Attributes["bitrate"].Value, Util.SerializationFormatProvider );
 			} catch ( Exception ) {
 				try {
 					// old format just stored these directly as a string, so try parsing that
@@ -49,9 +49,9 @@ namespace VodArchiver.VideoInfo {
 					Bitrate = 0;
 				}
 			}
-			VideoTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["videoTimestamp"].Value ) );
+			VideoTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["videoTimestamp"].Value, Util.SerializationFormatProvider ) );
 			try {
-				VideoLength = TimeSpan.FromSeconds( double.Parse( node.Attributes["videoLength"].Value ) );
+				VideoLength = TimeSpan.FromSeconds( double.Parse( node.Attributes["videoLength"].Value, Util.SerializationFormatProvider ) );
 			} catch ( OverflowException ) {
 				VideoLength = TimeSpan.MaxValue;
 			}
@@ -69,10 +69,10 @@ namespace VodArchiver.VideoInfo {
 			node.AppendAttribute( document, "_type", "FFMpegReencodeJobVideoInfo" );
 			node.AppendAttribute( document, "username", VideoTitle );
 			node.AppendAttribute( document, "videoId", VideoId );
-			node.AppendAttribute( document, "filesize", Filesize.ToString() );
-			node.AppendAttribute( document, "bitrate", Bitrate.ToString() );
-			node.AppendAttribute( document, "videoTimestamp", VideoTimestamp.ToBinary().ToString() );
-			node.AppendAttribute( document, "videoLength", VideoLength.TotalSeconds.ToString() );
+			node.AppendAttribute( document, "filesize", Filesize.ToString( Util.SerializationFormatProvider ) );
+			node.AppendAttribute( document, "bitrate", Bitrate.ToString( Util.SerializationFormatProvider ) );
+			node.AppendAttribute( document, "videoTimestamp", VideoTimestamp.ToBinary().ToString( Util.SerializationFormatProvider ) );
+			node.AppendAttribute( document, "videoLength", VideoLength.TotalSeconds.ToString( Util.SerializationFormatProvider ) );
 			node.AppendAttribute( document, "postfixOld", PostfixOld );
 			node.AppendAttribute( document, "postfixNew", PostfixNew );
 			foreach ( string option in FFMpegOptions ) {

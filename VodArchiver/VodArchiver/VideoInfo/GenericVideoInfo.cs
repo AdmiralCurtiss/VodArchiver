@@ -15,9 +15,9 @@ namespace VodArchiver.VideoInfo {
 			VideoId = node.Attributes["videoId"].Value;
 			VideoTitle = node.Attributes["videoTitle"].Value;
 			VideoGame = node.Attributes["videoTags"].Value;
-			VideoTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["videoTimestamp"].Value ) );
+			VideoTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["videoTimestamp"].Value, Util.SerializationFormatProvider ) );
 			try {
-				VideoLength = TimeSpan.FromSeconds( double.Parse( node.Attributes["videoLength"].Value ) );
+				VideoLength = TimeSpan.FromSeconds( double.Parse( node.Attributes["videoLength"].Value, Util.SerializationFormatProvider ) );
 			} catch (OverflowException) {
 				VideoLength = TimeSpan.MaxValue;
 			}
@@ -32,8 +32,8 @@ namespace VodArchiver.VideoInfo {
 			node.AppendAttribute( document, "videoId", VideoId );
 			node.AppendAttribute( document, "videoTitle", VideoTitle );
 			node.AppendAttribute( document, "videoTags", VideoGame );
-			node.AppendAttribute( document, "videoTimestamp", VideoTimestamp.ToBinary().ToString() );
-			node.AppendAttribute( document, "videoLength", VideoLength.TotalSeconds.ToString() );
+			node.AppendAttribute( document, "videoTimestamp", VideoTimestamp.ToBinary().ToString( Util.SerializationFormatProvider ) );
+			node.AppendAttribute( document, "videoLength", VideoLength.TotalSeconds.ToString( Util.SerializationFormatProvider ) );
 			node.AppendAttribute( document, "videoRecordingState", VideoRecordingState.ToString() );
 			node.AppendAttribute( document, "videoType", VideoType.ToString() );
 			return node;

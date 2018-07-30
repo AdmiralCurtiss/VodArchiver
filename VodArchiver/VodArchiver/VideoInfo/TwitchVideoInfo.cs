@@ -32,17 +32,17 @@ namespace VodArchiver.VideoInfo {
 			node.AppendAttribute( document, "_version", video.version.ToString() );
 			if ( video.title != null ) node.AppendAttribute( document, "title", video.title );
 			if ( video.description != null ) node.AppendAttribute( document, "description", video.description );
-			node.AppendAttribute( document, "broadcastId", video.broadcastId.ToString() );
+			node.AppendAttribute( document, "broadcastId", video.broadcastId.ToString( Util.SerializationFormatProvider ) );
 			if ( video.status != null ) node.AppendAttribute( document, "status", video.status );
 			if ( video.tagList != null ) node.AppendAttribute( document, "tagList", video.tagList );
 			if ( video.id != null ) node.AppendAttribute( document, "id", video.id );
-			if ( video.recordedAt != null ) node.AppendAttribute( document, "recordedAt", video.recordedAt.ToBinary().ToString() );
+			if ( video.recordedAt != null ) node.AppendAttribute( document, "recordedAt", video.recordedAt.ToBinary().ToString( Util.SerializationFormatProvider ) );
 			if ( video.game != null ) node.AppendAttribute( document, "game", video.game );
-			node.AppendAttribute( document, "length", video.length.ToString() );
+			node.AppendAttribute( document, "length", video.length.ToString( Util.SerializationFormatProvider ) );
 			if ( video.preview != null ) node.AppendAttribute( document, "preview", video.preview.OriginalString );
 			if ( video.url != null ) node.AppendAttribute( document, "url", video.url.OriginalString );
-			if ( video.fps != null ) node.AppendDictionary( document, "fps", video.fps, ( string s ) => s, ( double d ) => d.ToString() );
-			node.AppendAttribute( document, "views", video.views.ToString() );
+			if ( video.fps != null ) node.AppendDictionary( document, "fps", video.fps, ( string s ) => s, ( double d ) => d.ToString( Util.SerializationFormatProvider ) );
+			node.AppendAttribute( document, "views", video.views.ToString( Util.SerializationFormatProvider ) );
 			if ( video.resolutions != null ) node.AppendDictionary( document, "resolutions", video.resolutions, ( string s ) => s, ( TwixelAPI.Resolution r ) => r.width + "x" + r.height );
 			if ( video.broadcastType != null ) node.AppendAttribute( document, "broadcastType", video.broadcastType );
 			if ( video.channel != null ) node.AppendDictionary( document, "channel", video.channel );
@@ -69,16 +69,16 @@ namespace VodArchiver.VideoInfo {
 			TwixelAPI.Video v = new TwixelAPI.Video(
 				node.Attributes["title"]?.Value,
 				node.Attributes["description"]?.Value,
-				long.Parse( node.Attributes["broadcastId"]?.Value ),
+				long.Parse( node.Attributes["broadcastId"]?.Value, Util.SerializationFormatProvider ),
 				node.Attributes["status"]?.Value,
 				node.Attributes["tagList"]?.Value,
 				node.Attributes["id"]?.Value,
 				"2000-01-01", // temporary, this ctor is dumb
 				node.Attributes["game"]?.Value,
-				long.Parse( node.Attributes["length"]?.Value ),
+				long.Parse( node.Attributes["length"]?.Value, Util.SerializationFormatProvider ),
 				node.Attributes["preview"]?.Value,
 				node.Attributes["url"]?.Value,
-				long.Parse( node.Attributes["views"]?.Value ),
+				long.Parse( node.Attributes["views"]?.Value, Util.SerializationFormatProvider ),
 				null,
 				null,
 				node.Attributes["broadcastType"]?.Value,
@@ -86,8 +86,8 @@ namespace VodArchiver.VideoInfo {
 				null
 			);
 			v.version = (TwixelAPI.Twixel.APIVersion)Enum.Parse( typeof( TwixelAPI.Twixel.APIVersion ), node.Attributes["_version"]?.Value );
-			v.recordedAt = DateTime.FromBinary( long.Parse( node.Attributes["recordedAt"]?.Value ) );
-			v.fps = node.SelectSingleNode("fps")?.DeserializeDictionary( ( string key ) => key, ( string value ) => double.Parse( value ) );
+			v.recordedAt = DateTime.FromBinary( long.Parse( node.Attributes["recordedAt"]?.Value, Util.SerializationFormatProvider ) );
+			v.fps = node.SelectSingleNode("fps")?.DeserializeDictionary( ( string key ) => key, ( string value ) => double.Parse( value, Util.SerializationFormatProvider ) );
 			v.resolutions = node.SelectSingleNode( "resolutions" )?.DeserializeDictionary( ( string key ) => key, ( string value ) => new TwixelAPI.Resolution( int.Parse( value.Split('x')[0] ), int.Parse( value.Split( 'x' )[1] ) ) );
 			v.channel = node.SelectSingleNode( "channel" )?.DeserializeDictionary( ( string key ) => key, ( string value ) => value );
 			v.baseLinks = node.SelectSingleNode( "baseLinks" )?.DeserializeDictionary( ( string key ) => key, ( string value ) => new Uri( value ) );
