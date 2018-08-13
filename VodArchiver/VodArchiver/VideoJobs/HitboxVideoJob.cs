@@ -20,6 +20,8 @@ namespace VodArchiver.VideoJobs {
 
 		public HitboxVideoJob( XmlNode node ) : base( node ) { }
 
+		public override bool IsWaitingForUserInput => false;
+
 		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "_type", "HitboxVideoJob" );
 			return base.Serialize( document, node );

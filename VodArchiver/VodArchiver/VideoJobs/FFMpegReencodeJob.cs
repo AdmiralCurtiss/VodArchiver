@@ -21,6 +21,8 @@ namespace VodArchiver.VideoJobs {
 
 		public FFMpegReencodeJob( XmlNode node ) : base( node ) { }
 
+		public override bool IsWaitingForUserInput => false;
+
 		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "_type", "FFMpegReencodeJob" );
 			return base.Serialize( document, node );

@@ -25,6 +25,8 @@ namespace VodArchiver.VideoJobs {
 			VideoQuality = node.Attributes["videoQuality"].Value;
 		}
 
+		public override bool IsWaitingForUserInput => false;
+
 		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "_type", "TwitchVideoJob" );
 			XmlNode n = base.Serialize( document, node );

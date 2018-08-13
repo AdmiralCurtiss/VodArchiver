@@ -20,6 +20,7 @@ namespace VodArchiver.VideoJobs {
 		Success,
 		Cancelled,
 		Dead,
+		UserInputRequired,
 		TemporarilyUnavailable,
 	}
 
@@ -34,6 +35,10 @@ namespace VodArchiver.VideoJobs {
 				StatusUpdater.Update();
 			}
 		}
+
+		public abstract bool IsWaitingForUserInput { get; }
+
+		public virtual IUserInputRequest UserInputRequest { get { return null; } }
 
 		public virtual string HumanReadableJobName {
 			get {

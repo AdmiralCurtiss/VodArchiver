@@ -19,6 +19,8 @@ namespace VodArchiver.VideoJobs {
 
 		public YoutubeVideoJob( XmlNode node ) : base( node ) { }
 
+		public override bool IsWaitingForUserInput => false;
+
 		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "_type", "YoutubeVideoJob" );
 			return base.Serialize( document, node );

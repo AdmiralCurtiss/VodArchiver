@@ -20,7 +20,7 @@ namespace VodArchiver.Tasks {
 			EarliestPossibleStartTime = allowedStartTime;
 		}
 		public bool IsAllowedToStart() {
-			return DateTime.UtcNow >= EarliestPossibleStartTime;
+			return DateTime.UtcNow >= EarliestPossibleStartTime && !Job.IsWaitingForUserInput;
 		}
 	}
 
@@ -104,6 +104,9 @@ namespace VodArchiver.Tasks {
 
 						if ( task.Status == TaskStatus.RanToCompletion ) {
 							ResultType result = task.Result;
+							if ( result == ResultType.UserInputRequired ) { 
+								Add( new WaitingVideoJob( taskJob ) );
+							}
 							if ( result == ResultType.TemporarilyUnavailable ) {
 								Add( new WaitingVideoJob( taskJob, DateTime.UtcNow.AddMinutes( 30.0 ) ) );
 							}

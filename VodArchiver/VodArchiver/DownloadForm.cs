@@ -443,6 +443,22 @@ namespace VodArchiver {
 				IVideoJob job = model as IVideoJob;
 				ContextMenuStrip menu = new ContextMenuStrip();
 
+				if ( job.IsWaitingForUserInput ) {
+					IUserInputRequest uir = job.UserInputRequest;
+					if ( uir != null ) {
+						ToolStripMenuItem item = new ToolStripMenuItem( uir.GetQuestion() );
+						foreach ( string option in uir.GetOptions() ) {
+							item.DropDownItems.Add( option ).Click+= ( sender, e ) => {
+								if ( uir != null ) {
+									uir.SelectOption( option );
+								}
+							};
+						}
+						menu.Items.Add( item );
+						menu.Items.Add( new ToolStripSeparator() );
+					}
+				}
+
 				bool queueOptionsAvailable = false;
 				if ( ( job.JobStatus == VideoJobStatus.NotStarted || job.JobStatus == VideoJobStatus.Dead ) && !VideoTaskGroups[job.VideoInfo.Service].IsInQueue( job ) ) {
 					queueOptionsAvailable = true;
