@@ -13,6 +13,13 @@ namespace VodArchiver.VideoJobs {
 		public TsVideoJob() : base() { }
 		public TsVideoJob( XmlNode node ) : base( node ) { }
 
+		public override bool IsWaitingForUserInput => _UserInputRequest != null;
+		public override IUserInputRequest UserInputRequest => _UserInputRequest;
+		private IUserInputRequest _UserInputRequest = null;
+
+		private bool IgnoreTimeDifferenceCombined = false;
+		private bool IgnoreTimeDifferenceRemuxed = false;
+
 		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {
 			if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 
@@ -86,10 +93,11 @@ namespace VodArchiver.VideoJobs {
 						Status = "Sanity check on combined video...";
 						TimeSpan actualVideoLength = ( await FFMpegUtil.Probe( combinedTempname ) ).Duration;
 						TimeSpan expectedVideoLength = VideoInfo.VideoLength;
-						if ( actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
+						if ( !IgnoreTimeDifferenceCombined && actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
 							// if difference is bigger than 5 seconds something is off, report
 							Status = "Large time difference between expected (" + expectedVideoLength.ToString() + ") and combined (" + actualVideoLength.ToString() + "), stopping.";
-							return ResultType.Failure;
+							_UserInputRequest = new UserInputRequestTimeMismatchCombined( this );
+							return ResultType.UserInputRequired;
 						}
 
 						Util.MoveFileOverwrite( combinedTempname, combinedFilename );
@@ -117,10 +125,11 @@ namespace VodArchiver.VideoJobs {
 					Status = "Sanity check on remuxed video...";
 					TimeSpan actualVideoLength = ( await FFMpegUtil.Probe( remuxedFilename ) ).Duration;
 					TimeSpan expectedVideoLength = VideoInfo.VideoLength;
-					if ( actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
+					if ( !IgnoreTimeDifferenceRemuxed && actualVideoLength.Subtract( expectedVideoLength ).Duration() > TimeSpan.FromSeconds( 5 ) ) {
 						// if difference is bigger than 5 seconds something is off, report
 						Status = "Large time difference between expected (" + expectedVideoLength.ToString() + ") and remuxed (" + actualVideoLength.ToString() + "), stopping.";
-						return ResultType.Failure;
+						_UserInputRequest = new UserInputRequestTimeMismatchRemuxed( this );
+						return ResultType.UserInputRequired;
 					}
 
 					Util.MoveFileOverwrite( remuxedFilename, targetFilename );
@@ -290,6 +299,52 @@ namespace VodArchiver.VideoJobs {
 			);
 			Util.MoveFileOverwrite( tempName, targetName );
 			Console.WriteLine( "Created " + targetName + "!" );
+		}
+
+		class UserInputRequestTimeMismatchCombined : IUserInputRequest {
+			TsVideoJob Job;
+
+			public UserInputRequestTimeMismatchCombined( TsVideoJob job ) {
+				Job = job;
+			}
+
+			public List<string> GetOptions() {
+				return new List<string>() { "Try again", "Accept despite the mismatch" };
+			}
+
+			public string GetQuestion() {
+				return "Handle Combined Mismatch";
+			}
+
+			public void SelectOption( string option ) {
+				if ( option == "Accept despite the mismatch" ) {
+					Job.IgnoreTimeDifferenceCombined = true;
+				}
+				Job._UserInputRequest = null;
+			}
+		}
+
+		class UserInputRequestTimeMismatchRemuxed : IUserInputRequest {
+			TsVideoJob Job;
+
+			public UserInputRequestTimeMismatchRemuxed( TsVideoJob job ) {
+				Job = job;
+			}
+
+			public List<string> GetOptions() {
+				return new List<string>() { "Try again", "Accept despite the mismatch" };
+			}
+
+			public string GetQuestion() {
+				return "Handle Remuxed Mismatch";
+			}
+
+			public void SelectOption( string option ) {
+				if ( option == "Accept despite the mismatch" ) {
+					Job.IgnoreTimeDifferenceRemuxed = true;
+				}
+				Job._UserInputRequest = null;
+			}
 		}
 	}
 }
