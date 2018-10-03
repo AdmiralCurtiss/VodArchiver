@@ -24,6 +24,10 @@ namespace VodArchiver.VideoJobs {
 		public TwitchChatReplayJob( XmlNode node ) : base( node ) { }
 
 		public override bool IsWaitingForUserInput => false;
+		public override IUserInputRequest UserInputRequest => _UserInputRequest;
+		private IUserInputRequest _UserInputRequest = null;
+
+		public bool AssumeFinished = false;
 
 		public override XmlNode Serialize( XmlDocument document, XmlNode node ) {
 			node.AppendAttribute( document, "_type", "TwitchChatReplayJob" );
@@ -40,7 +44,8 @@ namespace VodArchiver.VideoJobs {
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
 			VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ), StreamService.TwitchChatReplay );
-			if ( VideoInfo.VideoRecordingState == RecordingState.Live ) {
+			if ( !AssumeFinished && VideoInfo.VideoRecordingState == RecordingState.Live ) {
+				_UserInputRequest = new UserInputRequestStreamLive( this );
 				return ResultType.TemporarilyUnavailable;
 			}
 
@@ -130,6 +135,26 @@ namespace VodArchiver.VideoJobs {
 
 		public string GetNextUrl( IVideoInfo info, string next ) {
 			return "https://api.twitch.tv/v5/videos/" + info.VideoId.Substring( 1 ) + "/comments?cursor=" + next;
+		}
+
+		class UserInputRequestStreamLive : IUserInputRequest {
+			TwitchChatReplayJob Job;
+
+			public UserInputRequestStreamLive( TwitchChatReplayJob job ) {
+				Job = job;
+			}
+
+			public List<string> GetOptions() {
+				return new List<string>() { "Keep Waiting", "Assume Finished" };
+			}
+
+			public string GetQuestion() {
+				return "Stream still Live";
+			}
+
+			public void SelectOption( string option ) {
+				Job.AssumeFinished = option == "Assume Finished";
+			}
 		}
 	}
 }

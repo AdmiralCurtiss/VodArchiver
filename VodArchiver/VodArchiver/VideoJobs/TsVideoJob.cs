@@ -13,12 +13,14 @@ namespace VodArchiver.VideoJobs {
 		public TsVideoJob() : base() { }
 		public TsVideoJob( XmlNode node ) : base( node ) { }
 
-		public override bool IsWaitingForUserInput => _UserInputRequest != null;
+		public override bool IsWaitingForUserInput => _IsWaitingForUserInput;
 		public override IUserInputRequest UserInputRequest => _UserInputRequest;
+		private bool _IsWaitingForUserInput = false;
 		private IUserInputRequest _UserInputRequest = null;
 
 		private bool IgnoreTimeDifferenceCombined = false;
 		private bool IgnoreTimeDifferenceRemuxed = false;
+		private bool AssumeFinished = false;
 
 		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {
 			if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
@@ -53,7 +55,7 @@ namespace VodArchiver.VideoJobs {
 							return downloadResult.result;
 						}
 						files = downloadResult.files;
-						if ( this.VideoInfo.VideoRecordingState != RecordingState.Live ) {
+						if ( this.AssumeFinished || this.VideoInfo.VideoRecordingState != RecordingState.Live ) {
 							break;
 						} else {
 							// we're downloading a stream that is still streaming
@@ -62,6 +64,7 @@ namespace VodArchiver.VideoJobs {
 							if ( timer.Elapsed.TotalMinutes < 2.5 ) {
 								TimeSpan ts = TimeSpan.FromMinutes( 2.5 ) - timer.Elapsed;
 								Status = "Waiting " + ts.TotalSeconds + " seconds for stream to update...";
+								_UserInputRequest = new UserInputRequestStreamLive( this );
 								try {
 									await Task.Delay( ts, cancellationToken );
 								} catch ( TaskCanceledException ) {
@@ -75,6 +78,7 @@ namespace VodArchiver.VideoJobs {
 							}
 						}
 					}
+					_UserInputRequest = null;
 
 					Status = "Waiting for free disk IO slot to combine...";
 					try {
@@ -97,6 +101,7 @@ namespace VodArchiver.VideoJobs {
 							// if difference is bigger than 5 seconds something is off, report
 							Status = "Large time difference between expected (" + expectedVideoLength.ToString() + ") and combined (" + actualVideoLength.ToString() + "), stopping.";
 							_UserInputRequest = new UserInputRequestTimeMismatchCombined( this );
+							_IsWaitingForUserInput = true;
 							return ResultType.UserInputRequired;
 						}
 
@@ -129,6 +134,7 @@ namespace VodArchiver.VideoJobs {
 						// if difference is bigger than 5 seconds something is off, report
 						Status = "Large time difference between expected (" + expectedVideoLength.ToString() + ") and remuxed (" + actualVideoLength.ToString() + "), stopping.";
 						_UserInputRequest = new UserInputRequestTimeMismatchRemuxed( this );
+						_IsWaitingForUserInput = true;
 						return ResultType.UserInputRequired;
 					}
 
@@ -321,6 +327,7 @@ namespace VodArchiver.VideoJobs {
 					Job.IgnoreTimeDifferenceCombined = true;
 				}
 				Job._UserInputRequest = null;
+				Job._IsWaitingForUserInput = false;
 			}
 		}
 
@@ -344,6 +351,27 @@ namespace VodArchiver.VideoJobs {
 					Job.IgnoreTimeDifferenceRemuxed = true;
 				}
 				Job._UserInputRequest = null;
+				Job._IsWaitingForUserInput = false;
+			}
+		}
+
+		class UserInputRequestStreamLive : IUserInputRequest {
+			TsVideoJob Job;
+
+			public UserInputRequestStreamLive( TsVideoJob job ) {
+				Job = job;
+			}
+
+			public List<string> GetOptions() {
+				return new List<string>() { "Keep Waiting", "Assume Finished" };
+			}
+
+			public string GetQuestion() {
+				return "Stream still Live";
+			}
+
+			public void SelectOption( string option ) {
+				Job.AssumeFinished = option == "Assume Finished";
 			}
 		}
 	}

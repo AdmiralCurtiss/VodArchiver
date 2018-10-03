@@ -443,7 +443,7 @@ namespace VodArchiver {
 				IVideoJob job = model as IVideoJob;
 				ContextMenuStrip menu = new ContextMenuStrip();
 
-				if ( job.IsWaitingForUserInput ) {
+				{
 					IUserInputRequest uir = job.UserInputRequest;
 					if ( uir != null ) {
 						ToolStripMenuItem item = new ToolStripMenuItem( uir.GetQuestion() );
