@@ -257,6 +257,12 @@ namespace VodArchiver {
 			new VodList( this, TwitchAPI ).Show();
 		}
 
+		private void buttonFetchUser_MouseUp( object sender, MouseEventArgs e ) {
+			if ( e.Button == MouseButtons.Right ) {
+				new VideoSplitWindow().ShowDialog();
+			}
+		}
+
 		private void LoadJobs() {
 			lock ( Util.JobFileLock ) {
 				List<IVideoJob> jobs = new List<IVideoJob>();

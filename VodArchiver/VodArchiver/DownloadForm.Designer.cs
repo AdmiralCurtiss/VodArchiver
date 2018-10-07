@@ -243,6 +243,7 @@
 			this.buttonFetchUser.Text = "Fetch User\'s Videos";
 			this.buttonFetchUser.UseVisualStyleBackColor = true;
 			this.buttonFetchUser.Click += new System.EventHandler(this.buttonFetchUser_Click);
+			this.buttonFetchUser.MouseUp += new System.Windows.Forms.MouseEventHandler(this.buttonFetchUser_MouseUp);
 			// 
 			// labelStatusBar
 			// 

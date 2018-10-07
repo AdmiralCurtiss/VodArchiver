@@ -151,6 +151,12 @@
     <Compile Include="VideoJobs\TwitchChatReplayJob.cs" />
     <Compile Include="VideoJobs\TwitchVideoJob.cs" />
     <Compile Include="VideoJobs\YoutubeVideoJob.cs" />
+    <Compile Include="VideoSplitWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="VideoSplitWindow.Designer.cs">
+      <DependentUpon>VideoSplitWindow.cs</DependentUpon>
+    </Compile>
     <Compile Include="VodList.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -177,6 +183,9 @@
     </Compile>
     <EmbeddedResource Include="SettingsWindow.resx">
       <DependentUpon>SettingsWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="VideoSplitWindow.resx">
+      <DependentUpon>VideoSplitWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="VodList.resx">
       <DependentUpon>VodList.cs</DependentUpon>
