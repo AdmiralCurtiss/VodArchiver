@@ -72,6 +72,8 @@ namespace VodArchiver.VideoJobs {
 					using ( var cancellationCallback = cancellationToken.Register( client.CancelAsync ) ) {
 						try {
 							byte[] data = await client.DownloadDataTaskAsync( VideoInfo.VideoId );
+							await StallWrite( tempFilename, data.LongLength, cancellationToken );
+							if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 							using ( FileStream fs = File.Create( tempFilename ) ) {
 								await fs.WriteAsync( data, 0, data.Length );
 								success = true;
@@ -83,10 +85,14 @@ namespace VodArchiver.VideoJobs {
 					}
 
 					if ( success ) {
+						await StallWrite( movedFilename, new FileInfo( tempFilename ).Length, cancellationToken );
+						if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 						File.Move( tempFilename, movedFilename );
 					}
 				}
 
+				if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+				await StallWrite( targetFilename, new FileInfo( movedFilename ).Length, cancellationToken );
 				if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 				File.Move( movedFilename, targetFilename );
 			}

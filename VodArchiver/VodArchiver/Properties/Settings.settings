@@ -23,5 +23,8 @@
     <Setting Name="TwitchRedirectURI" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="MinimumFreeSpaceBytes" Type="System.Int64" Scope="User">
+      <Value Profile="(Default)">5368709120</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

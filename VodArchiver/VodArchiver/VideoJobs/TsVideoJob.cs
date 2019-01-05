@@ -87,10 +87,17 @@ namespace VodArchiver.VideoJobs {
 						return ResultType.Cancelled;
 					}
 					try {
+						long expectedTargetFilesize = 0;
+						foreach ( var file in files ) {
+							expectedTargetFilesize += new FileInfo( file ).Length;
+						}
+
 						Status = "Combining downloaded video parts...";
 						if ( await Util.FileExists( combinedTempname ) ) {
 							await Util.DeleteFile( combinedTempname );
 						}
+						await StallWrite( combinedFilename, expectedTargetFilesize, cancellationToken );
+						if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 						await TsVideoJob.Combine( combinedTempname, files );
 
 						// sanity check
@@ -124,6 +131,8 @@ namespace VodArchiver.VideoJobs {
 					if ( await Util.FileExists( remuxedTempname ) ) {
 						await Util.DeleteFile( remuxedTempname );
 					}
+					await StallWrite( remuxedFilename, new FileInfo( combinedFilename ).Length, cancellationToken );
+					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 					await Task.Run( () => TsVideoJob.Remux( remuxedFilename, combinedFilename, remuxedTempname ) );
 
 					// sanity check
@@ -223,6 +232,8 @@ namespace VodArchiver.VideoJobs {
 						try {
 							job.Status = "Downloading files... (" + ( files.Count + 1 ) + "/" + urls.Length + ")";
 							byte[] data = await client.DownloadDataTaskAsync( url );
+							await job.StallWrite( outpath_temp, data.LongLength, cancellationToken );
+							if ( cancellationToken.IsCancellationRequested ) { return (ResultType.Cancelled, null); }
 							using ( FileStream fs = File.Create( outpath_temp ) ) {
 								await fs.WriteAsync( data, 0, data.Length );
 							}
@@ -250,6 +261,8 @@ namespace VodArchiver.VideoJobs {
 					}
 
 					if ( success ) {
+						await job.StallWrite( outpath, new FileInfo( outpath_temp ).Length, cancellationToken );
+						if ( cancellationToken.IsCancellationRequested ) { return (ResultType.Cancelled, null); }
 						File.Move( outpath_temp, outpath );
 						files.Add( outpath );
 					}

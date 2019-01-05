@@ -119,5 +119,25 @@ namespace VodArchiver.VideoJobs {
 		public override int GetHashCode() {
 			return VideoInfo.GetHashCode();
 		}
+
+		protected virtual bool ShouldStallWrite( string path, long filesize ) {
+			long freeSpace = new System.IO.DriveInfo( path ).AvailableFreeSpace;
+			return freeSpace <= ( Util.MinimumFreeSpaceBytes + filesize );
+		}
+
+		public async Task StallWrite( string path, long filesize, CancellationToken cancellationToken ) {
+			if ( ShouldStallWrite( path, filesize ) ) {
+				Status = "Not enough free space, stalling...";
+
+				while ( ShouldStallWrite( path, filesize ) ) {
+					if ( cancellationToken.IsCancellationRequested ) {
+						return;
+					}
+					try {
+						await Task.Delay( 10000, cancellationToken );
+					} catch ( TaskCanceledException ) { }
+				}
+			}
+		}
 	}
 }

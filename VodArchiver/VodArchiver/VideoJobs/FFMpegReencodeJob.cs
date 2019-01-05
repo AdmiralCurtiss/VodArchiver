@@ -101,6 +101,8 @@ namespace VodArchiver.VideoJobs {
 				if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 
 				Status = "Encoding " + newfile + "...";
+				await StallWrite( newfile, new FileInfo( encodeinput ).Length, cancellationToken );
+				if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 				Directory.CreateDirectory( postfixdir );
 				FFMpegReencodeJobVideoInfo ffmpegVideoInfo = VideoInfo as FFMpegReencodeJobVideoInfo;
 				await Reencode( newfile, encodeinput, tempfile, ffmpegVideoInfo.FFMpegOptions );

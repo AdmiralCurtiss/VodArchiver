@@ -58,6 +58,8 @@ namespace VodArchiver.VideoJobs {
 
 					Directory.CreateDirectory( tempFolder );
 					Status = "Running youtube-dl...";
+					await StallWrite( tempFilepath, 0, cancellationToken ); // don't know expected filesize, so hope we have a sensible value in minimum free space
+					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 					var data = await ExternalProgramExecution.RunProgram(
 						@"youtube-dl",
 						new string[] {

@@ -49,12 +49,13 @@ namespace VodArchiver.VideoJobs {
 				return ResultType.TemporarilyUnavailable;
 			}
 
-			string tempname = Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() + ".json" );
+			string tempname = Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() + ".json.tmp" );
+			string finalintmpname = Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() + ".json" );
 			string filename = Path.Combine( Util.TargetFolderPath, GetTargetFilenameWithoutExtension() + ".json" );
 			Random rng = new Random( int.Parse( VideoInfo.VideoId.Substring( 1 ) ) );
 
 			if ( !await Util.FileExists( filename ) ) {
-				if ( !await Util.FileExists( tempname ) ) {
+				if ( !await Util.FileExists( finalintmpname ) ) {
 					Status = "Downloading chat (Initial)...";
 					StringBuilder concatJson = new StringBuilder();
 					string url = GetStartUrl( VideoInfo );
@@ -104,7 +105,10 @@ namespace VodArchiver.VideoJobs {
 						}
 					}
 
+					await StallWrite( tempname, concatJson.Length, cancellationToken ); // size not accurate because encoding but whatever
+					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 					File.WriteAllText( tempname, concatJson.ToString() );
+					File.Move( tempname, finalintmpname );
 				}
 
 				if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
@@ -118,7 +122,9 @@ namespace VodArchiver.VideoJobs {
 				try {
 					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 					Status = "Moving to final location...";
-					Util.MoveFileOverwrite( tempname, filename );
+					await StallWrite( filename, new FileInfo( finalintmpname ).Length, cancellationToken );
+					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+					Util.MoveFileOverwrite( finalintmpname, filename );
 				} finally {
 					Util.ExpensiveDiskIOSemaphore.Release();
 				}
@@ -135,6 +141,11 @@ namespace VodArchiver.VideoJobs {
 
 		public string GetNextUrl( IVideoInfo info, string next ) {
 			return "https://api.twitch.tv/v5/videos/" + info.VideoId.Substring( 1 ) + "/comments?cursor=" + next;
+		}
+
+		protected override bool ShouldStallWrite( string path, long filesize ) {
+			long freeSpace = new System.IO.DriveInfo( path ).AvailableFreeSpace;
+			return freeSpace <= ( Util.AbsoluteMinimumFreeSpaceBytes + filesize ) || freeSpace <= ( Util.MinimumFreeSpaceBytes + filesize );
 		}
 
 		class UserInputRequestStreamLive : IUserInputRequest {

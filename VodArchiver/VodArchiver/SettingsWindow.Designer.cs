@@ -36,6 +36,10 @@
 			this.label4 = new System.Windows.Forms.Label();
 			this.textBoxTwitchClientID = new System.Windows.Forms.TextBox();
 			this.label5 = new System.Windows.Forms.Label();
+			this.numericUpDownMinimumFreeSpace = new System.Windows.Forms.NumericUpDown();
+			this.label6 = new System.Windows.Forms.Label();
+			this.label7 = new System.Windows.Forms.Label();
+			((System.ComponentModel.ISupportInitialize)(this.numericUpDownMinimumFreeSpace)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// label1
@@ -163,11 +167,49 @@
 			this.label5.TabIndex = 9;
 			this.label5.Text = "Twitch Client ID";
 			// 
+			// numericUpDownMinimumFreeSpace
+			// 
+			this.numericUpDownMinimumFreeSpace.Increment = new decimal(new int[] {
+            1073741824,
+            0,
+            0,
+            0});
+			this.numericUpDownMinimumFreeSpace.Location = new System.Drawing.Point(131, 183);
+			this.numericUpDownMinimumFreeSpace.Maximum = new decimal(new int[] {
+            1879048191,
+            -1291644761,
+            -500259693,
+            0});
+			this.numericUpDownMinimumFreeSpace.Name = "numericUpDownMinimumFreeSpace";
+			this.numericUpDownMinimumFreeSpace.Size = new System.Drawing.Size(142, 20);
+			this.numericUpDownMinimumFreeSpace.TabIndex = 13;
+			// 
+			// label6
+			// 
+			this.label6.AutoSize = true;
+			this.label6.Location = new System.Drawing.Point(12, 185);
+			this.label6.Name = "label6";
+			this.label6.Size = new System.Drawing.Size(106, 13);
+			this.label6.TabIndex = 14;
+			this.label6.Text = "Minimum Free Space";
+			// 
+			// label7
+			// 
+			this.label7.AutoSize = true;
+			this.label7.Location = new System.Drawing.Point(279, 185);
+			this.label7.Name = "label7";
+			this.label7.Size = new System.Drawing.Size(33, 13);
+			this.label7.TabIndex = 15;
+			this.label7.Text = "Bytes";
+			// 
 			// SettingsWindow
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(503, 319);
+			this.Controls.Add(this.label7);
+			this.Controls.Add(this.label6);
+			this.Controls.Add(this.numericUpDownMinimumFreeSpace);
 			this.Controls.Add(this.textBoxTwitchRedirectURI);
 			this.Controls.Add(this.label4);
 			this.Controls.Add(this.textBoxTwitchClientID);
@@ -183,6 +225,7 @@
 			this.Controls.Add(this.label1);
 			this.Name = "SettingsWindow";
 			this.Text = "SettingsWindow";
+			((System.ComponentModel.ISupportInitialize)(this.numericUpDownMinimumFreeSpace)).EndInit();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -203,5 +246,8 @@
 		private System.Windows.Forms.Label label4;
 		private System.Windows.Forms.TextBox textBoxTwitchClientID;
 		private System.Windows.Forms.Label label5;
+		private System.Windows.Forms.NumericUpDown numericUpDownMinimumFreeSpace;
+		private System.Windows.Forms.Label label6;
+		private System.Windows.Forms.Label label7;
 	}
 }

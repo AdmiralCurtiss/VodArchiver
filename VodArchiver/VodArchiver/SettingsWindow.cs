@@ -18,6 +18,7 @@ namespace VodArchiver {
 			textBoxCustomLocationPersistentData.Text = Util.PersistentDataPath;
 			textBoxTwitchClientID.Text = Util.TwitchClientId;
 			textBoxTwitchRedirectURI.Text = Util.TwitchRedirectURI;
+			numericUpDownMinimumFreeSpace.Value = Util.MinimumFreeSpaceBytes;
 		}
 
 		private void buttonSave_Click( object sender, EventArgs e ) {
@@ -27,6 +28,7 @@ namespace VodArchiver {
 			Properties.Settings.Default.CustomDataPath = Properties.Settings.Default.EnableCustomDataPath ? textBoxCustomLocationPersistentData.Text : "";
 			Properties.Settings.Default.TwitchClientID = textBoxTwitchClientID.Text;
 			Properties.Settings.Default.TwitchRedirectURI = textBoxTwitchRedirectURI.Text;
+			Properties.Settings.Default.MinimumFreeSpaceBytes = (long)numericUpDownMinimumFreeSpace.Value;
 			Properties.Settings.Default.Save();
 			this.Close();
 		}
