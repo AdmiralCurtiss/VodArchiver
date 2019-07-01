@@ -66,7 +66,20 @@ namespace VodArchiver.VideoJobs {
 
 			if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 
-			string inname = Path.GetFullPath( VideoInfo.VideoId );
+			string originalpath = Path.GetFullPath( VideoInfo.VideoId );
+			string newdirpath = originalpath + "_splitdir";
+			if ( File.Exists( newdirpath ) || Directory.Exists( newdirpath ) ) {
+				Status = "File or directory at " + newdirpath + " already exists, cancelling.";
+				return ResultType.Failure;
+			}
+			DirectoryInfo di = Directory.CreateDirectory( newdirpath );
+			string inname = Path.Combine( di.FullName, Path.GetFileName( originalpath ) );
+			if ( File.Exists( inname ) ) {
+				Status = "File at " + inname + " already exists, cancelling.";
+				return ResultType.Failure;
+			}
+			File.Move( originalpath, inname );
+
 			string outname = GenerateOutputName( inname );
 
 			List<string> args = new List<string>();
