@@ -259,7 +259,7 @@ namespace VodArchiver {
 
 		private void buttonFetchUser_MouseUp( object sender, MouseEventArgs e ) {
 			if ( e.Button == MouseButtons.Right ) {
-				new VideoSplitWindow().ShowDialog();
+				new VideoSplitWindow( this ).Show();
 			}
 		}
 

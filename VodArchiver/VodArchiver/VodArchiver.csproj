@@ -143,6 +143,7 @@
     <Compile Include="VideoInfo\TwitchVideoInfo.cs" />
     <Compile Include="VideoInfo\YoutubeVideoInfo.cs" />
     <Compile Include="VideoJobs\FFMpegReencodeJob.cs" />
+    <Compile Include="VideoJobs\FFMpegSplitJob.cs" />
     <Compile Include="VideoJobs\GenericFileJob.cs" />
     <Compile Include="VideoJobs\HitboxVideoJob.cs" />
     <Compile Include="VideoJobs\IUserInputRequest.cs" />
