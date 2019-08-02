@@ -69,6 +69,7 @@ namespace VodArchiver.VideoJobs {
 							"--no-color",
 							"--abort-on-error",
 							"--abort-on-unavailable-fragment",
+							"--rate-limit", "500k",
 							"https://www.youtube.com/watch?v=" + VideoInfo.VideoId
 						},
 						stdoutCallbacks: new System.Diagnostics.DataReceivedEventHandler[1] {
