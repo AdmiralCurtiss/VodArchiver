@@ -125,6 +125,7 @@
     </Compile>
     <Compile Include="Tasks\FetchTaskGroup.cs" />
     <Compile Include="Tasks\VideoTaskGroup.cs" />
+    <Compile Include="Twitch.cs" />
     <Compile Include="UserInfo\FFMpegJobUserInfo.cs" />
     <Compile Include="UserInfo\HitboxUserInfo.cs" />
     <Compile Include="UserInfo\RssFeedUserInfo.cs" />
@@ -140,6 +141,7 @@
     <Compile Include="VideoInfo\HitboxVideoInfo.cs" />
     <Compile Include="VideoInfo\IVideoInfo.cs" />
     <Compile Include="VideoInfo\TwitchTwixelVideoInfo.cs" />
+    <Compile Include="VideoInfo\TwitchVideoInfo.cs" />
     <Compile Include="VideoInfo\YoutubeVideoInfo.cs" />
     <Compile Include="VideoJobs\FFMpegReencodeJob.cs" />
     <Compile Include="VideoJobs\FFMpegSplitJob.cs" />

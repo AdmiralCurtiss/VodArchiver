@@ -5,20 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VodArchiver.VideoInfo;
-using TwixelAPI;
 using System.Xml;
 using Newtonsoft.Json.Linq;
 using System.Threading;
 
 namespace VodArchiver.VideoJobs {
 	class TwitchChatReplayJob : IVideoJob {
-		public Twixel TwitchAPI;
-
-		public TwitchChatReplayJob( Twixel api, string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
+		public TwitchChatReplayJob( string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
 			JobStatus = VideoJobStatus.NotStarted;
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
 			VideoInfo = new GenericVideoInfo() { Service = StreamService.TwitchChatReplay, VideoId = id };
-			TwitchAPI = api;
 		}
 
 		public TwitchChatReplayJob( XmlNode node ) : base( node ) { }
@@ -43,7 +39,7 @@ namespace VodArchiver.VideoJobs {
 
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
-			VideoInfo = new TwitchTwixelVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ), StreamService.TwitchChatReplay );
+			VideoInfo = new TwitchVideoInfo( await TwitchV5.GetVideo( long.Parse( VideoInfo.VideoId ) ), StreamService.TwitchChatReplay );
 			if ( !AssumeFinished && VideoInfo.VideoRecordingState == RecordingState.Live ) {
 				_UserInputRequest = new UserInputRequestStreamLive( this );
 				return ResultType.TemporarilyUnavailable;
@@ -70,7 +66,7 @@ namespace VodArchiver.VideoJobs {
 									return ResultType.Cancelled;
 								}
 
-								string commentJson = await Twixel.GetWebData( new Uri( url ), Twixel.APIVersion.v5 );
+								string commentJson = await TwitchV5.Get( url );
 								JObject responseObject = JObject.Parse( commentJson );
 								if ( responseObject["comments"] == null ) {
 									throw new Exception( "Nonsense JSON returned, no comments." );

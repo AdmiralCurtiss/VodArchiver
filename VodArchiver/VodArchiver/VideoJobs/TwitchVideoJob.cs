@@ -5,20 +5,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VodArchiver.VideoInfo;
-using TwixelAPI;
 using System.Xml;
 using System.Threading;
 
 namespace VodArchiver.VideoJobs {
 	public class TwitchVideoJob : TsVideoJob {
-		public Twixel TwitchAPI;
 		string VideoQuality = "chunked";
 
-		public TwitchVideoJob( Twixel api, string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
+		public TwitchVideoJob( string id, StatusUpdate.IStatusUpdate statusUpdater = null ) {
 			JobStatus = VideoJobStatus.NotStarted;
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
 			VideoInfo = new GenericVideoInfo() { Service = StreamService.Twitch, VideoId = id };
-			TwitchAPI = api;
 		}
 
 		public TwitchVideoJob( XmlNode node ) : base( node ) {
@@ -33,26 +30,26 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public override async Task<(ResultType result, string[] urls)> GetFileUrlsOfVod( CancellationToken cancellationToken ) {
-			VideoInfo = new TwitchTwixelVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ) );
+			VideoInfo = new TwitchVideoInfo( await TwitchV5.GetVideo( long.Parse( VideoInfo.VideoId ) ) );
 
 			string folderpath;
 			string[] filenames;
 			while ( true ) {
 				try {
-					string m3u = await TwitchAPI.RetrieveVodM3U( VideoInfo.VideoId );
+					string m3u = await TwitchV5.GetVodM3U( long.Parse( VideoInfo.VideoId ) );
 					string m3u8path = GetM3U8PathFromM3U( m3u, VideoQuality );
 					folderpath = TsVideoJob.GetFolder( m3u8path );
-					string m3u8 = await Twixel.GetWebData( new Uri( m3u8path ) );
+					string m3u8 = await TwitchV5.Get( m3u8path );
 					filenames = TsVideoJob.GetFilenamesFromM3U8( m3u8 );
-				} catch ( TwitchException e ) {
-					if ( e.Status == 404 && VideoInfo.VideoRecordingState == RecordingState.Live ) {
+				} catch ( TwitchHttpException e ) {
+					if ( e.StatusCode == System.Net.HttpStatusCode.NotFound && VideoInfo.VideoRecordingState == RecordingState.Live ) {
 						// this can happen on streams that have just started, in this just wait a bit and retry
 						try {
 							await Task.Delay( 20000, cancellationToken );
 						} catch ( TaskCanceledException ) {
 							return (ResultType.Cancelled, null);
 						}
-						VideoInfo = new TwitchTwixelVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ) );
+						VideoInfo = new TwitchVideoInfo( await TwitchV5.GetVideo( long.Parse( VideoInfo.VideoId ) ) );
 						continue;
 					} else {
 						throw;

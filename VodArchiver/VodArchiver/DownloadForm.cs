@@ -178,10 +178,10 @@ namespace VodArchiver {
 			IVideoJob job;
 			switch ( service ) {
 				case StreamService.Twitch:
-					job = new TwitchVideoJob( TwitchAPI, id );
+					job = new TwitchVideoJob( id );
 					break;
 				case StreamService.TwitchChatReplay:
-					job = new TwitchChatReplayJob( TwitchAPI, id );
+					job = new TwitchChatReplayJob( id );
 					break;
 				case StreamService.Hitbox:
 					job = new HitboxVideoJob( id );
@@ -281,11 +281,6 @@ namespace VodArchiver {
 								job.JobStatus = VideoJobStatus.NotStarted;
 								job.StatusUpdater = new StatusUpdate.NullStatusUpdate();
 								job.Status = "Interrupted during: " + job.Status;
-							}
-							if ( job as TwitchVideoJob != null ) {
-								( job as TwitchVideoJob ).TwitchAPI = TwitchAPI;
-							} else if ( job as TwitchChatReplayJob != null ) {
-								( job as TwitchChatReplayJob ).TwitchAPI = TwitchAPI;
 							}
 							job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
 							if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
