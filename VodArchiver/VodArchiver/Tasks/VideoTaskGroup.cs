@@ -218,14 +218,6 @@ namespace VodArchiver.Tasks {
 							job.Status = "Temporarily unavailable, retrying later.";
 						}
 
-						if ( Util.ShowToastNotifications ) {
-							if ( result == ResultType.Success ) {
-								ToastUtil.ShowToast( "Downloaded " + job.HumanReadableJobName + "!" );
-							} else if ( result == ResultType.Failure ) {
-								ToastUtil.ShowToast( "Failed to download " + job.HumanReadableJobName + "." );
-							}
-						}
-
 						return result;
 					} else {
 						// task is already finished, no need to do anything
@@ -234,9 +226,6 @@ namespace VodArchiver.Tasks {
 				} catch ( Exception ex ) {
 					job.JobStatus = wasDead ? VideoJobStatus.Dead : VideoJobStatus.NotStarted;
 					job.Status = "ERROR: " + ex.ToString();
-					if ( Util.ShowToastNotifications ) {
-						ToastUtil.ShowToast( "Failed to download " + job.HumanReadableJobName + ": " + ex.ToString() );
-					}
 
 					return ResultType.Failure;
 				}

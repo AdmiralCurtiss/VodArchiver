@@ -224,10 +224,6 @@ namespace VodArchiver {
 			job.Status = "Waiting...";
 			VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
 
-			if ( Util.ShowToastNotifications ) {
-				ToastUtil.ShowToast( "Enqueued " + job.HumanReadableJobName + "!" );
-			}
-
 			InvokeSaveJobs();
 
 			return true;
@@ -351,9 +347,6 @@ namespace VodArchiver {
 							if ( SaveJobTimer != null ) {
 								SaveJobTimer.Stop();
 							}
-						}
-						if ( Util.ShowToastNotifications ) {
-							ToastUtil.ShowToast( DateTime.Now + ": Saving jobs." );
 						}
 
 						List<IVideoJob> jobs = new List<IVideoJob>();

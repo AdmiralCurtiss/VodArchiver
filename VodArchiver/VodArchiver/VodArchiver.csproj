@@ -125,7 +125,6 @@
     </Compile>
     <Compile Include="Tasks\FetchTaskGroup.cs" />
     <Compile Include="Tasks\VideoTaskGroup.cs" />
-    <Compile Include="ToastUtil.cs" />
     <Compile Include="UserInfo\FFMpegJobUserInfo.cs" />
     <Compile Include="UserInfo\HitboxUserInfo.cs" />
     <Compile Include="UserInfo\RssFeedUserInfo.cs" />
