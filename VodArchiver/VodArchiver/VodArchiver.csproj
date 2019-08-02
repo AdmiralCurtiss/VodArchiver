@@ -140,7 +140,7 @@
     <Compile Include="VideoInfo\GenericVideoInfo.cs" />
     <Compile Include="VideoInfo\HitboxVideoInfo.cs" />
     <Compile Include="VideoInfo\IVideoInfo.cs" />
-    <Compile Include="VideoInfo\TwitchVideoInfo.cs" />
+    <Compile Include="VideoInfo\TwitchTwixelVideoInfo.cs" />
     <Compile Include="VideoInfo\YoutubeVideoInfo.cs" />
     <Compile Include="VideoJobs\FFMpegReencodeJob.cs" />
     <Compile Include="VideoJobs\FFMpegSplitJob.cs" />

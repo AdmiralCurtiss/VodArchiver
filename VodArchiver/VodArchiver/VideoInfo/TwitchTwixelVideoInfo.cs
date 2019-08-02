@@ -6,16 +6,16 @@ using System.Threading.Tasks;
 using System.Xml;
 
 namespace VodArchiver.VideoInfo {
-	public class TwitchVideoInfo : IVideoInfo {
+	public class TwitchTwixelVideoInfo : IVideoInfo {
 		TwixelAPI.Video VideoInfo;
 		StreamService _Service;
 
-		public TwitchVideoInfo( TwixelAPI.Video video, StreamService service = StreamService.Twitch ) {
+		public TwitchTwixelVideoInfo( TwixelAPI.Video video, StreamService service = StreamService.Twitch ) {
 			VideoInfo = video;
 			_Service = service;
 		}
 
-		public TwitchVideoInfo( XmlNode node ) {
+		public TwitchTwixelVideoInfo( XmlNode node ) {
 			VideoInfo = DeserializeTwixelVideo( node.SelectSingleNode( "VideoInfo" ) );
 			_Service = (StreamService)Enum.Parse( typeof( StreamService ), node.Attributes["service"].Value );
 		}

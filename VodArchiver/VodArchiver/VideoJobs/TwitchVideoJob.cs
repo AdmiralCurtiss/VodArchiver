@@ -33,7 +33,7 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public override async Task<(ResultType result, string[] urls)> GetFileUrlsOfVod( CancellationToken cancellationToken ) {
-			VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ) );
+			VideoInfo = new TwitchTwixelVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ) );
 
 			string folderpath;
 			string[] filenames;
@@ -52,7 +52,7 @@ namespace VodArchiver.VideoJobs {
 						} catch ( TaskCanceledException ) {
 							return (ResultType.Cancelled, null);
 						}
-						VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ) );
+						VideoInfo = new TwitchTwixelVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ) );
 						continue;
 					} else {
 						throw;

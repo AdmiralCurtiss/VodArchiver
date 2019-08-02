@@ -43,7 +43,7 @@ namespace VodArchiver.VideoJobs {
 
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
-			VideoInfo = new TwitchVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ), StreamService.TwitchChatReplay );
+			VideoInfo = new TwitchTwixelVideoInfo( await TwitchAPI.RetrieveVideo( VideoInfo.VideoId ), StreamService.TwitchChatReplay );
 			if ( !AssumeFinished && VideoInfo.VideoRecordingState == RecordingState.Live ) {
 				_UserInputRequest = new UserInputRequestStreamLive( this );
 				return ResultType.TemporarilyUnavailable;

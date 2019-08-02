@@ -77,8 +77,8 @@ namespace VodArchiver.UserInfo {
 				hasMore = broadcasts.wrapped.Count == 25;
 			}
 			foreach ( var v in broadcasts.wrapped ) {
-				videosToAdd.Add( new TwitchVideoInfo( v, StreamService.Twitch ) );
-				videosToAdd.Add( new TwitchVideoInfo( v, StreamService.TwitchChatReplay ) );
+				videosToAdd.Add( new TwitchTwixelVideoInfo( v, StreamService.Twitch ) );
+				videosToAdd.Add( new TwitchTwixelVideoInfo( v, StreamService.TwitchChatReplay ) );
 			}
 			currentVideos = broadcasts.wrapped.Count;
 
