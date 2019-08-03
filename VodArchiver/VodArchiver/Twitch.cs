@@ -91,7 +91,7 @@ namespace VodArchiver {
 		}
 
 		public static async Task<TwitchVodFetchResult> GetVideos( long channelId, bool highlights, int offset, int limit ) {
-			string result = await Get( Kraken + "channels/" + channelId + "/videos?limit=" + limit + "&offset=" + offset + "&broadcast_type=" + ( highlights ? "highlight" : "archive,upload" ) );
+			string result = await Get( Kraken + "channels/" + channelId + "/videos?limit=" + limit + "&offset=" + offset + "&broadcast_type=" + ( highlights ? "highlight" : "archive" ) );
 			JObject json = JObject.Parse( result );
 
 			TwitchVodFetchResult r = new TwitchVodFetchResult();
