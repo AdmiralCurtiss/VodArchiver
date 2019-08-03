@@ -48,7 +48,7 @@ namespace VodArchiver.VideoJobs {
 			string tempname = Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() + ".json.tmp" );
 			string finalintmpname = Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() + ".json" );
 			string filename = Path.Combine( Util.TargetFolderPath, GetTargetFilenameWithoutExtension() + ".json" );
-			Random rng = new Random( int.Parse( VideoInfo.VideoId.Substring( 1 ) ) );
+			Random rng = new Random( int.Parse( VideoInfo.VideoId ) );
 
 			if ( !await Util.FileExists( filename ) ) {
 				if ( !await Util.FileExists( finalintmpname ) ) {
@@ -132,11 +132,11 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public string GetStartUrl( IVideoInfo info ) {
-			return "https://api.twitch.tv/v5/videos/" + info.VideoId.Substring( 1 ) + "/comments?content_offset_seconds=0";
+			return "https://api.twitch.tv/v5/videos/" + info.VideoId + "/comments?content_offset_seconds=0";
 		}
 
 		public string GetNextUrl( IVideoInfo info, string next ) {
-			return "https://api.twitch.tv/v5/videos/" + info.VideoId.Substring( 1 ) + "/comments?cursor=" + next;
+			return "https://api.twitch.tv/v5/videos/" + info.VideoId + "/comments?cursor=" + next;
 		}
 
 		protected override bool ShouldStallWrite( string path, long filesize ) {
