@@ -5,10 +5,6 @@ VisualStudioVersion = 15.0.27004.2006
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VodArchiver", "VodArchiver\VodArchiver.csproj", "{D809A464-CA77-4653-80EF-F0C5CCF4DDEF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Twixel", "..\Twixel\Twixel\Twixel.csproj", "{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "golf1052.Trexler", "..\Trexler\golf1052.Trexler\golf1052.Trexler.csproj", "{DA156FD7-9871-4E36-8F2E-6BE8BBF17485}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -22,18 +18,6 @@ Global
 		{D809A464-CA77-4653-80EF-F0C5CCF4DDEF}.DebugToConsole|Any CPU.Build.0 = Debug|Any CPU
 		{D809A464-CA77-4653-80EF-F0C5CCF4DDEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D809A464-CA77-4653-80EF-F0C5CCF4DDEF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}.DebugToConsole|Any CPU.ActiveCfg = Debug|Any CPU
-		{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}.DebugToConsole|Any CPU.Build.0 = Debug|Any CPU
-		{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DFD0DB77-DBC7-4B79-8747-F9CAF6274DBE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DA156FD7-9871-4E36-8F2E-6BE8BBF17485}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DA156FD7-9871-4E36-8F2E-6BE8BBF17485}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DA156FD7-9871-4E36-8F2E-6BE8BBF17485}.DebugToConsole|Any CPU.ActiveCfg = Debug|Any CPU
-		{DA156FD7-9871-4E36-8F2E-6BE8BBF17485}.DebugToConsole|Any CPU.Build.0 = Debug|Any CPU
-		{DA156FD7-9871-4E36-8F2E-6BE8BBF17485}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DA156FD7-9871-4E36-8F2E-6BE8BBF17485}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,7 +1,0 @@
-[submodule "Twixel"]
-	path = Twixel
-	url = https://github.com/AdmiralCurtiss/Twixel.git
-	branch = vod
-[submodule "Trexler"]
-	path = Trexler
-	url = https://github.com/AdmiralCurtiss/Trexler.git

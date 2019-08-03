@@ -44,9 +44,6 @@
     <Reference Include="Argotic.Extensions, Version=2008.0.2.0, Culture=neutral, PublicKeyToken=84b2ce808fb02469, processorArchitecture=MSIL">
       <HintPath>..\packages\Argotic.Extensions.2008.0.2.0\lib\Net35\Argotic.Extensions.dll</HintPath>
     </Reference>
-    <Reference Include="Flurl, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Flurl.2.5.0\lib\net40\Flurl.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -140,7 +137,6 @@
     <Compile Include="VideoInfo\GenericVideoInfo.cs" />
     <Compile Include="VideoInfo\HitboxVideoInfo.cs" />
     <Compile Include="VideoInfo\IVideoInfo.cs" />
-    <Compile Include="VideoInfo\TwitchTwixelVideoInfo.cs" />
     <Compile Include="VideoInfo\TwitchVideoInfo.cs" />
     <Compile Include="VideoInfo\YoutubeVideoInfo.cs" />
     <Compile Include="VideoJobs\FFMpegReencodeJob.cs" />
@@ -205,12 +201,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Twixel\Twixel\Twixel.csproj">
-      <Project>{dfd0db77-dbc7-4b79-8747-f9caf6274dbe}</Project>
-      <Name>Twixel</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\cog.png" />
