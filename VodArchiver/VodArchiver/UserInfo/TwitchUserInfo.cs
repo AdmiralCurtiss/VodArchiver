@@ -31,7 +31,7 @@ namespace VodArchiver.UserInfo {
 		}
 
 		public TwitchUserInfo( XmlNode node ) {
-			ServiceVideoCategoryType t = ( ServiceVideoCategoryType)Enum.Parse( typeof( ServiceVideoCategoryType ), node.Attributes["_type"].Value );
+			ServiceVideoCategoryType t = (ServiceVideoCategoryType)Enum.Parse( typeof( ServiceVideoCategoryType ), node.Attributes["_type"].Value );
 			if ( t == ServiceVideoCategoryType.TwitchRecordings ) {
 				Highlights = false;
 			} else if ( t == ServiceVideoCategoryType.TwitchHighlights ) {
@@ -56,31 +56,24 @@ namespace VodArchiver.UserInfo {
 			return node;
 		}
 
-		public override async Task<FetchReturnValue> Fetch( TwixelAPI.Twixel twitchApi, int offset, bool flat ) {
+		public override async Task<FetchReturnValue> Fetch( int offset, bool flat ) {
 			List<IVideoInfo> videosToAdd = new List<IVideoInfo>();
 			bool hasMore = true;
 			long maxVideos = -1;
 			int currentVideos = -1;
 
 			if ( UserID == null ) {
-				UserID = await twitchApi.GetUserId( Username, TwixelAPI.Twixel.APIVersion.v5 );
+				UserID = await TwitchV5.GetUserIdFromUsername( Username );
 			}
-			TwixelAPI.Total<List<TwixelAPI.Video>> broadcasts = await twitchApi.RetrieveVideos(
-				channel: UserID == null ? Username : UserID.ToString(),
-				offset: offset, limit: 25, broadcasts: !Highlights, hls: false,
-				version: UserID == null ? TwixelAPI.Twixel.APIVersion.v3 : TwixelAPI.Twixel.APIVersion.v5
-			);
-			if ( broadcasts.total.HasValue ) {
-				hasMore = offset + broadcasts.wrapped.Count < broadcasts.total;
-				maxVideos = (long)broadcasts.total;
-			} else {
-				hasMore = broadcasts.wrapped.Count == 25;
+			TwitchVodFetchResult broadcasts = await TwitchV5.GetVideos( UserID.Value, Highlights, offset, 25 );
+			hasMore = offset + broadcasts.Videos.Count < broadcasts.TotalVideoCount;
+			maxVideos = broadcasts.TotalVideoCount;
+
+			foreach ( var v in broadcasts.Videos ) {
+				videosToAdd.Add( new TwitchVideoInfo( v, StreamService.Twitch ) );
+				videosToAdd.Add( new TwitchVideoInfo( v, StreamService.TwitchChatReplay ) );
 			}
-			foreach ( var v in broadcasts.wrapped ) {
-				videosToAdd.Add( new TwitchTwixelVideoInfo( v, StreamService.Twitch ) );
-				videosToAdd.Add( new TwitchTwixelVideoInfo( v, StreamService.TwitchChatReplay ) );
-			}
-			currentVideos = broadcasts.wrapped.Count;
+			currentVideos = broadcasts.Videos.Count;
 
 			if ( videosToAdd.Count <= 0 ) {
 				return new FetchReturnValue { Success = true, HasMore = false, TotalVideos = maxVideos, VideoCountThisFetch = 0, Videos = videosToAdd };

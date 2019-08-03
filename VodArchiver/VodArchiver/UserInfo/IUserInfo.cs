@@ -42,7 +42,7 @@ namespace VodArchiver.UserInfo {
 			}
 		}
 
-		public abstract Task<FetchReturnValue> Fetch( TwixelAPI.Twixel twitchApi, int offset, bool flat );
+		public abstract Task<FetchReturnValue> Fetch( int offset, bool flat );
 
 		public virtual int CompareTo( IUserInfo other ) {
 			if ( this.Type != other.Type ) {

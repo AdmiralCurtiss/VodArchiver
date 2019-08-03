@@ -129,11 +129,11 @@ namespace VodArchiver.UserInfo {
 			return u;
 		}
 
-		public override async Task<FetchReturnValue> Fetch( TwixelAPI.Twixel twitchApi, int offset, bool flat ) {
-			return await Fetch( twitchApi, this, offset, flat );
+		public override async Task<FetchReturnValue> Fetch( int offset, bool flat ) {
+			return await Fetch( this, offset, flat );
 		}
 
-		private static async Task<FetchReturnValue> Fetch( TwixelAPI.Twixel twitchApi, GenericUserInfo userInfo, int offset, bool flat ) {
+		private static async Task<FetchReturnValue> Fetch( GenericUserInfo userInfo, int offset, bool flat ) {
 			return new FetchReturnValue { Success = false, HasMore = false, TotalVideos = 0, VideoCountThisFetch = 0, Videos = new List<IVideoInfo>() };
 		}
 	}

@@ -7,21 +7,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using TwixelAPI;
 using VodArchiver.UserInfo;
 using VodArchiver.VideoInfo;
 
 namespace VodArchiver {
 	public partial class VodList : Form {
 		DownloadForm DownloadWindow;
-		Twixel TwitchAPI;
 		int Offset = 0;
 		IUserInfo selectedUserInfo = null;
 
-		public VodList( DownloadForm parent, Twixel twixel ) {
+		public VodList( DownloadForm parent ) {
 			InitializeComponent();
 			DownloadWindow = parent;
-			TwitchAPI = twixel;
 			comboBoxService.Text = "Twitch (Recordings)";
 			objectListViewVideos.SecondarySortColumn = objectListViewVideos.GetColumn( "Video ID" );
 			objectListViewVideos.SecondarySortOrder = SortOrder.Ascending;
@@ -76,7 +73,7 @@ namespace VodArchiver {
 				userInfo = selectedUserInfo;
 			}
 
-			var rv = await Fetch( TwitchAPI, userInfo, Offset, checkBoxFlat.Checked );
+			var rv = await Fetch( userInfo, Offset, checkBoxFlat.Checked );
 
 			if ( rv.Success && rv.Videos.Count > 0 ) {
 				Offset += rv.VideoCountThisFetch;
@@ -101,8 +98,8 @@ namespace VodArchiver {
 			return rv;
 		}
 
-		private static async Task<FetchReturnValue> Fetch( Twixel twitchApi, IUserInfo userInfo, int offset, bool flat ) {
-			FetchReturnValue frv = await userInfo.Fetch( twitchApi, offset, flat );
+		private static async Task<FetchReturnValue> Fetch( IUserInfo userInfo, int offset, bool flat ) {
+			FetchReturnValue frv = await userInfo.Fetch( offset, flat );
 
 			if ( !frv.Success ) {
 				return frv;
@@ -202,10 +199,10 @@ namespace VodArchiver {
 					users.Add( userInfo );
 				}
 			}
-			await AutoDownload( users.ToArray(), TwitchAPI, DownloadWindow );
+			await AutoDownload( users.ToArray(), DownloadWindow );
 		}
 
-		public static async Task AutoDownload( IUserInfo[] users, Twixel twitchApi, DownloadForm downloadWindow ) {
+		public static async Task AutoDownload( IUserInfo[] users, DownloadForm downloadWindow ) {
 			Random rng = new Random();
 			for ( int i = 0; i < users.Length; ++i ) {
 				var userInfo = users[i];
@@ -224,7 +221,7 @@ namespace VodArchiver {
 							int Offset = 0;
 							do {
 								await Task.Delay( rng.Next( 55000, 95000 ) );
-								fetchReturnValue = await Fetch( twitchApi, userInfo, Offset, true );
+								fetchReturnValue = await Fetch( userInfo, Offset, true );
 								Offset += fetchReturnValue.VideoCountThisFetch;
 								if ( fetchReturnValue.Success ) {
 									videos.AddRange( fetchReturnValue.Videos );

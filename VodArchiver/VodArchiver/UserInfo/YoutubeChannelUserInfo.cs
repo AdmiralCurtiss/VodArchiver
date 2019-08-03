@@ -41,7 +41,7 @@ namespace VodArchiver.UserInfo {
 			return node;
 		}
 
-		public override async Task<FetchReturnValue> Fetch( TwixelAPI.Twixel twitchApi, int offset, bool flat ) {
+		public override async Task<FetchReturnValue> Fetch( int offset, bool flat ) {
 			List<IVideoInfo> videosToAdd = new List<IVideoInfo>();
 			bool hasMore = true;
 			long maxVideos = -1;

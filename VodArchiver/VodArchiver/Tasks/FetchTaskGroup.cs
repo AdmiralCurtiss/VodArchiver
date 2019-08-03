@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TwixelAPI;
 using VodArchiver.UserInfo;
 using VodArchiver.VideoInfo;
 
@@ -13,11 +12,9 @@ namespace VodArchiver.Tasks {
 		private object ContainerLock;
 		private List<IUserInfo> UserInfos;
 
-		private Twixel TwitchAPI;
 		private DownloadForm Form;
 
-		public FetchTaskGroup( Twixel twitchApi, DownloadForm form ) {
-			TwitchAPI = twitchApi;
+		public FetchTaskGroup( DownloadForm form ) {
 			Form = form;
 			ContainerLock = new Object();
 			UserInfos = new List<IUserInfo>();
@@ -53,7 +50,7 @@ namespace VodArchiver.Tasks {
 						DateTime earliestStartTime = earliestUserInfo.LastRefreshedOn.AddHours( 7.0 );
 						if ( earliestStartTime <= DateTime.UtcNow ) {
 							// hacky, TODO: refactor
-							await VodList.AutoDownload( new IUserInfo[] { earliestUserInfo }, TwitchAPI, Form );
+							await VodList.AutoDownload( new IUserInfo[] { earliestUserInfo }, Form );
 						}
 					}
 				} catch ( Exception ) { }

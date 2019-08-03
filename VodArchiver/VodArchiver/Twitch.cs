@@ -29,6 +29,11 @@ namespace VodArchiver {
 		public System.Net.HttpStatusCode StatusCode;
 	}
 
+	public class TwitchVodFetchResult {
+		public List<TwitchVideo> Videos;
+		public long TotalVideoCount;
+	}
+
 	public static class TwitchV5 {
 		private static readonly string Kraken = "https://api.twitch.tv/kraken/";
 		private static readonly string Api = "https://api.twitch.tv/api/";
@@ -37,7 +42,10 @@ namespace VodArchiver {
 		public static async Task<TwitchVideo> GetVideo( long id ) {
 			string result = await Get( Kraken + "videos/" + id.ToString() );
 			JObject json = JObject.Parse( result );
+			return VideoFromJson( json );
+		}
 
+		private static TwitchVideo VideoFromJson( JObject json ) {
 			TwitchVideo v = new TwitchVideo();
 			v.ID = long.Parse( ( (string)json["_id"] ).TrimStart( 'v' ) );
 			v.UserID = long.Parse( (string)json["channel"]["_id"] );
@@ -60,7 +68,6 @@ namespace VodArchiver {
 				case "recording": v.State = RecordingState.Live; break;
 				default: v.State = RecordingState.Unknown; break;
 			}
-
 			return v;
 		}
 
@@ -75,6 +82,26 @@ namespace VodArchiver {
 			}
 
 			return await Get( Usher + "vod/" + id.ToString() + "?nauthsig=" + sig + "&nauth=" + Uri.EscapeDataString( token ) );
+		}
+
+		public static async Task<long> GetUserIdFromUsername( string username ) {
+			string result = await Get( Kraken + "users?login=" + Uri.EscapeDataString( username ) );
+			JObject json = JObject.Parse( result );
+			return (long)json["users"][0]["_id"];
+		}
+
+		public static async Task<TwitchVodFetchResult> GetVideos( long channelId, bool highlights, int offset, int limit ) {
+			string result = await Get( Kraken + "channels/" + channelId + "/videos?limit=" + limit + "&offset=" + offset + "&broadcast_type=" + ( highlights ? "highlight" : "archive,upload" ) );
+			JObject json = JObject.Parse( result );
+
+			TwitchVodFetchResult r = new TwitchVodFetchResult();
+			r.Videos = new List<TwitchVideo>();
+			foreach ( JObject jv in (JArray)json["videos"] ) {
+				r.Videos.Add( VideoFromJson( jv ) );
+			}
+			r.TotalVideoCount = (long)json["_total"];
+
+			return r;
 		}
 
 		public static async Task<string> Get( string url ) {

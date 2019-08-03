@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
-using TwixelAPI;
 using VodArchiver.Tasks;
 using VodArchiver.UserInfo;
 using VodArchiver.VideoInfo;
@@ -19,8 +18,6 @@ using VodArchiver.VideoJobs;
 
 namespace VodArchiver {
 	public partial class DownloadForm : Form {
-		Twixel TwitchAPI;
-
 		HashSet<IVideoJob> JobSet;
 		long IndexCounter = 0;
 
@@ -35,7 +32,6 @@ namespace VodArchiver {
 
 			comboBoxService.SelectedIndex = 0;
 			comboBoxPowerStateWhenDone.SelectedIndex = 0;
-			TwitchAPI = new Twixel( Util.TwitchClientId, Util.TwitchRedirectURI, Twixel.APIVersion.v3 );
 
 			JobSet = new HashSet<IVideoJob>();
 
@@ -85,7 +81,7 @@ namespace VodArchiver {
 			if ( Util.AllowTimedAutoFetch ) {
 				FetchTaskGroups = new Dictionary<ServiceVideoCategoryType, FetchTaskGroup>();
 				foreach ( List<ServiceVideoCategoryType> types in ServiceVideoCategoryGroups.Groups ) {
-					FetchTaskGroup ftg = new FetchTaskGroup( TwitchAPI, this );
+					FetchTaskGroup ftg = new FetchTaskGroup( this );
 					foreach ( ServiceVideoCategoryType svc in types ) {
 						FetchTaskGroups.Add( svc, ftg );
 						foreach ( IUserInfo ui in UserInfoPersister.GetKnownUsers() ) {
@@ -250,7 +246,7 @@ namespace VodArchiver {
 		}
 
 		private void buttonFetchUser_Click( object sender, EventArgs e ) {
-			new VodList( this, TwitchAPI ).Show();
+			new VodList( this ).Show();
 		}
 
 		private void buttonFetchUser_MouseUp( object sender, MouseEventArgs e ) {
