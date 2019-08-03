@@ -31,7 +31,7 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public string GetTargetFilenameWithoutExtension() {
-			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoId + "_" + "chat5";
+			return "twitch_" + VideoInfo.Username + "_v" + VideoInfo.VideoId + "_" + "chat5";
 		}
 
 		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {

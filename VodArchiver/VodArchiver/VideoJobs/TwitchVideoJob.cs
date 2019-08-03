@@ -81,11 +81,11 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public override string GetTempFilenameWithoutExtension() {
-			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoId + "_" + VideoQuality;
+			return "twitch_" + VideoInfo.Username + "_v" + VideoInfo.VideoId + "_" + VideoQuality;
 		}
 
 		public override string GetFinalFilenameWithoutExtension() {
-			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoId + "_" + CleanGamenameForFilename( VideoInfo.VideoGame ) + "_" + VideoQuality;
+			return "twitch_" + VideoInfo.Username + "_v" + VideoInfo.VideoId + "_" + CleanGamenameForFilename( VideoInfo.VideoGame ) + "_" + VideoQuality;
 		}
 
 		private static string ToUpperFirstChar( string s ) {
