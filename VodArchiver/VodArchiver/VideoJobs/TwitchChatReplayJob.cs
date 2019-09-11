@@ -101,7 +101,7 @@ namespace VodArchiver.VideoJobs {
 						}
 					}
 
-					await StallWrite( tempname, concatJson.Length, cancellationToken ); // size not accurate because encoding but whatever
+					await StallWrite( tempname, concatJson.Length * 4, cancellationToken ); // size not accurate because encoding but whatever
 					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 					File.WriteAllText( tempname, concatJson.ToString() );
 					File.Move( tempname, finalintmpname );
@@ -141,7 +141,7 @@ namespace VodArchiver.VideoJobs {
 
 		protected override bool ShouldStallWrite( string path, long filesize ) {
 			long freeSpace = new System.IO.DriveInfo( path ).AvailableFreeSpace;
-			return freeSpace <= ( Util.AbsoluteMinimumFreeSpaceBytes + filesize ) || freeSpace <= ( Util.MinimumFreeSpaceBytes + filesize );
+			return freeSpace <= ( Math.Min( Util.AbsoluteMinimumFreeSpaceBytes, Util.MinimumFreeSpaceBytes ) + filesize );
 		}
 
 		class UserInputRequestStreamLive : IUserInputRequest {
