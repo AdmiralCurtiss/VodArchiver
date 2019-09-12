@@ -108,22 +108,10 @@ namespace VodArchiver.VideoJobs {
 				}
 
 				if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
-
-				Status = "Waiting for free disk IO slot to move...";
-				try {
-					await Util.ExpensiveDiskIOSemaphore.WaitAsync( cancellationToken );
-				} catch ( OperationCanceledException ) {
-					return ResultType.Cancelled;
-				}
-				try {
-					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
-					Status = "Moving to final location...";
-					await StallWrite( filename, new FileInfo( finalintmpname ).Length, cancellationToken );
-					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
-					Util.MoveFileOverwrite( finalintmpname, filename );
-				} finally {
-					Util.ExpensiveDiskIOSemaphore.Release();
-				}
+				Status = "Moving to final location...";
+				await StallWrite( filename, new FileInfo( finalintmpname ).Length, cancellationToken );
+				if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+				Util.MoveFileOverwrite( finalintmpname, filename );
 			}
 
 			Status = "Done!";
