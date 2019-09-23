@@ -56,12 +56,16 @@ namespace VodArchiver.VideoJobs {
 					StringBuilder concatJson = new StringBuilder();
 					string url = GetStartUrl( VideoInfo );
 					int attemptsLeft = 5;
+					TimeSpan? lastTimeSpan = new TimeSpan( 0 );
+					int nextDelayMilliseconds = 0;
 					while ( true ) {
 						using ( var client = new KeepAliveWebClient() )
 						using ( var cancellationCallback = cancellationToken.Register( client.CancelAsync ) ) {
 							try {
 								try {
-									await Task.Delay( rng.Next( 90000, 270000 ), cancellationToken );
+									if ( nextDelayMilliseconds != 0 ) {
+										await Task.Delay( nextDelayMilliseconds > 0 ? nextDelayMilliseconds : rng.Next( 90000, 270000 ), cancellationToken );
+									}
 								} catch ( TaskCanceledException ) {
 									return ResultType.Cancelled;
 								}
@@ -76,8 +80,28 @@ namespace VodArchiver.VideoJobs {
 								try {
 									JToken c = ( (JArray)responseObject["comments"] ).Last;
 									double val = (double)c["content_offset_seconds"];
-									offset = TimeSpan.FromSeconds( val ).ToString();
-								} catch ( Exception ) { }
+									TimeSpan ts = TimeSpan.FromSeconds( val );
+									if ( lastTimeSpan != null ) {
+										TimeSpan diff = ts - lastTimeSpan.Value;
+										double delay = diff.TotalMilliseconds;
+										if ( delay < 0.0 || delay > 270000.0 ) {
+											if ( delay > 90000.0 ) {
+												nextDelayMilliseconds = rng.Next( 90000, (int)delay );
+											} else {
+												nextDelayMilliseconds = -1;
+											}
+										} else {
+											nextDelayMilliseconds = (int)delay;
+										}
+									} else {
+										nextDelayMilliseconds = -1;
+									}
+									lastTimeSpan = ts;
+									offset = ts.ToString();
+								} catch ( Exception ) {
+									lastTimeSpan = null;
+									nextDelayMilliseconds = -1;
+								}
 
 								concatJson.Append( commentJson );
 								if ( responseObject["_next"] != null ) {
