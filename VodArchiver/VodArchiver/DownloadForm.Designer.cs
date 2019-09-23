@@ -45,6 +45,9 @@
 			this.labelStatusBar = new System.Windows.Forms.Label();
 			this.labelPowerStateWhenDone = new System.Windows.Forms.Label();
 			this.comboBoxPowerStateWhenDone = new System.Windows.Forms.ComboBox();
+			this.checkBoxAutoEnqueue = new System.Windows.Forms.CheckBox();
+			this.buttonEnqueueAll = new System.Windows.Forms.Button();
+			this.buttonDequeueAll = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -124,6 +127,7 @@
             this.columnNotes,
             this.columnStatus});
 			this.objectListViewDownloads.Cursor = System.Windows.Forms.Cursors.Default;
+			this.objectListViewDownloads.HideSelection = false;
 			this.objectListViewDownloads.Location = new System.Drawing.Point(12, 41);
 			this.objectListViewDownloads.Name = "objectListViewDownloads";
 			this.objectListViewDownloads.SelectedBackColor = System.Drawing.SystemColors.Highlight;
@@ -280,12 +284,49 @@
 			this.comboBoxPowerStateWhenDone.TabIndex = 10;
 			this.comboBoxPowerStateWhenDone.SelectedIndexChanged += new System.EventHandler(this.comboBoxPowerStateWhenDone_SelectedIndexChanged);
 			// 
+			// checkBoxAutoEnqueue
+			// 
+			this.checkBoxAutoEnqueue.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.checkBoxAutoEnqueue.AutoSize = true;
+			this.checkBoxAutoEnqueue.Location = new System.Drawing.Point(1002, 452);
+			this.checkBoxAutoEnqueue.Name = "checkBoxAutoEnqueue";
+			this.checkBoxAutoEnqueue.Size = new System.Drawing.Size(91, 17);
+			this.checkBoxAutoEnqueue.TabIndex = 11;
+			this.checkBoxAutoEnqueue.Text = "AutoEnqueue";
+			this.checkBoxAutoEnqueue.UseVisualStyleBackColor = true;
+			this.checkBoxAutoEnqueue.CheckedChanged += new System.EventHandler(this.checkBoxAutoEnqueue_CheckedChanged);
+			// 
+			// buttonEnqueueAll
+			// 
+			this.buttonEnqueueAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.buttonEnqueueAll.Location = new System.Drawing.Point(921, 449);
+			this.buttonEnqueueAll.Name = "buttonEnqueueAll";
+			this.buttonEnqueueAll.Size = new System.Drawing.Size(75, 21);
+			this.buttonEnqueueAll.TabIndex = 12;
+			this.buttonEnqueueAll.Text = "Enqueue All";
+			this.buttonEnqueueAll.UseVisualStyleBackColor = true;
+			this.buttonEnqueueAll.Click += new System.EventHandler(this.buttonEnqueueAll_Click);
+			// 
+			// buttonDequeueAll
+			// 
+			this.buttonDequeueAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.buttonDequeueAll.Location = new System.Drawing.Point(840, 450);
+			this.buttonDequeueAll.Name = "buttonDequeueAll";
+			this.buttonDequeueAll.Size = new System.Drawing.Size(75, 20);
+			this.buttonDequeueAll.TabIndex = 13;
+			this.buttonDequeueAll.Text = "Dequeue All";
+			this.buttonDequeueAll.UseVisualStyleBackColor = true;
+			this.buttonDequeueAll.Click += new System.EventHandler(this.buttonDequeueAll_Click);
+			// 
 			// DownloadForm
 			// 
 			this.AcceptButton = this.buttonDownload;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(1378, 473);
+			this.Controls.Add(this.buttonDequeueAll);
+			this.Controls.Add(this.buttonEnqueueAll);
+			this.Controls.Add(this.checkBoxAutoEnqueue);
 			this.Controls.Add(this.comboBoxPowerStateWhenDone);
 			this.Controls.Add(this.labelPowerStateWhenDone);
 			this.Controls.Add(this.labelStatusBar);
@@ -329,5 +370,8 @@
 		private BrightIdeasSoftware.OLVColumn columnNotes;
 		private System.Windows.Forms.Label labelPowerStateWhenDone;
 		private System.Windows.Forms.ComboBox comboBoxPowerStateWhenDone;
+		private System.Windows.Forms.CheckBox checkBoxAutoEnqueue;
+		private System.Windows.Forms.Button buttonEnqueueAll;
+		private System.Windows.Forms.Button buttonDequeueAll;
 	}
 }

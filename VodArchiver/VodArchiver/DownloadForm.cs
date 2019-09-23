@@ -218,7 +218,9 @@ namespace VodArchiver {
 			objectListViewDownloads.AddObject( job );
 			JobSet.Add( job );
 			job.Status = "Waiting...";
-			VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
+			if ( checkBoxAutoEnqueue.Checked ) {
+				VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
+			}
 
 			InvokeSaveJobs();
 
@@ -279,9 +281,6 @@ namespace VodArchiver {
 								job.Status = "Interrupted during: " + job.Status;
 							}
 							job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
-							if ( job.JobStatus != VideoJobStatus.Finished && job.JobStatus != VideoJobStatus.Dead ) {
-								VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
-							}
 							jobs.Add( job );
 						}
 					}
@@ -588,6 +587,25 @@ namespace VodArchiver {
 					} catch ( Exception ) {
 					}
 				}
+			}
+		}
+
+		private void checkBoxAutoEnqueue_CheckedChanged( object sender, EventArgs e ) {
+
+		}
+
+		private void buttonEnqueueAll_Click( object sender, EventArgs e ) {
+			foreach ( var item in objectListViewDownloads.Objects ) {
+				IVideoJob job = item as IVideoJob;
+				if ( job != null && job.JobStatus == VideoJobStatus.NotStarted ) {
+					VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
+				}
+			}
+		}
+
+		private void buttonDequeueAll_Click( object sender, EventArgs e ) {
+			foreach ( var kvp in VideoTaskGroups ) {
+				kvp.Value.DequeueAll();
 			}
 		}
 	}

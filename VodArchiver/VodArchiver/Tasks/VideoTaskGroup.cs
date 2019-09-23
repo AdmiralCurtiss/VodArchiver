@@ -260,5 +260,11 @@ namespace VodArchiver.Tasks {
 				return WaitingJobs.RemoveAll( x => x.Job == job ) > 0;
 			}
 		}
+
+		public void DequeueAll() {
+			lock ( JobQueueLock ) {
+				WaitingJobs.Clear();
+			}
+		}
 	}
 }
