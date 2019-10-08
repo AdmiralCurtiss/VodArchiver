@@ -84,14 +84,14 @@ namespace VodArchiver.VideoJobs {
 									if ( lastTimeSpan != null ) {
 										TimeSpan diff = ts - lastTimeSpan.Value;
 										double delay = diff.TotalMilliseconds;
-										if ( delay < 0.0 || delay > 270000.0 ) {
-											if ( delay > 90000.0 ) {
-												nextDelayMilliseconds = rng.Next( 90000, (int)delay );
-											} else {
-												nextDelayMilliseconds = -1;
-											}
-										} else {
+										if ( delay < 0.0 ) {
+											nextDelayMilliseconds = -1;
+										} else if ( delay < 90000.0 ) {
 											nextDelayMilliseconds = (int)delay;
+										} else if ( delay < 270000.0 ) {
+											nextDelayMilliseconds = rng.Next( 90000, (int)delay );
+										} else {
+											nextDelayMilliseconds = -1;
 										}
 									} else {
 										nextDelayMilliseconds = -1;
