@@ -17,13 +17,16 @@ namespace VodArchiver.VideoJobs {
 		public FFMpegSplitJob( string path, string splitTimes, StatusUpdate.IStatusUpdate statusUpdater = null ) {
 			JobStatus = VideoJobStatus.NotStarted;
 			StatusUpdater = statusUpdater == null ? new StatusUpdate.NullStatusUpdate() : statusUpdater;
-			VideoInfo = new GenericVideoInfo() { Service = StreamService.FFMpegJob, VideoId = path, Username = "_split" };
+			VideoInfo = new GenericVideoInfo() { Service = StreamService.FFMpegJob, VideoId = path, Username = "_split", VideoTitle = splitTimes };
 			Status = "...";
 			SplitTimes = splitTimes;
 		}
 
 		public FFMpegSplitJob( XmlNode node ) : base( node ) {
 			SplitTimes = node.Attributes["splitTimes"].Value;
+			if ( VideoInfo is GenericVideoInfo ) {
+				VideoInfo.VideoTitle = SplitTimes;
+			}
 		}
 
 		public override bool IsWaitingForUserInput => false;
