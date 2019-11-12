@@ -162,6 +162,26 @@ namespace VodArchiver {
 			return fn;
 		}
 
+		private static string ToUpperFirstChar( string s ) {
+			if ( s.Length > 0 ) {
+				bool maybeRomanNumeral = s.All( c => "IVX".Contains( c ) );
+				if ( maybeRomanNumeral ) {
+					return s;
+				} else {
+					return s.Substring( 0, 1 ).ToUpperInvariant() + s.Substring( 1 ).ToLowerInvariant();
+				}
+			} else {
+				return s;
+			}
+		}
+		public static string MakeIntercapsFilename( string gamename ) {
+			string safename = Util.MakeStringFileSystemSafeBaseName( gamename ).Replace( "-", "_" );
+			return string.Join( "", safename.Split( new char[] { '_' }, StringSplitOptions.RemoveEmptyEntries ).Select( x => ToUpperFirstChar( x ) ) );
+		}
+		public static string Crop( this string s, int length ) {
+			return s.Length <= length ? s : s.Substring( 0, length );
+		}
+
 		public static void CopyStream( System.IO.Stream input, System.IO.Stream output, long count ) {
 			byte[] buffer = new byte[4096];
 			int read;

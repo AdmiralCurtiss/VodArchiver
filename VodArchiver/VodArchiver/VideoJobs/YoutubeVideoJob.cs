@@ -50,9 +50,8 @@ namespace VodArchiver.VideoJobs {
 			string filename = filenameWithoutExtension + ".mkv";
 			string tempFolder = Path.Combine( Util.TempFolderPath, filenameWithoutExtension );
 			string tempFilepath = Path.Combine( tempFolder, filename );
-			string finalFilepath = Path.Combine( Util.TargetFolderPath, filename );
 
-			if ( !await Util.FileExists( finalFilepath ) ) {
+			{
 				if ( !await Util.FileExists( tempFilepath ) ) {
 					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 
@@ -69,7 +68,7 @@ namespace VodArchiver.VideoJobs {
 							"--no-color",
 							"--abort-on-error",
 							"--abort-on-unavailable-fragment",
-							"--rate-limit", "500k",
+							"--rate-limit", "1800k",
 							"https://www.youtube.com/watch?v=" + VideoInfo.VideoId
 						},
 						stdoutCallbacks: new System.Diagnostics.DataReceivedEventHandler[1] {
@@ -80,6 +79,12 @@ namespace VodArchiver.VideoJobs {
 							}
 						}
 					);
+				}
+
+				string finalFilename = "youtube_" + VideoInfo.Username + "_" + VideoInfo.VideoTimestamp.ToString( "yyyy-MM-dd" ) + "_" + VideoInfo.VideoId + "_" + Util.MakeIntercapsFilename( VideoInfo.VideoTitle ).Crop( 80 ) + ".mkv";
+				string finalFilepath = Path.Combine( Util.TargetFolderPath, finalFilename );
+				if ( File.Exists( finalFilepath ) ) {
+					throw new Exception( "File exists: " + finalFilepath );
 				}
 
 				Status = "Waiting for free disk IO slot to move...";
