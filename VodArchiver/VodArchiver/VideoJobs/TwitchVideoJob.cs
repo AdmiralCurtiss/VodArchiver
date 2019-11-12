@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using VodArchiver.VideoInfo;
 using System.Xml;
 using System.Threading;
+using System.Diagnostics;
 
 namespace VodArchiver.VideoJobs {
 	public class TwitchVideoJob : TsVideoJob {
@@ -36,11 +37,29 @@ namespace VodArchiver.VideoJobs {
 			string[] filenames;
 			while ( true ) {
 				try {
-					string m3u = await TwitchV5.GetVodM3U( long.Parse( VideoInfo.VideoId ) );
-					string m3u8path = GetM3U8PathFromM3U( m3u, VideoQuality );
-					folderpath = TsVideoJob.GetFolder( m3u8path );
-					string m3u8 = await TwitchV5.Get( m3u8path );
-					filenames = TsVideoJob.GetFilenamesFromM3U8( m3u8 );
+					bool interactive = true;
+					if ( interactive ) {
+						Status = "";
+						string tmp1 = Path.Combine( GetTempFolder(), GetTempFilenameWithoutExtension() + "_baseurl.txt" );
+						string tmp2 = Path.Combine( GetTempFolder(), GetTempFilenameWithoutExtension() + "_tsnames.txt" );
+						File.WriteAllText( tmp1, "get baseurl for m3u8 from https://www.twitch.tv/videos/" + VideoInfo.VideoId );
+						File.WriteAllText( tmp2, "get actual m3u file from https://www.twitch.tv/videos/" + VideoInfo.VideoId );
+						await Task.Delay( 200 );
+						Process.Start( tmp1 );
+						await Task.Delay( 200 );
+						Process.Start( tmp2 );
+						folderpath = TsVideoJob.GetFolder( GetM3U8PathFromM3U( await WaitForUserCopyM3U( tmp1 ), VideoQuality ) );
+						filenames = TsVideoJob.GetFilenamesFromM3U8( await WaitForUserCopyM3U( tmp2 ) );
+						await Task.Delay( 500 );
+						File.Delete( tmp1 );
+						File.Delete( tmp2 );
+					} else {
+						string m3u = await TwitchV5.GetVodM3U( long.Parse( VideoInfo.VideoId ) );
+						string m3u8path = GetM3U8PathFromM3U( m3u, VideoQuality );
+						folderpath = TsVideoJob.GetFolder( m3u8path );
+						string m3u8 = await TwitchV5.Get( m3u8path );
+						filenames = TsVideoJob.GetFilenamesFromM3U8( m3u8 );
+					}
 				} catch ( TwitchHttpException e ) {
 					if ( e.StatusCode == System.Net.HttpStatusCode.NotFound && VideoInfo.VideoRecordingState == RecordingState.Live ) {
 						// this can happen on streams that have just started, in this just wait a bit and retry
@@ -63,6 +82,19 @@ namespace VodArchiver.VideoJobs {
 				urls.Add( folderpath + filename );
 			}
 			return (ResultType.Success, urls.ToArray());
+		}
+
+		private async Task<string> WaitForUserCopyM3U( string tmp ) {
+			while ( true ) {
+				try {
+					var lines = System.IO.File.ReadAllText( tmp );
+					if ( lines.Contains( ".ts" ) || lines.Contains( "vod-secure.twitch.tv" ) ) {
+						return lines;
+					} else {
+						await Task.Delay( 2000 );
+					}
+				} catch ( Exception ex ) { }
+			}
 		}
 
 		public static string GetM3U8PathFromM3U( string m3u, string videoType ) {
