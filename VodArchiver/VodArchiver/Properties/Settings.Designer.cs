@@ -119,5 +119,17 @@ namespace VodArchiver.Properties {
                 this["MinimumFreeSpaceBytes"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string YoutubeSpeedLimit {
+            get {
+                return ((string)(this["YoutubeSpeedLimit"]));
+            }
+            set {
+                this["YoutubeSpeedLimit"] = value;
+            }
+        }
     }
 }

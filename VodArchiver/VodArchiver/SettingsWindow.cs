@@ -19,6 +19,7 @@ namespace VodArchiver {
 			textBoxTwitchClientID.Text = Util.TwitchClientId;
 			textBoxTwitchRedirectURI.Text = Util.TwitchRedirectURI;
 			numericUpDownMinimumFreeSpace.Value = Util.MinimumFreeSpaceBytes;
+			textBoxYoutubeSpeedLimit.Text = Util.YoutubeSpeedLimit;
 		}
 
 		private void buttonSave_Click( object sender, EventArgs e ) {
@@ -29,6 +30,7 @@ namespace VodArchiver {
 			Properties.Settings.Default.TwitchClientID = textBoxTwitchClientID.Text;
 			Properties.Settings.Default.TwitchRedirectURI = textBoxTwitchRedirectURI.Text;
 			Properties.Settings.Default.MinimumFreeSpaceBytes = (long)numericUpDownMinimumFreeSpace.Value;
+			Properties.Settings.Default.YoutubeSpeedLimit = textBoxYoutubeSpeedLimit.Text;
 			Properties.Settings.Default.Save();
 			this.Close();
 		}

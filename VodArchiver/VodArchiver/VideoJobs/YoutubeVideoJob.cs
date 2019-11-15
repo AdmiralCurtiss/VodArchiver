@@ -59,18 +59,22 @@ namespace VodArchiver.VideoJobs {
 					Status = "Running youtube-dl...";
 					await StallWrite( tempFilepath, 0, cancellationToken ); // don't know expected filesize, so hope we have a sensible value in minimum free space
 					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+					List<string> args = new List<string>() {
+						"-f", "bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
+						"-o", tempFilepath,
+						"--merge-output-format", "mkv",
+						"--no-color",
+						"--abort-on-error",
+						"--abort-on-unavailable-fragment",
+					};
+					string limit = Util.YoutubeSpeedLimit;
+					if ( limit != "" ) {
+						args.Add( "--rate-limit" );
+						args.Add( limit );
+					}
+					args.Add( "https://www.youtube.com/watch?v=" + VideoInfo.VideoId );
 					var data = await ExternalProgramExecution.RunProgram(
-						@"youtube-dl",
-						new string[] {
-							"-f", "bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
-							"-o", tempFilepath,
-							"--merge-output-format", "mkv",
-							"--no-color",
-							"--abort-on-error",
-							"--abort-on-unavailable-fragment",
-							"--rate-limit", "1800k",
-							"https://www.youtube.com/watch?v=" + VideoInfo.VideoId
-						},
+						@"youtube-dl", args.ToArray(),
 						stdoutCallbacks: new System.Diagnostics.DataReceivedEventHandler[1] {
 							( sender, received ) => {
 								if ( !String.IsNullOrEmpty( received.Data ) ) {

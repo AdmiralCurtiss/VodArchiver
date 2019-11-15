@@ -51,6 +51,8 @@ namespace VodArchiver {
 		public static string TwitchClientId { get { return Properties.Settings.Default.TwitchClientID; } }
 		public static string TwitchRedirectURI { get { return Properties.Settings.Default.TwitchRedirectURI; } }
 
+		public static string YoutubeSpeedLimit { get { return Properties.Settings.Default.YoutubeSpeedLimit ?? ""; } }
+
 		public static long MinimumFreeSpaceBytes { get { return Properties.Settings.Default.MinimumFreeSpaceBytes; } }
 		public static long AbsoluteMinimumFreeSpaceBytes { get { return 50 * 1024 * 1024; } }
 
