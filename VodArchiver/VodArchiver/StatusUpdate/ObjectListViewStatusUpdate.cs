@@ -6,16 +6,16 @@ using System.Threading.Tasks;
 
 namespace VodArchiver.StatusUpdate {
 	public class ObjectListViewStatusUpdate : IStatusUpdate {
-		BrightIdeasSoftware.ObjectListView ObjectListView;
+		ObjectListViewUpdaterTask UpdaterTask;
 		object Object;
 
-		public ObjectListViewStatusUpdate( BrightIdeasSoftware.ObjectListView listView, object obj ) {
-			ObjectListView = listView;
+		public ObjectListViewStatusUpdate( ObjectListViewUpdaterTask task, object obj ) {
+			UpdaterTask = task;
 			Object = obj;
 		}
 
 		public void Update() {
-			ObjectListView.RefreshObject( Object );
+			UpdaterTask.RequestUpdate( Object );
 		}
 	}
 }

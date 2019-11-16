@@ -24,9 +24,11 @@ namespace VodArchiver {
 		Dictionary<StreamService, VideoTaskGroup> VideoTaskGroups;
 		Dictionary<ServiceVideoCategoryType, FetchTaskGroup> FetchTaskGroups;
 		CancellationTokenSource CancellationTokenSource;
+		ObjectListViewUpdaterTask ObjectListViewUpdater;
 
 		public DownloadForm() {
 			InitializeComponent();
+			ObjectListViewUpdater = new ObjectListViewUpdaterTask( objectListViewDownloads );
 			CancellationTokenSource = new CancellationTokenSource();
 			objectListViewDownloads.CellEditActivation = BrightIdeasSoftware.ObjectListView.CellEditActivateMode.DoubleClick;
 
@@ -213,7 +215,7 @@ namespace VodArchiver {
 				return false;
 			}
 
-			job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
+			job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( ObjectListViewUpdater, job );
 			job.Index = ++IndexCounter;
 			objectListViewDownloads.AddObject( job );
 			JobSet.Add( job );
@@ -280,7 +282,7 @@ namespace VodArchiver {
 								job.StatusUpdater = new StatusUpdate.NullStatusUpdate();
 								job.Status = "Interrupted during: " + job.Status;
 							}
-							job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( objectListViewDownloads, job );
+							job.StatusUpdater = new StatusUpdate.ObjectListViewStatusUpdate( ObjectListViewUpdater, job );
 							jobs.Add( job );
 						}
 					}

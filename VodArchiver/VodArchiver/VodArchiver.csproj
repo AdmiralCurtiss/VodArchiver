@@ -104,6 +104,7 @@
     <Compile Include="ExternalProgramExecution.cs" />
     <Compile Include="FFMpegUtil.cs" />
     <Compile Include="Hitbox.cs" />
+    <Compile Include="ObjectListViewUpdaterTask.cs" />
     <Compile Include="ReencodeFetcher.cs" />
     <Compile Include="Rss.cs" />
     <Compile Include="SettingsWindow.cs">
