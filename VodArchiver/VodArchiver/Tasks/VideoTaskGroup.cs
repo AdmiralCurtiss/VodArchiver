@@ -44,13 +44,27 @@ namespace VodArchiver.Tasks {
 			Service = service;
 			WaitingJobs = new List<WaitingVideoJob>();
 			JobQueueLock = new object();
-			MaxJobsRunningPerType = ( service == StreamService.Youtube || service == StreamService.RawUrl || service == StreamService.FFMpegJob ) ? 1 : 3;
+			MaxJobsRunningPerType = GetDefaultMaxJobs( service );
 			RunningTasks = new List<(IVideoJob job, Task<ResultType> task, CancellationTokenSource cancellationTokenSource)>( MaxJobsRunningPerType );
 			RequestSaveJobs = saveJobsDelegate;
 			RequestPowerEvent = powerEventDelegate;
 			CancellationToken = cancellationToken;
 
 			JobRunnerThread = RunJobRunnerThread();
+		}
+
+		private static int GetDefaultMaxJobs( StreamService service ) {
+			switch ( service ) {
+				case StreamService.Youtube:
+					return 2;
+				case StreamService.RawUrl:
+				case StreamService.FFMpegJob:
+					return 1;
+				case StreamService.Twitch:
+					return 0;
+				default:
+					return 3;
+			}
 		}
 
 		public void Add( WaitingVideoJob wj ) {
