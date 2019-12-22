@@ -28,12 +28,27 @@ namespace VodArchiver {
 				}
 
 				if ( localUpdateList.Count > 0 ) {
-					ObjectListView.RefreshObjects( localUpdateList );
+					List<object> localUpdateListDedup = new List<object>();
+					foreach ( object o in localUpdateList ) {
+						if ( !ContainsInstance( localUpdateListDedup, o ) ) {
+							localUpdateListDedup.Add( o );
+						}
+					}
+					ObjectListView.RefreshObjects( localUpdateListDedup );
 					localUpdateList.Clear();
 				}
 
 				await Task.Delay( 500 );
 			}
+		}
+
+		private bool ContainsInstance( List<object> list, object o ) {
+			foreach ( object l in list ) {
+				if ( l == o ) {
+					return true;
+				}
+			}
+			return false;
 		}
 
 		public void RequestUpdate( object o ) {
