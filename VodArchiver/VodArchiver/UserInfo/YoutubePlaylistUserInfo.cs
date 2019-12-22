@@ -19,6 +19,7 @@ namespace VodArchiver.UserInfo {
 		private DateTime _LastRefreshedOn = Util.DateTimeFromUnixTime( 0 );
 
 		private string Playlist;
+		private string Comment;
 
 		public YoutubePlaylistUserInfo( string playlist ) {
 			if ( playlist.StartsWith( "http://" ) || playlist.StartsWith( "https://" ) ) {
@@ -34,6 +35,7 @@ namespace VodArchiver.UserInfo {
 			_AutoDownload = node.Attributes["autoDownload"].Value == "true";
 			_LastRefreshedOn = Util.DateTimeFromUnixTime( ulong.Parse( node.Attributes["lastRefreshedOn"].Value ) );
 			Playlist = node.Attributes["playlist"].Value;
+			Comment = node?.Attributes["comment"]?.Value;
 			_Persistable = true;
 		}
 
@@ -42,6 +44,9 @@ namespace VodArchiver.UserInfo {
 			node.AppendAttribute( document, "autoDownload", AutoDownload ? "true" : "false" );
 			node.AppendAttribute( document, "lastRefreshedOn", LastRefreshedOn.DateTimeToUnixTime().ToString() );
 			node.AppendAttribute( document, "playlist", Playlist.ToString() );
+			if (Comment != null) {
+				node.AppendAttribute(document, "comment", Comment);
+			}
 			return node;
 		}
 
@@ -63,6 +68,13 @@ namespace VodArchiver.UserInfo {
 			}
 
 			return new FetchReturnValue { Success = true, HasMore = hasMore, TotalVideos = maxVideos, VideoCountThisFetch = currentVideos, Videos = videosToAdd };
+		}
+
+		public override string ToString() {
+			if (Comment != null) {
+				return Type + ": [" + Comment + "] " + UserIdentifier;
+			}
+			return base.ToString();
 		}
 	}
 }

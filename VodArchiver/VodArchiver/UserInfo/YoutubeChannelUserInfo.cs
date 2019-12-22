@@ -19,6 +19,7 @@ namespace VodArchiver.UserInfo {
 		private DateTime _LastRefreshedOn = Util.DateTimeFromUnixTime( 0 );
 
 		private string Channel;
+		public string Comment;
 
 		public YoutubeChannelUserInfo( string channel ) {
 			Channel = channel;
@@ -30,6 +31,7 @@ namespace VodArchiver.UserInfo {
 			_AutoDownload = node.Attributes["autoDownload"].Value == "true";
 			_LastRefreshedOn = Util.DateTimeFromUnixTime( ulong.Parse( node.Attributes["lastRefreshedOn"].Value ) );
 			Channel = node.Attributes["channel"].Value;
+			Comment = node?.Attributes["comment"]?.Value;
 			_Persistable = true;
 		}
 
@@ -38,6 +40,9 @@ namespace VodArchiver.UserInfo {
 			node.AppendAttribute( document, "autoDownload", AutoDownload ? "true" : "false" );
 			node.AppendAttribute( document, "lastRefreshedOn", LastRefreshedOn.DateTimeToUnixTime().ToString() );
 			node.AppendAttribute( document, "channel", Channel.ToString() );
+			if (Comment != null) {
+				node.AppendAttribute(document, "comment", Comment);
+			}
 			return node;
 		}
 
@@ -59,6 +64,13 @@ namespace VodArchiver.UserInfo {
 			}
 
 			return new FetchReturnValue { Success = true, HasMore = hasMore, TotalVideos = maxVideos, VideoCountThisFetch = currentVideos, Videos = videosToAdd };
+		}
+
+		public override string ToString() {
+			if (Comment != null) {
+				return Type + ": [" + Comment + "] " + UserIdentifier;
+			}
+			return base.ToString();
 		}
 	}
 }
