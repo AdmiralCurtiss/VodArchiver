@@ -56,7 +56,7 @@ namespace VodArchiver.UserInfo {
 			long maxVideos = -1;
 			int currentVideos = -1;
 
-			List<IVideoInfo> playlistVideos = await Youtube.RetrieveVideosFromPlaylist( Playlist, flat );
+			List<IVideoInfo> playlistVideos = await Youtube.RetrieveVideosFromPlaylist( Playlist, flat, Comment );
 			hasMore = false;
 			foreach ( var v in playlistVideos ) {
 				videosToAdd.Add( v );

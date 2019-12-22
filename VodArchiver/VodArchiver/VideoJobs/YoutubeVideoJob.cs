@@ -32,7 +32,7 @@ namespace VodArchiver.VideoJobs {
 			JobStatus = VideoJobStatus.Running;
 			if ( ( VideoInfo as YoutubeVideoInfo ) == null ) {
 				Status = "Retrieving video info...";
-				var result = await Youtube.RetrieveVideo( VideoInfo.VideoId );
+				var result = await Youtube.RetrieveVideo( VideoInfo.VideoId, VideoInfo.Username );
 
 				switch ( result.result ) {
 					case Youtube.RetrieveVideoResult.Success:

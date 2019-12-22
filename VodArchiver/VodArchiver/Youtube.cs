@@ -8,10 +8,11 @@ using VodArchiver.VideoInfo;
 
 namespace VodArchiver {
 	public class Youtube {
-		public static (bool success, YoutubeVideoInfo info) ParseFromJsonFull( JToken json ) {
+		public static (bool success, YoutubeVideoInfo info) ParseFromJsonFull( JToken json, string usernameIfNotInJson ) {
 			YoutubeVideoInfo y = new YoutubeVideoInfo();
 			y.Username = json["uploader_id"].Value<string>();
 			if ( string.IsNullOrWhiteSpace( y.Username ) ) {
+				y.Username = usernameIfNotInJson;
 				return (false, y);
 			}
 			y.VideoId = json["id"].Value<string>();
@@ -48,31 +49,32 @@ namespace VodArchiver {
 			return (true, y);
 		}
 
-		public static (bool success, GenericVideoInfo info) ParseFromJsonFlat( JToken json ) {
+		public static (bool success, GenericVideoInfo info) ParseFromJsonFlat( JToken json, string usernameIfNotInJson ) {
 			GenericVideoInfo y = new GenericVideoInfo();
 			y.Service = StreamService.Youtube;
 			y.VideoId = json["id"].Value<string>();
 			y.VideoTitle = json["title"].Value<string>();
+			y.Username = usernameIfNotInJson;
 			return (true, y);
 		}
 
-		public static (bool success, IVideoInfo info) ParseFromJson( JToken json, bool flat ) {
+		public static (bool success, IVideoInfo info) ParseFromJson( JToken json, bool flat, string usernameIfNotInJson ) {
 			if ( flat ) {
-				return ParseFromJsonFlat( json );
+				return ParseFromJsonFlat( json, usernameIfNotInJson );
 			} else {
-				return ParseFromJsonFull( json );
+				return ParseFromJsonFull( json, usernameIfNotInJson );
 			}
 		}
 
 		public enum RetrieveVideoResult { Success, FetchFailure, ParseFailure }
-		public static async Task<(RetrieveVideoResult result, IVideoInfo info)> RetrieveVideo( string id ) {
+		public static async Task<(RetrieveVideoResult result, IVideoInfo info)> RetrieveVideo( string id, string usernameIfNotInJson ) {
 			var data = await ExternalProgramExecution.RunProgram( @"youtube-dl", new string[] { "-j", "https://www.youtube.com/watch?v=" + id } );
 			var json = JObject.Parse( data.StdOut );
-			var parsed = ParseFromJson( json, false );
+			var parsed = ParseFromJson( json, false, usernameIfNotInJson );
 			return (parsed.success ? RetrieveVideoResult.Success : RetrieveVideoResult.ParseFailure, parsed.info);
 		}
 
-		public static async Task<List<IVideoInfo>> RetrieveVideosFromParameterString( string parameter, bool flat ) {
+		public static async Task<List<IVideoInfo>> RetrieveVideosFromParameterString( string parameter, bool flat, string usernameIfNotInJson ) {
 			string raw = "";
 			try {
 				List<string> args = new List<string>();
@@ -93,7 +95,7 @@ namespace VodArchiver {
 			List<IVideoInfo> list = new List<IVideoInfo>();
 			foreach ( var entry in entries ) {
 				try {
-					var d = ParseFromJson( entry, flat );
+					var d = ParseFromJson( entry, flat, usernameIfNotInJson );
 					if ( d.success ) {
 						list.Add( d.info );
 					}
@@ -104,25 +106,16 @@ namespace VodArchiver {
 			return list;
 		}
 
-		public static async Task<List<IVideoInfo>> RetrieveVideosFromPlaylist( string playlist, bool flat ) {
-			return await RetrieveVideosFromParameterString( "https://www.youtube.com/playlist?list=" + playlist, flat );
+		public static async Task<List<IVideoInfo>> RetrieveVideosFromPlaylist( string playlist, bool flat, string usernameIfNotInJson ) {
+			return await RetrieveVideosFromParameterString( "https://www.youtube.com/playlist?list=" + playlist, flat, usernameIfNotInJson );
 		}
 
-		public static async Task<List<IVideoInfo>> RetrieveVideosFromChannel( string channel, bool flat ) {
-			return await RetrieveVideosFromParameterString( "https://www.youtube.com/channel/" + channel, flat );
+		public static async Task<List<IVideoInfo>> RetrieveVideosFromChannel( string channel, bool flat, string usernameIfNotInJson ) {
+			return await RetrieveVideosFromParameterString( "https://www.youtube.com/channel/" + channel, flat, usernameIfNotInJson );
 		}
 
 		public static async Task<List<IVideoInfo>> RetrieveVideosFromUser( string user, bool flat ) {
-			List<IVideoInfo> videos = await RetrieveVideosFromParameterString( "ytuser:" + user, flat );
-
-			// fetching a flat video list doesn't set in the username, but we know it since we used it to request the video list, so manually fill it in
-			if ( flat ) {
-				for ( int i = 0; i < videos.Count; ++i ) {
-					videos[i].Username = user;
-				}
-			}
-
-			return videos;
+			return await RetrieveVideosFromParameterString( "ytuser:" + user, flat, user );
 		}
 	}
 }

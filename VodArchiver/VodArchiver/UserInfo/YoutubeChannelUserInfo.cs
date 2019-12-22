@@ -52,7 +52,7 @@ namespace VodArchiver.UserInfo {
 			long maxVideos = -1;
 			int currentVideos = -1;
 
-			List<IVideoInfo> channelVideos = await Youtube.RetrieveVideosFromChannel( Channel, flat );
+			List<IVideoInfo> channelVideos = await Youtube.RetrieveVideosFromChannel( Channel, flat, Comment );
 			hasMore = false;
 			foreach ( var v in channelVideos ) {
 				videosToAdd.Add( v );
