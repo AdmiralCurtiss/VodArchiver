@@ -42,17 +42,26 @@ namespace VodArchiver.VideoJobs {
 						Status = "";
 						string tmp1 = Path.Combine( GetTempFolder(), GetTempFilenameWithoutExtension() + "_baseurl.txt" );
 						string tmp2 = Path.Combine( GetTempFolder(), GetTempFilenameWithoutExtension() + "_tsnames.txt" );
-						File.WriteAllText( tmp1, "get baseurl for m3u8 from https://www.twitch.tv/videos/" + VideoInfo.VideoId );
-						File.WriteAllText( tmp2, "get actual m3u file from https://www.twitch.tv/videos/" + VideoInfo.VideoId );
-						await Task.Delay( 200 );
-						Process.Start( tmp1 );
-						await Task.Delay( 200 );
-						Process.Start( tmp2 );
-						folderpath = TsVideoJob.GetFolder( GetM3U8PathFromM3U( await WaitForUserCopyM3U( tmp1 ), VideoQuality ) );
-						filenames = TsVideoJob.GetFilenamesFromM3U8( await WaitForUserCopyM3U( tmp2 ) );
-						await Task.Delay( 500 );
-						File.Delete( tmp1 );
-						File.Delete( tmp2 );
+						string linesbaseurl = TryGetUserCopyBaseurlM3U(tmp1);
+						string linestsnames = TryGetUserCopyTsnamesM3U(tmp2);
+						if (linesbaseurl == null) {
+							File.WriteAllText(tmp1, "get baseurl for m3u8 from https://www.twitch.tv/videos/" + VideoInfo.VideoId);
+						}
+						if (linestsnames == null) {
+							File.WriteAllText(tmp2, "get actual m3u file from https://www.twitch.tv/videos/" + VideoInfo.VideoId);
+						}
+
+						if (linesbaseurl == null || linestsnames == null) {
+							await Task.Delay(200);
+							Process.Start(tmp1);
+							await Task.Delay(200);
+							Process.Start(tmp2);
+							await Task.Delay(200);
+							return (ResultType.UserInputRequired, null);
+						}
+
+						folderpath = TsVideoJob.GetFolder(GetM3U8PathFromM3U(linesbaseurl, VideoQuality));
+						filenames = TsVideoJob.GetFilenamesFromM3U8(linestsnames);
 					} else {
 						string m3u = await TwitchV5.GetVodM3U( long.Parse( VideoInfo.VideoId ) );
 						string m3u8path = GetM3U8PathFromM3U( m3u, VideoQuality );
@@ -84,17 +93,24 @@ namespace VodArchiver.VideoJobs {
 			return (ResultType.Success, urls.ToArray());
 		}
 
-		private async Task<string> WaitForUserCopyM3U( string tmp ) {
-			while ( true ) {
-				try {
-					var lines = System.IO.File.ReadAllText( tmp );
-					if ( lines.Contains( ".ts" ) || lines.Contains( "vod-secure.twitch.tv" ) ) {
-						return lines;
-					} else {
-						await Task.Delay( 2000 );
-					}
-				} catch ( Exception ex ) { }
+		private string TryGetUserCopyBaseurlM3U(string tmp) {
+			if (File.Exists(tmp)) {
+				var lines = System.IO.File.ReadAllText(tmp);
+				if (lines.Contains("vod-secure.twitch.tv")) {
+					return lines;
+				}
 			}
+			return null;
+		}
+
+		private string TryGetUserCopyTsnamesM3U(string tmp) {
+			if (File.Exists(tmp)) {
+				var lines = System.IO.File.ReadAllText(tmp);
+				if (lines.Contains(".ts")) {
+					return lines;
+				}
+			}
+			return null;
 		}
 
 		public static string GetM3U8PathFromM3U( string m3u, string videoType ) {

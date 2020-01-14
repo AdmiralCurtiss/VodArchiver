@@ -28,6 +28,10 @@ namespace VodArchiver.VideoJobs {
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
 			(ResultType getFileUrlsResult, string[] urls) = await GetFileUrlsOfVod( cancellationToken );
+			if (getFileUrlsResult == ResultType.UserInputRequired) {
+				Status = "Need manual fetch of file URLs.";
+				return ResultType.UserInputRequired;
+			}
 			if ( getFileUrlsResult != ResultType.Success ) {
 				Status = "Failed retrieving file URLs.";
 				return ResultType.Failure;
@@ -38,6 +42,8 @@ namespace VodArchiver.VideoJobs {
 			string remuxedTempname = Path.Combine( GetTempFolder(), GetTempFilenameWithoutExtension() + "_combined.mp4" );
 			string remuxedFilename = Path.Combine( GetTempFolder(), GetFinalFilenameWithoutExtension() + ".mp4" );
 			string targetFilename = Path.Combine( GetTargetFolder(), GetFinalFilenameWithoutExtension() + ".mp4" );
+			string baseurlfilepath = Path.Combine(GetTempFolder(), GetTempFilenameWithoutExtension() + "_baseurl.txt");
+			string tsnamesfilepath = Path.Combine(GetTempFolder(), GetTempFilenameWithoutExtension() + "_tsnames.txt");
 
 			if ( !await Util.FileExists( targetFilename ) ) {
 				if ( !await Util.FileExists( combinedFilename ) ) {
@@ -70,6 +76,9 @@ namespace VodArchiver.VideoJobs {
 								} catch ( TaskCanceledException ) {
 									return ResultType.Cancelled;
 								}
+							}
+							if (File.Exists(tsnamesfilepath)) {
+								File.Delete(tsnamesfilepath);
 							}
 							(getFileUrlsResult, urls) = await GetFileUrlsOfVod( cancellationToken );
 							if ( getFileUrlsResult != ResultType.Success ) {
@@ -155,6 +164,12 @@ namespace VodArchiver.VideoJobs {
 
 			Status = "Done!";
 			JobStatus = VideoJobStatus.Finished;
+			if (File.Exists(tsnamesfilepath)) {
+				File.Delete(tsnamesfilepath);
+			}
+			if (File.Exists(baseurlfilepath)) {
+				File.Delete(baseurlfilepath);
+			}
 			return ResultType.Success;
 		}
 

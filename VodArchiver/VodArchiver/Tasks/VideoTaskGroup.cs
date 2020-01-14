@@ -61,7 +61,7 @@ namespace VodArchiver.Tasks {
 				case StreamService.FFMpegJob:
 					return 1;
 				case StreamService.Twitch:
-					return 0;
+					return 1;
 				default:
 					return 3;
 			}
@@ -118,9 +118,9 @@ namespace VodArchiver.Tasks {
 
 						if ( task.Status == TaskStatus.RanToCompletion ) {
 							ResultType result = task.Result;
-							if ( result == ResultType.UserInputRequired ) { 
-								Add( new WaitingVideoJob( taskJob ) );
-							}
+							//if ( result == ResultType.UserInputRequired ) { 
+							//	Add( new WaitingVideoJob( taskJob ) );
+							//}
 							if ( result == ResultType.TemporarilyUnavailable ) {
 								Add( new WaitingVideoJob( taskJob, DateTime.UtcNow.AddMinutes( 30.0 ) ) );
 							}
