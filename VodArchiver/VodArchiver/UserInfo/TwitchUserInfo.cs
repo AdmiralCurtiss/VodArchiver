@@ -63,9 +63,9 @@ namespace VodArchiver.UserInfo {
 			int currentVideos = -1;
 
 			if ( UserID == null ) {
-				UserID = await TwitchV5.GetUserIdFromUsername( Username );
+				UserID = await TwitchV5.GetUserIdFromUsername( Username, Util.TwitchClientId );
 			}
-			TwitchVodFetchResult broadcasts = await TwitchV5.GetVideos( UserID.Value, Highlights, offset, 25 );
+			TwitchVodFetchResult broadcasts = await TwitchV5.GetVideos( UserID.Value, Highlights, offset, 25, Util.TwitchClientId );
 			hasMore = offset + broadcasts.Videos.Count < broadcasts.TotalVideoCount;
 			maxVideos = broadcasts.TotalVideoCount;
 

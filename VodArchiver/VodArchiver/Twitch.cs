@@ -39,8 +39,8 @@ namespace VodArchiver {
 		private static readonly string Api = "https://api.twitch.tv/api/";
 		private static readonly string Usher = "http://usher.twitch.tv/";
 
-		public static async Task<TwitchVideo> GetVideo( long id ) {
-			string result = await Get( Kraken + "videos/" + id.ToString() );
+		public static async Task<TwitchVideo> GetVideo( long id, string clientId ) {
+			string result = await Get( Kraken + "videos/" + id.ToString(), clientId );
 			JObject json = JObject.Parse( result );
 			return VideoFromJson( json );
 		}
@@ -71,27 +71,27 @@ namespace VodArchiver {
 			return v;
 		}
 
-		public static async Task<string> GetVodM3U( long id ) {
+		public static async Task<string> GetVodM3U( long id, string clientId ) {
 			string token;
 			string sig;
 			{
-				string result = await Get( Api + "vods/" + id.ToString() + "/access_token" );
+				string result = await Get( Api + "vods/" + id.ToString() + "/access_token", clientId );
 				JObject json = JObject.Parse( result );
 				token = (string)json["token"];
 				sig = (string)json["sig"];
 			}
 
-			return await Get( Usher + "vod/" + id.ToString() + "?nauthsig=" + sig + "&nauth=" + Uri.EscapeDataString( token ) );
+			return await Get( Usher + "vod/" + id.ToString() + "?nauthsig=" + sig + "&nauth=" + Uri.EscapeDataString( token ), clientId );
 		}
 
-		public static async Task<long> GetUserIdFromUsername( string username ) {
-			string result = await Get( Kraken + "users?login=" + Uri.EscapeDataString( username ) );
+		public static async Task<long> GetUserIdFromUsername( string username, string clientId ) {
+			string result = await Get( Kraken + "users?login=" + Uri.EscapeDataString( username ), clientId );
 			JObject json = JObject.Parse( result );
 			return (long)json["users"][0]["_id"];
 		}
 
-		public static async Task<TwitchVodFetchResult> GetVideos( long channelId, bool highlights, int offset, int limit ) {
-			string result = await Get( Kraken + "channels/" + channelId + "/videos?limit=" + limit + "&offset=" + offset + "&broadcast_type=" + ( highlights ? "highlight" : "archive" ) );
+		public static async Task<TwitchVodFetchResult> GetVideos( long channelId, bool highlights, int offset, int limit, string clientId ) {
+			string result = await Get( Kraken + "channels/" + channelId + "/videos?limit=" + limit + "&offset=" + offset + "&broadcast_type=" + ( highlights ? "highlight" : "archive" ), clientId );
 			JObject json = JObject.Parse( result );
 
 			TwitchVodFetchResult r = new TwitchVodFetchResult();
@@ -104,10 +104,10 @@ namespace VodArchiver {
 			return r;
 		}
 
-		public static async Task<string> Get( string url ) {
+		public static async Task<string> Get( string url, string clientId ) {
 			HttpClient client = new HttpClient();
 			client.DefaultRequestHeaders.Add( "Accept", "application/vnd.twitchtv.v5+json" );
-			client.DefaultRequestHeaders.Add( "Client-ID", Util.TwitchClientId );
+			client.DefaultRequestHeaders.Add( "Client-ID", clientId );
 			var result = await client.GetAsync( url );
 			if ( result.IsSuccessStatusCode ) {
 				return await result.Content.ReadAsStringAsync();

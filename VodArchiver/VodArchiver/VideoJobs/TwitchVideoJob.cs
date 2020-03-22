@@ -31,7 +31,7 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public override async Task<(ResultType result, string[] urls)> GetFileUrlsOfVod( CancellationToken cancellationToken ) {
-			VideoInfo = new TwitchVideoInfo( await TwitchV5.GetVideo( long.Parse( VideoInfo.VideoId ) ) );
+			VideoInfo = new TwitchVideoInfo( await TwitchV5.GetVideo( long.Parse( VideoInfo.VideoId ), Util.TwitchClientId ) );
 
 			string folderpath;
 			string[] filenames;
@@ -63,10 +63,11 @@ namespace VodArchiver.VideoJobs {
 						folderpath = TsVideoJob.GetFolder(GetM3U8PathFromM3U(linesbaseurl, VideoQuality));
 						filenames = TsVideoJob.GetFilenamesFromM3U8(linestsnames);
 					} else {
-						string m3u = await TwitchV5.GetVodM3U( long.Parse( VideoInfo.VideoId ) );
+						string clientId = Util.TwitchClientId;
+						string m3u = await TwitchV5.GetVodM3U( long.Parse( VideoInfo.VideoId ), clientId );
 						string m3u8path = GetM3U8PathFromM3U( m3u, VideoQuality );
 						folderpath = TsVideoJob.GetFolder( m3u8path );
-						string m3u8 = await TwitchV5.Get( m3u8path );
+						string m3u8 = await TwitchV5.Get( m3u8path, clientId );
 						filenames = TsVideoJob.GetFilenamesFromM3U8( m3u8 );
 					}
 				} catch ( TwitchHttpException e ) {
@@ -77,7 +78,7 @@ namespace VodArchiver.VideoJobs {
 						} catch ( TaskCanceledException ) {
 							return (ResultType.Cancelled, null);
 						}
-						VideoInfo = new TwitchVideoInfo( await TwitchV5.GetVideo( long.Parse( VideoInfo.VideoId ) ) );
+						VideoInfo = new TwitchVideoInfo( await TwitchV5.GetVideo( long.Parse( VideoInfo.VideoId ), Util.TwitchClientId ) );
 						continue;
 					} else {
 						throw;
