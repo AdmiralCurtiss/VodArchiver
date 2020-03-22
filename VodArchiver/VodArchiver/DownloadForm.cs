@@ -481,6 +481,19 @@ namespace VodArchiver {
 					menu.Items.Add( new ToolStripSeparator() );
 				}
 
+
+				{
+					ToolStripItem item = menu.Items.Add("Copy Video ID");
+					item.Click += (sender, e) => {
+						string id = job?.VideoInfo?.VideoId;
+						if (id != null) {
+							Clipboard.SetText(id);
+						}
+					};
+				}
+
+				menu.Items.Add(new ToolStripSeparator());
+
 				if ( job.JobStatus == VideoJobStatus.Running ) {
 					ToolStripItem item = menu.Items.Add( "Stop" );
 					item.Click += ( sender, e ) => {
