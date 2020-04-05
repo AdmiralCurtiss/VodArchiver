@@ -70,7 +70,7 @@ namespace VodArchiver.VideoJobs {
 			if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 
 			string originalpath = Path.GetFullPath( VideoInfo.VideoId );
-			string newdirpath = originalpath + "_splitdir";
+			string newdirpath = Path.Combine(Path.GetDirectoryName(originalpath), DateTime.UtcNow.ToString("yyyyMMddHHmmssfff"));
 			if ( File.Exists( newdirpath ) || Directory.Exists( newdirpath ) ) {
 				Status = "File or directory at " + newdirpath + " already exists, cancelling.";
 				return ResultType.Failure;
