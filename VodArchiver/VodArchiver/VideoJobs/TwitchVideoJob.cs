@@ -134,7 +134,7 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public override string GetFinalFilenameWithoutExtension() {
-			return "twitch_" + VideoInfo.Username + "_v" + VideoInfo.VideoId + "_" + Util.MakeIntercapsFilename( VideoInfo.VideoGame ?? "unknown" ) + "_" + Util.MakeIntercapsFilename( VideoInfo.VideoTitle ).Crop( 80 ) + "_" + VideoQuality;
+			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoTimestamp.ToString("yyyy-MM-dd_HH-mm-ss") + "_v" + VideoInfo.VideoId + "_" + Util.MakeIntercapsFilename( VideoInfo.VideoGame ?? "unknown" ) + "_" + Util.MakeIntercapsFilename( VideoInfo.VideoTitle ).Crop( 80 ) + "_" + VideoQuality;
 		}
 	}
 }

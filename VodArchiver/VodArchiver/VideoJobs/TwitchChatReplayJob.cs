@@ -30,8 +30,12 @@ namespace VodArchiver.VideoJobs {
 			return base.Serialize( document, node );
 		}
 
-		public string GetTargetFilenameWithoutExtension() {
+		public string GetTempFilenameWithoutExtension() {
 			return "twitch_" + VideoInfo.Username + "_v" + VideoInfo.VideoId + "_" + "chat5";
+		}
+
+		public string GetTargetFilenameWithoutExtension() {
+			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoTimestamp.ToString("yyyy-MM-dd_HH-mm-ss") + "_v" + VideoInfo.VideoId + "_" + "chat5";
 		}
 
 		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {
@@ -45,8 +49,8 @@ namespace VodArchiver.VideoJobs {
 				return ResultType.TemporarilyUnavailable;
 			}
 
-			string tempname = Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() + ".json.tmp" );
-			string finalintmpname = Path.Combine( Util.TempFolderPath, GetTargetFilenameWithoutExtension() + ".json" );
+			string tempname = Path.Combine( Util.TempFolderPath, GetTempFilenameWithoutExtension() + ".json.tmp" );
+			string finalintmpname = Path.Combine( Util.TempFolderPath, GetTempFilenameWithoutExtension() + ".json" );
 			string filename = Path.Combine( Util.TargetFolderPath, GetTargetFilenameWithoutExtension() + ".json" );
 			Random rng = new Random( int.Parse( VideoInfo.VideoId ) );
 
