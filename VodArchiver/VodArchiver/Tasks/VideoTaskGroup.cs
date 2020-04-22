@@ -40,6 +40,8 @@ namespace VodArchiver.Tasks {
 		private RequestSaveJobsDelegate RequestSaveJobs;
 		private RequestPowerEventDelegate RequestPowerEvent;
 
+		public bool AutoEnqueue = false;
+
 		public VideoTaskGroup( StreamService service, RequestSaveJobsDelegate saveJobsDelegate, RequestPowerEventDelegate powerEventDelegate, CancellationToken cancellationToken ) {
 			Service = service;
 			WaitingJobs = new List<WaitingVideoJob>();

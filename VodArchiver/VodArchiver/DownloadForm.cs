@@ -220,7 +220,7 @@ namespace VodArchiver {
 			objectListViewDownloads.AddObject( job );
 			JobSet.Add( job );
 			job.Status = "Waiting...";
-			if ( checkBoxAutoEnqueue.Checked ) {
+			if (VideoTaskGroups[job.VideoInfo.Service].AutoEnqueue) {
 				VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
 			}
 
@@ -605,22 +605,83 @@ namespace VodArchiver {
 			}
 		}
 
-		private void checkBoxAutoEnqueue_CheckedChanged( object sender, EventArgs e ) {
+		private void buttonQueueSettings_Click( object sender, EventArgs e ) {
+			ContextMenuStrip menu = new ContextMenuStrip();
 
+
+			{
+				ToolStripMenuItem item = new ToolStripMenuItem("Enqueue All");
+				item.Click += (lsender, le) => {
+					EnqueueAll();
+				};
+				menu.Items.Add(item);
+			}
+
+			{
+				ToolStripMenuItem item = new ToolStripMenuItem("Enqueue Only...");
+				foreach (StreamService service in Enum.GetValues(typeof(StreamService))) {
+					item.DropDownItems.Add(service.ToString()).Click += (lsender, le) => {
+						EnqueueAll(service);
+					};
+				}
+				menu.Items.Add(item);
+			}
+
+			menu.Items.Add(new ToolStripSeparator());
+
+			{
+				ToolStripMenuItem item = new ToolStripMenuItem("Dequeue All");
+				item.Click += (lsender, le) => {
+					DequeueAll();
+				};
+				menu.Items.Add(item);
+			}
+
+			{
+				ToolStripMenuItem item = new ToolStripMenuItem("Dequeue Only...");
+				foreach (StreamService service in Enum.GetValues(typeof(StreamService))) {
+					item.DropDownItems.Add(service.ToString()).Click += (lsender, le) => {
+						DequeueAll(service);
+					};
+				}
+				menu.Items.Add(item);
+			}
+
+			menu.Items.Add(new ToolStripSeparator());
+
+			{
+				ToolStripMenuItem item = new ToolStripMenuItem("Auto-enqueue...");
+				foreach (StreamService service in Enum.GetValues(typeof(StreamService))) {
+					ToolStripMenuItem tsi = new ToolStripMenuItem(service.ToString());
+					bool autoenqueue = VideoTaskGroups[service].AutoEnqueue;
+					tsi.Checked = autoenqueue;
+					tsi.Click += (lsender, le) => {
+						VideoTaskGroups[service].AutoEnqueue = !autoenqueue;
+					};
+					item.DropDownItems.Add(tsi);
+				}
+				menu.Items.Add(item);
+			}
+
+			menu.Show(Cursor.Position);
 		}
 
-		private void buttonEnqueueAll_Click( object sender, EventArgs e ) {
-			foreach ( var item in objectListViewDownloads.Objects ) {
+		private void EnqueueAll(StreamService? service = null) {
+			foreach (var item in objectListViewDownloads.Objects) {
 				IVideoJob job = item as IVideoJob;
-				if ( job != null && job.JobStatus == VideoJobStatus.NotStarted ) {
-					VideoTaskGroups[job.VideoInfo.Service].Add( new WaitingVideoJob( job ) );
+				if (job != null && job.JobStatus == VideoJobStatus.NotStarted) {
+					if (service == null || service.Value == job.VideoInfo.Service) {
+						VideoTaskGroups[job.VideoInfo.Service].Add(new WaitingVideoJob(job));
+					}
 				}
 			}
 		}
 
-		private void buttonDequeueAll_Click( object sender, EventArgs e ) {
-			foreach ( var kvp in VideoTaskGroups ) {
-				kvp.Value.DequeueAll();
+		private void DequeueAll(StreamService? service = null) {
+			foreach (var kvp in VideoTaskGroups) {
+				if (service == null || service.Value == kvp.Key) {
+					kvp.Value.DequeueAll();
+				}
 			}
 		}
 	}
