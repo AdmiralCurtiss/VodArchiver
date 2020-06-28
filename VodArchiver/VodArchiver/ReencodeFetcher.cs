@@ -36,21 +36,40 @@ namespace VodArchiver {
 				List<string> ffmpegOptions;
 				string postfixOld;
 				string postfixNew;
-				if ( additionalOptions.Contains( "rescale720" ) ) {
+				string outputformat;
+				if (additionalOptions == "rescale720_30fps") {
+					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-sws_flags", "lanczos", "-vf", "\"scale=-2:720\"", "-c:a", "copy", "-max_muxing_queue_size", "100000", "-r", "30" };
+					postfixOld = "_chunked";
+					postfixNew = "_x264crf23scaled720p30";
+					outputformat = "mkv";
+				} else if (additionalOptions == "rescale480_30fps") {
+					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-sws_flags", "lanczos", "-vf", "\"scale=-2:480\"", "-c:a", "copy", "-max_muxing_queue_size", "100000", "-r", "30" };
+					postfixOld = "_chunked";
+					postfixNew = "_x264crf23scaled480p30";
+					outputformat = "mkv";
+				} else if (additionalOptions == "30fps") {
+					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-c:a", "copy", "-max_muxing_queue_size", "100000", "-r", "30" };
+					postfixOld = "_chunked";
+					postfixNew = "_x264crf23-30";
+					outputformat = "mkv";
+				} else if (additionalOptions == "rescale720") {
 					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-sws_flags", "lanczos", "-vf", "\"scale=-2:720\"", "-c:a", "copy", "-max_muxing_queue_size", "100000" };
 					postfixOld = "_chunked";
 					postfixNew = "_x264crf23scaled720p";
-				} else if ( additionalOptions.Contains( "rescale480" ) ) {
+					outputformat = "mp4";
+				} else if (additionalOptions == "rescale480") {
 					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-sws_flags", "lanczos", "-vf", "\"scale=-2:480\"", "-c:a", "copy", "-max_muxing_queue_size", "100000" };
 					postfixOld = "_chunked";
 					postfixNew = "_x264crf23scaled480p";
+					outputformat = "mp4";
 				} else {
 					ffmpegOptions = new List<string>() { "-c:v", "libx264", "-preset", "slower", "-crf", "23", "-c:a", "copy", "-max_muxing_queue_size", "100000" };
 					postfixOld = "_chunked";
 					postfixNew = "_x264crf23";
+					outputformat = "mp4";
 				}
 
-				IVideoInfo retval = new FFMpegReencodeJobVideoInfo( f, probe, ffmpegOptions, postfixOld, postfixNew );
+				IVideoInfo retval = new FFMpegReencodeJobVideoInfo( f, probe, ffmpegOptions, postfixOld, postfixNew, outputformat );
 
 				rv.Add( retval );
 			}

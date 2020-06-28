@@ -37,16 +37,17 @@ namespace VodArchiver.VideoJobs {
 			string file = VideoInfo.VideoId;
 			string path = Path.GetDirectoryName( file );
 			string name = Path.GetFileNameWithoutExtension( file );
-			string ext = Path.GetExtension( file );
 
 			List<string> ffmpegOptions;
 			string postfixOld;
 			string postfixNew;
+			string outputformat;
 			if ( VideoInfo is FFMpegReencodeJobVideoInfo ) {
 				FFMpegReencodeJobVideoInfo ffvi = VideoInfo as FFMpegReencodeJobVideoInfo;
 				ffmpegOptions = ffvi.FFMpegOptions;
 				postfixOld = ffvi.PostfixOld;
 				postfixNew = ffvi.PostfixNew;
+				outputformat = ffvi.OutputFormat;
 			} else {
 				ffmpegOptions = new List<string>() {
 					"-c:v", "libx264",
@@ -58,7 +59,9 @@ namespace VodArchiver.VideoJobs {
 				};
 				postfixOld = "_chunked";
 				postfixNew = "_x264crf23";
+				outputformat = "mp4";
 			}
+			string ext = "." + outputformat;
 
 			string chunked = postfixOld;
 			string postfix = postfixNew;
@@ -80,7 +83,7 @@ namespace VodArchiver.VideoJobs {
 			}
 
 			if ( probe != null ) {
-				VideoInfo = new FFMpegReencodeJobVideoInfo( file, probe, ffmpegOptions, postfixOld, postfixNew );
+				VideoInfo = new FFMpegReencodeJobVideoInfo(file, probe, ffmpegOptions, postfixOld, postfixNew, outputformat);
 			}
 
 			// if the input file doesn't exist we might still be in a state where we can set this to finished if the output file already exists, so continue anyway

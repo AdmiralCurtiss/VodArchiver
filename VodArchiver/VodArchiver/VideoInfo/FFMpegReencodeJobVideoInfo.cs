@@ -16,11 +16,12 @@ namespace VodArchiver.VideoInfo {
 		public List<string> FFMpegOptions;
 		public string PostfixOld;
 		public string PostfixNew;
+		public string OutputFormat;
 
 		private ulong Filesize;
 		private ulong Bitrate;
 
-		public FFMpegReencodeJobVideoInfo( string filename, FFProbeResult probe, List<string> ffmpegOptions, string postfixOld, string postfixNew ) {
+		public FFMpegReencodeJobVideoInfo( string filename, FFProbeResult probe, List<string> ffmpegOptions, string postfixOld, string postfixNew, string outputformat ) {
 			VideoTitle = System.IO.Path.GetFileNameWithoutExtension( filename );
 			VideoId = System.IO.Path.GetFullPath( filename );
 			Filesize = probe.Filesize;
@@ -30,6 +31,7 @@ namespace VodArchiver.VideoInfo {
 			FFMpegOptions = ffmpegOptions;
 			PostfixOld = postfixOld;
 			PostfixNew = postfixNew;
+			OutputFormat = outputformat;
 		}
 
 		public FFMpegReencodeJobVideoInfo( XmlNode node ) {
@@ -57,6 +59,7 @@ namespace VodArchiver.VideoInfo {
 			}
 			PostfixOld = node.Attributes["postfixOld"].Value;
 			PostfixNew = node.Attributes["postfixNew"].Value;
+			OutputFormat = node?.Attributes["outputFormat"]?.Value ?? "mp4";
 			FFMpegOptions = new List<string>();
 			foreach ( XmlNode n in node.ChildNodes ) {
 				if ( n.Name == "FFMpegOption" ) {
@@ -75,6 +78,7 @@ namespace VodArchiver.VideoInfo {
 			node.AppendAttribute( document, "videoLength", VideoLength.TotalSeconds.ToString( Util.SerializationFormatProvider ) );
 			node.AppendAttribute( document, "postfixOld", PostfixOld );
 			node.AppendAttribute( document, "postfixNew", PostfixNew );
+			node.AppendAttribute( document, "outputFormat", OutputFormat );
 			foreach ( string option in FFMpegOptions ) {
 				var ffmpegOptionsNode = document.CreateElement( "FFMpegOption" );
 				ffmpegOptionsNode.AppendAttribute( document, "arg", option );
