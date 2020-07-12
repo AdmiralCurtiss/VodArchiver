@@ -58,12 +58,12 @@ namespace VodArchiver.Tasks {
 		private static int GetDefaultMaxJobs( StreamService service ) {
 			switch ( service ) {
 				case StreamService.Youtube:
-					return 2;
+					return 1;
 				case StreamService.RawUrl:
 				case StreamService.FFMpegJob:
 					return 1;
 				case StreamService.Twitch:
-					return 1;
+					return 3;
 				default:
 					return 3;
 			}
