@@ -97,7 +97,7 @@ namespace VodArchiver.VideoJobs {
 		private string TryGetUserCopyBaseurlM3U(string tmp) {
 			if (File.Exists(tmp)) {
 				var lines = System.IO.File.ReadAllText(tmp);
-				if (lines.Contains("vod-secure.twitch.tv")) {
+				if (lines.Contains("vod-secure.twitch.tv") || lines.Contains("cloudfront.net")) {
 					return lines;
 				}
 			}
@@ -107,7 +107,7 @@ namespace VodArchiver.VideoJobs {
 		private string TryGetUserCopyTsnamesM3U(string tmp) {
 			if (File.Exists(tmp)) {
 				var lines = System.IO.File.ReadAllText(tmp);
-				if (lines.Contains(".ts")) {
+				if (lines.Contains(".ts") || lines.Contains("autogen:")) {
 					return lines;
 				}
 			}
