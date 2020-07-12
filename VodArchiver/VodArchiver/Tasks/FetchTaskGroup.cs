@@ -53,7 +53,9 @@ namespace VodArchiver.Tasks {
 							await VodList.AutoDownload( new IUserInfo[] { earliestUserInfo }, Form );
 						}
 					}
-				} catch ( Exception ) { }
+				} catch (Exception ex) {
+					Form.AddStatusMessage("Error during fetch: " + ex.ToString());
+				}
 			}
 		}
 	}

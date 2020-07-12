@@ -46,6 +46,7 @@
 			this.labelPowerStateWhenDone = new System.Windows.Forms.Label();
 			this.comboBoxPowerStateWhenDone = new System.Windows.Forms.ComboBox();
 			this.buttonQueueSettings = new System.Windows.Forms.Button();
+			this.buttonOpenLog = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.objectListViewDownloads)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -251,7 +252,7 @@
 			// 
 			this.labelStatusBar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.labelStatusBar.AutoSize = true;
-			this.labelStatusBar.Location = new System.Drawing.Point(12, 452);
+			this.labelStatusBar.Location = new System.Drawing.Point(52, 452);
 			this.labelStatusBar.Name = "labelStatusBar";
 			this.labelStatusBar.Size = new System.Drawing.Size(0, 13);
 			this.labelStatusBar.TabIndex = 7;
@@ -293,12 +294,24 @@
 			this.buttonQueueSettings.UseVisualStyleBackColor = true;
 			this.buttonQueueSettings.Click += new System.EventHandler(this.buttonQueueSettings_Click);
 			// 
+			// buttonOpenLog
+			// 
+			this.buttonOpenLog.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.buttonOpenLog.Location = new System.Drawing.Point(12, 449);
+			this.buttonOpenLog.Name = "buttonOpenLog";
+			this.buttonOpenLog.Size = new System.Drawing.Size(34, 21);
+			this.buttonOpenLog.TabIndex = 13;
+			this.buttonOpenLog.Text = "Log";
+			this.buttonOpenLog.UseVisualStyleBackColor = true;
+			this.buttonOpenLog.Click += new System.EventHandler(this.buttonOpenLog_Click);
+			// 
 			// DownloadForm
 			// 
 			this.AcceptButton = this.buttonDownload;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(1378, 473);
+			this.Controls.Add(this.buttonOpenLog);
 			this.Controls.Add(this.buttonQueueSettings);
 			this.Controls.Add(this.comboBoxPowerStateWhenDone);
 			this.Controls.Add(this.labelPowerStateWhenDone);
@@ -339,10 +352,11 @@
 		private BrightIdeasSoftware.OLVColumn columnRecordingState;
 		private BrightIdeasSoftware.OLVColumn columnIndex;
 		private BrightIdeasSoftware.OLVColumn columnValidated;
-		private System.Windows.Forms.Label labelStatusBar;
 		private BrightIdeasSoftware.OLVColumn columnNotes;
 		private System.Windows.Forms.Label labelPowerStateWhenDone;
 		private System.Windows.Forms.ComboBox comboBoxPowerStateWhenDone;
 		private System.Windows.Forms.Button buttonQueueSettings;
+		private System.Windows.Forms.Label labelStatusBar;
+		private System.Windows.Forms.Button buttonOpenLog;
 	}
 }

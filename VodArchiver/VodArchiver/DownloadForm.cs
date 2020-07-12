@@ -26,6 +26,10 @@ namespace VodArchiver {
 		CancellationTokenSource CancellationTokenSource;
 		ObjectListViewUpdaterTask ObjectListViewUpdater;
 
+		List<string> StatusMessages = new List<string>();
+		object StatusMessageLock = new object();
+		Task StatusMessageTask = null;
+
 		public DownloadForm() {
 			InitializeComponent();
 			ObjectListViewUpdater = new ObjectListViewUpdaterTask( objectListViewDownloads );
@@ -93,12 +97,52 @@ namespace VodArchiver {
 						}
 					}
 				}
+
+				StatusMessageTask = StatusMessageThreadFunc(CancellationTokenSource.Token);
 			}
 		}
 
-		public void SetAutoDownloadStatus( string s ) {
-			if ( Util.AllowTimedAutoFetch ) {
-				labelStatusBar.Text = "[" + DateTime.Now.ToString() + "] " + s;
+		public void AddStatusMessage(string s) {
+			if (Util.AllowTimedAutoFetch) {
+				string message = "[" + DateTime.Now.ToString() + "] " + s;
+				lock (StatusMessageLock) {
+					if (StatusMessages.Count > 10000) {
+						StatusMessages.RemoveRange(0, 2000);
+					}
+
+					StatusMessages.Add(message);
+				}
+			}
+		}
+
+		private async Task StatusMessageThreadFunc(CancellationToken cancellationToken) {
+			while (true) {
+				try {
+					if (cancellationToken.IsCancellationRequested) {
+						return;
+					}
+
+					await Task.Delay(500, cancellationToken);
+
+					string msg = GetLatestStatusMessageInternal();
+					Invoke((MethodInvoker)(() => {
+						if (labelStatusBar.Text != msg) {
+							labelStatusBar.Text = msg;
+						}
+					}));
+				} catch (Exception ex) {
+					continue;
+				}
+			}
+		}
+
+		private string GetLatestStatusMessageInternal() {
+			lock (StatusMessageLock) {
+				if (StatusMessages.Count > 0) {
+					return StatusMessages[StatusMessages.Count - 1];
+				} else {
+					return "";
+				}
 			}
 		}
 
@@ -371,6 +415,9 @@ namespace VodArchiver {
 
 		private async Task WaitForAllTasksToEnd() {
 			// TODO: wait for fetches to end too
+			if (StatusMessageTask != null) {
+				await StatusMessageTask;
+			}
 			foreach ( var group in VideoTaskGroups ) {
 				await group.Value.WaitForJobRunnerThreadToEnd();
 			}
@@ -683,6 +730,16 @@ namespace VodArchiver {
 					kvp.Value.DequeueAll();
 				}
 			}
+		}
+
+		private void buttonOpenLog_Click(object sender, EventArgs e) {
+			StringBuilder sb = new StringBuilder();
+			lock (StatusMessageLock) {
+				foreach (string msg in StatusMessages) {
+					sb.AppendLine(msg);
+				}
+			}
+			new LogView(sb.ToString()).Show();
 		}
 	}
 }

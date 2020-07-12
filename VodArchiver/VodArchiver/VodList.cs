@@ -101,11 +101,11 @@ namespace VodArchiver {
 		private static async Task<FetchReturnValue> Fetch( IUserInfo userInfo, int offset, bool flat ) {
 			FetchReturnValue frv = await userInfo.Fetch( offset, flat );
 
+			userInfo.LastRefreshedOn = DateTime.UtcNow;
+
 			if ( !frv.Success ) {
 				return frv;
 			}
-
-			userInfo.LastRefreshedOn = DateTime.UtcNow;
 
 			if ( userInfo.Persistable ) {
 				UserInfoPersister.AddOrUpdate( userInfo );
@@ -214,7 +214,7 @@ namespace VodArchiver {
 					List<IVideoInfo> videos = new List<IVideoInfo>();
 
 					while ( true ) {
-						downloadWindow.SetAutoDownloadStatus( "[" + ( i + 1 ).ToString() + "/" + users.Length.ToString() + "] Fetching " + userInfo.ToString() + "..." );
+						downloadWindow.AddStatusMessage( "[" + ( i + 1 ).ToString() + "/" + users.Length.ToString() + "] Fetching " + userInfo.ToString() + "..." );
 
 						try {
 							FetchReturnValue fetchReturnValue;
@@ -229,7 +229,7 @@ namespace VodArchiver {
 							} while ( fetchReturnValue.Success && fetchReturnValue.HasMore );
 							break;
 						} catch ( Exception ex ) {
-							// TODO: Better errorhandling?
+							downloadWindow.AddStatusMessage("Error during " + userInfo.ToString() + ": " + ex.ToString());
 							break;
 						}
 					}
