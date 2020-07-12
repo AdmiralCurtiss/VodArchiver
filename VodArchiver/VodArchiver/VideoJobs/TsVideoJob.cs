@@ -199,15 +199,51 @@ namespace VodArchiver.VideoJobs {
 
 		public static string[] GetFilenamesFromM3U8( string m3u8 ) {
 			var lines = m3u8.Split( new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries );
-			List<string> filenames = new List<string>( lines.Length );
+			List<string> filenames = new List<string>(lines.Length);
+
+			bool literal = true;
+			if (literal) {
+				foreach (var line in lines) {
+					if (line.Trim() == "" || line.Trim().StartsWith("#")) {
+						continue;
+					}
+					filenames.Add(line.Trim());
+				}
+				return filenames.ToArray();
+			}
+
+			int max;
+			if (lines.Length == 1 && lines[0].StartsWith("autogen:")) {
+				max = int.Parse(lines[0].Substring(8));
+				for (int i = 0; i < max; ++i) {
+					filenames.Add(i + ".ts");
+				}
+				return filenames.ToArray();
+			}
+
+			int maxtsid = 0;
+			ISet<int> muted = new HashSet<int>();
 			foreach ( var line in lines ) {
 				if ( line.Trim() == "" || line.Trim().StartsWith( "#" ) ) {
 					continue;
 				}
-
-				filenames.Add( line.Trim() );
+				int rrr;
+				if (int.TryParse(line.Split(new char[] { '.', '-' })[0], out rrr)) {
+					maxtsid = Math.Max(rrr, maxtsid);
+					if (line.EndsWith("-muted.ts")) {
+						muted.Add(rrr);
+					}
+				}
 			}
 
+			max = maxtsid+1;
+			for (int i = 0; i < max; ++i) {
+				if (muted.Contains(i)) {
+					filenames.Add(i + "-muted.ts");
+				} else {
+					filenames.Add(i + ".ts");
+				}
+			}
 			return filenames.ToArray();
 		}
 
@@ -224,6 +260,7 @@ namespace VodArchiver.VideoJobs {
 				}
 				files.Clear();
 				for ( int i = 0; i < urls.Length; ++i ) {
+				//for (int i = urls.Length - 1; i >= 0; --i) {
 					if ( cancellationToken.IsCancellationRequested ) {
 						return (ResultType.Cancelled, null);
 					}
