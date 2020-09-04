@@ -26,6 +26,8 @@
 			this.textBoxPath = new System.Windows.Forms.TextBox();
 			this.buttonRename = new System.Windows.Forms.Button();
 			this.labelPath = new System.Windows.Forms.Label();
+			this.buttonGenDurationDiff = new System.Windows.Forms.Button();
+			this.textBoxDurationDiff = new System.Windows.Forms.TextBox();
 			this.SuspendLayout();
 			// 
 			// textBoxPath
@@ -57,11 +59,34 @@
 			this.labelPath.TabIndex = 2;
 			this.labelPath.Text = "Path";
 			// 
+			// buttonGenDurationDiff
+			// 
+			this.buttonGenDurationDiff.Location = new System.Drawing.Point(12, 57);
+			this.buttonGenDurationDiff.Name = "buttonGenDurationDiff";
+			this.buttonGenDurationDiff.Size = new System.Drawing.Size(140, 23);
+			this.buttonGenDurationDiff.TabIndex = 3;
+			this.buttonGenDurationDiff.Text = "Generate Duration Diff";
+			this.buttonGenDurationDiff.UseVisualStyleBackColor = true;
+			this.buttonGenDurationDiff.Click += new System.EventHandler(this.buttonGenDurationDiff_Click);
+			// 
+			// textBoxDurationDiff
+			// 
+			this.textBoxDurationDiff.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.textBoxDurationDiff.Location = new System.Drawing.Point(12, 86);
+			this.textBoxDurationDiff.Multiline = true;
+			this.textBoxDurationDiff.Name = "textBoxDurationDiff";
+			this.textBoxDurationDiff.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+			this.textBoxDurationDiff.Size = new System.Drawing.Size(776, 127);
+			this.textBoxDurationDiff.TabIndex = 4;
+			// 
 			// AutoRenameWindow
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(800, 450);
+			this.Controls.Add(this.textBoxDurationDiff);
+			this.Controls.Add(this.buttonGenDurationDiff);
 			this.Controls.Add(this.labelPath);
 			this.Controls.Add(this.buttonRename);
 			this.Controls.Add(this.textBoxPath);
@@ -77,5 +102,7 @@
 		private System.Windows.Forms.TextBox textBoxPath;
 		private System.Windows.Forms.Button buttonRename;
 		private System.Windows.Forms.Label labelPath;
+		private System.Windows.Forms.Button buttonGenDurationDiff;
+		private System.Windows.Forms.TextBox textBoxDurationDiff;
 	}
 }

@@ -92,5 +92,48 @@ namespace VodArchiver {
 				}
 			} catch (Exception) { }
 		}
+
+		private async void buttonGenDurationDiff_Click(object sender, EventArgs e) {
+			string path = textBoxPath.Text.Trim();
+			if (path != "") {
+				StringBuilder sb = new StringBuilder();
+				await GenDurationTwitch(sb, path);
+				textBoxDurationDiff.Text = sb.ToString();
+			}
+		}
+
+		private async Task GenDurationTwitch(StringBuilder sb, string path) {
+			sb.AppendFormat("Scanning {0}...", path).AppendLine();
+			List<string> filesInDir = Directory.EnumerateFiles(path).ToList();
+
+			foreach (string filepath in filesInDir) {
+				string filename = Path.GetFileName(filepath);
+
+				foreach (IVideoJob job in Jobs) {
+					if (job != null && job.VideoInfo.Service == StreamService.Twitch) {
+						string filestart = "twitch_" + job.VideoInfo.Username + "_";
+						string filemid = "_v" + job.VideoInfo.VideoId + "_";
+						string fileend = ".mp4";
+						if (filename.StartsWith(filestart) && filename.Contains(filemid) && filename.EndsWith(fileend)) {
+							Console.WriteLine("Probing {0}", filepath);
+							TimeSpan actualVideoLength = (await FFMpegUtil.Probe(filepath)).Duration;
+							TimeSpan expectedVideoLength = job.VideoInfo.VideoLength;
+							if (actualVideoLength.Subtract(expectedVideoLength).Duration() > TimeSpan.FromSeconds(5)) {
+								sb.AppendFormat("File {0} seems to have a large difference. ({1} seconds)", filepath, actualVideoLength.Subtract(expectedVideoLength).Duration().TotalSeconds);
+								sb.AppendLine();
+							}
+						}
+					}
+				}
+			}
+
+			try {
+				foreach (string subdir in Directory.EnumerateDirectories(path)) {
+					try {
+						await GenDurationTwitch(sb, subdir);
+					} catch (Exception) { }
+				}
+			} catch (Exception) { }
+		}
 	}
 }
