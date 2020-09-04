@@ -87,7 +87,7 @@ namespace VodArchiver {
 			if ( Util.AllowTimedAutoFetch ) {
 				FetchTaskGroups = new Dictionary<ServiceVideoCategoryType, FetchTaskGroup>();
 				foreach ( List<ServiceVideoCategoryType> types in ServiceVideoCategoryGroups.Groups ) {
-					FetchTaskGroup ftg = new FetchTaskGroup( this );
+					FetchTaskGroup ftg = new FetchTaskGroup(this, CancellationTokenSource.Token);
 					foreach ( ServiceVideoCategoryType svc in types ) {
 						FetchTaskGroups.Add( svc, ftg );
 						foreach ( IUserInfo ui in UserInfoPersister.GetKnownUsers() ) {
@@ -420,6 +420,9 @@ namespace VodArchiver {
 			}
 			foreach ( var group in VideoTaskGroups ) {
 				await group.Value.WaitForJobRunnerThreadToEnd();
+			}
+			foreach (var group in FetchTaskGroups) {
+				await group.Value.WaitForFetchThreadToEnd();
 			}
 		}
 
