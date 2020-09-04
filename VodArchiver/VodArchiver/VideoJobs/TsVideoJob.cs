@@ -27,7 +27,7 @@ namespace VodArchiver.VideoJobs {
 
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
-			(ResultType getFileUrlsResult, string[] urls) = await GetFileUrlsOfVod( cancellationToken );
+			(ResultType getFileUrlsResult, List<DownloadInfo> downloadInfos) = await GetFileUrlsOfVod( cancellationToken );
 			if (getFileUrlsResult == ResultType.UserInputRequired) {
 				Status = "Need manual fetch of file URLs.";
 				return ResultType.UserInputRequired;
@@ -56,7 +56,7 @@ namespace VodArchiver.VideoJobs {
 
 						System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
 						timer.Start();
-						var downloadResult = await Download( this, cancellationToken, GetTempFolderForParts(), urls );
+						var downloadResult = await Download(this, cancellationToken, GetTempFolderForParts(), downloadInfos);
 						if ( downloadResult.result != ResultType.Success ) {
 							return downloadResult.result;
 						}
@@ -80,7 +80,7 @@ namespace VodArchiver.VideoJobs {
 							if (File.Exists(tsnamesfilepath)) {
 								File.Delete(tsnamesfilepath);
 							}
-							(getFileUrlsResult, urls) = await GetFileUrlsOfVod( cancellationToken );
+							(getFileUrlsResult, downloadInfos) = await GetFileUrlsOfVod( cancellationToken );
 							if ( getFileUrlsResult != ResultType.Success ) {
 								Status = "Failed retrieving file URLs.";
 								return ResultType.Failure;
@@ -173,7 +173,7 @@ namespace VodArchiver.VideoJobs {
 			return ResultType.Success;
 		}
 
-		public abstract Task<(ResultType result, string[] urls)> GetFileUrlsOfVod( CancellationToken cancellationToken );
+		public abstract Task<(ResultType result, List<DownloadInfo> downloadInfos)> GetFileUrlsOfVod( CancellationToken cancellationToken );
 
 		public virtual string GetTempFolder() {
 			return Util.TempFolderPath;
@@ -197,93 +197,97 @@ namespace VodArchiver.VideoJobs {
 			return String.Join( "/", urlParts );
 		}
 
-		public static string[] GetFilenamesFromM3U8( string m3u8 ) {
-			var lines = m3u8.Split( new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries );
-			List<string> filenames = new List<string>(lines.Length);
-
-			bool literal = true;
-			if (literal) {
-				foreach (var line in lines) {
-					if (line.Trim() == "" || line.Trim().StartsWith("#")) {
-						continue;
-					}
-					filenames.Add(line.Trim());
-				}
-				return filenames.ToArray();
-			}
-
-			int max;
-			if (lines.Length == 1 && lines[0].StartsWith("autogen:")) {
-				max = int.Parse(lines[0].Substring(8));
-				for (int i = 0; i < max; ++i) {
-					filenames.Add(i + ".ts");
-				}
-				return filenames.ToArray();
-			}
-
-			int maxtsid = 0;
-			ISet<int> muted = new HashSet<int>();
-			foreach ( var line in lines ) {
-				if ( line.Trim() == "" || line.Trim().StartsWith( "#" ) ) {
-					continue;
-				}
-				int rrr;
-				if (int.TryParse(line.Split(new char[] { '.', '-' })[0], out rrr)) {
-					maxtsid = Math.Max(rrr, maxtsid);
-					if (line.EndsWith("-muted.ts")) {
-						muted.Add(rrr);
-					}
-				}
-			}
-
-			max = maxtsid+1;
-			for (int i = 0; i < max; ++i) {
-				if (muted.Contains(i)) {
-					filenames.Add(i + "-muted.ts");
-				} else {
-					filenames.Add(i + ".ts");
-				}
-			}
-			return filenames.ToArray();
+		public class DownloadInfo {
+			public string Url;
+			public string FilesystemId;
+			public long? Offset;
+			public long? Length;
 		}
 
-		public static async Task<(ResultType result, string[] files)> Download( IVideoJob job, CancellationToken cancellationToken, string targetFolder, string[] urls, int delayPerDownload = 0 ) {
+		public static List<DownloadInfo> GetFilenamesFromM3U8(string baseurl, string m3u8) {
+			var lines = m3u8.Split( new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries );
+			List<DownloadInfo> downloadInfos = new List<DownloadInfo>();
+
+			long? offset = null;
+			long? length = null;
+			foreach (var line in lines) {
+				string l = line.Trim();
+				if (l == "") {
+					continue;
+				}
+				if (l.StartsWith("#EXT-X-BYTERANGE:")) {
+					string[] split = l.Substring("#EXT-X-BYTERANGE:".Length).Split(new char[] { '@' });
+					length = long.Parse(split[0]);
+					offset = long.Parse(split[1]);
+					continue;
+				}
+				if (l.StartsWith("#")) {
+					continue;
+				}
+
+				var di = new DownloadInfo() {
+					Url = baseurl + l,
+					Length = length,
+					Offset = offset,
+				};
+				di.FilesystemId = GenerateFilesystemName(l, length, offset);
+				downloadInfos.Add(di);
+				length = null;
+				offset = null;
+			}
+			return downloadInfos;
+		}
+
+		private static string GenerateFilesystemName(string l, long? length, long? offset) {
+			return Util.FileSystemEscapeName(l) + "_" + (length == null ? "" : length.Value.ToString()) + "_" + (offset == null ? "" : offset.Value.ToString());
+		}
+
+		public static async Task<(ResultType result, string[] files)> Download(
+			IVideoJob job, CancellationToken cancellationToken, string targetFolder, List<DownloadInfo> downloadInfos, int delayPerDownload = 0
+		) {
 			Directory.CreateDirectory( targetFolder );
 
-			List<string> files = new List<string>( urls.Length );
+			List<string> files = new List<string>(downloadInfos.Count);
 			const int MaxTries = 5;
 			int triesLeft = MaxTries;
-			while ( files.Count < urls.Length ) {
+			while (files.Count < downloadInfos.Count) {
 				if ( triesLeft <= 0 ) {
 					job.Status = "Failed to download individual parts after " + MaxTries + " tries, aborting.";
 					return (ResultType.Failure, null);
 				}
 				files.Clear();
-				for ( int i = 0; i < urls.Length; ++i ) {
-				//for (int i = urls.Length - 1; i >= 0; --i) {
+				for (int i = 0; i < downloadInfos.Count; ++i) {
+				//for (int i = downloadInfos.Count - 1; i >= 0; --i) {
 					if ( cancellationToken.IsCancellationRequested ) {
 						return (ResultType.Cancelled, null);
 					}
 
-					string url = urls[i];
-					string outpath = Path.Combine( targetFolder, "part" + i.ToString( "D8" ) + ".ts" );
+					DownloadInfo downloadInfo = downloadInfos[i];
+					string outpath = Path.Combine( targetFolder, downloadInfo.FilesystemId + ".ts" );
 					string outpath_temp = outpath + ".tmp";
 					if ( await Util.FileExists( outpath_temp ) ) {
 						await Util.DeleteFile( outpath_temp );
 					}
 					if ( await Util.FileExists( outpath ) ) {
 						if ( i % 100 == 99 ) {
-							job.Status = "Already have part " + ( i + 1 ) + "/" + urls.Length + "...";
+							job.Status = "Already have part " + ( i + 1 ) + "/" + downloadInfos.Count + "...";
 						}
 						files.Add( outpath );
 						continue;
 					}
 
 					bool success = false;
-					using ( var client = new KeepAliveWebClient() ) {
+					{
+						System.Net.WebClient client = null;
 						try {
-							job.Status = "Downloading files... (" + ( files.Count + 1 ) + "/" + urls.Length + ")";
-							byte[] data = await client.DownloadDataTaskAsync( url );
+							if (downloadInfo.Length != null && downloadInfo.Offset != null) {
+								client = new KeepAliveWebClientWithRange(downloadInfo.Offset.Value, downloadInfo.Offset.Value + downloadInfo.Length.Value - 1);
+							} else {
+								client = new KeepAliveWebClient();
+							}
+
+							job.Status = "Downloading files... (" + ( files.Count + 1 ) + "/" + downloadInfos.Count + ")";
+							byte[] data = await client.DownloadDataTaskAsync(downloadInfo.Url);
 							await job.StallWrite( outpath_temp, data.LongLength, cancellationToken );
 							if ( cancellationToken.IsCancellationRequested ) { return (ResultType.Cancelled, null); }
 							using ( FileStream fs = File.Create( outpath_temp ) ) {
@@ -309,6 +313,10 @@ namespace VodArchiver.VideoJobs {
 								Console.WriteLine( ex.ToString() );
 							}
 							continue;
+						} finally {
+							if (client != null) {
+								client.Dispose();
+							}
 						}
 					}
 
@@ -328,7 +336,7 @@ namespace VodArchiver.VideoJobs {
 					}
 				}
 
-				if ( files.Count < urls.Length ) {
+				if (files.Count < downloadInfos.Count) {
 					try {
 						await Task.Delay( 60000, cancellationToken );
 					} catch ( TaskCanceledException ) {

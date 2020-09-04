@@ -30,11 +30,11 @@ namespace VodArchiver.VideoJobs {
 			return n;
 		}
 
-		public override async Task<(ResultType result, string[] urls)> GetFileUrlsOfVod( CancellationToken cancellationToken ) {
+		public override async Task<(ResultType result, List<DownloadInfo> downloadInfos)> GetFileUrlsOfVod( CancellationToken cancellationToken ) {
 			VideoInfo = new TwitchVideoInfo( await TwitchV5.GetVideo( long.Parse( VideoInfo.VideoId ), Util.TwitchClientId ) );
 
 			string folderpath;
-			string[] filenames;
+			List<DownloadInfo> downloadInfos;
 			while ( true ) {
 				try {
 					bool interactive = true;
@@ -61,14 +61,14 @@ namespace VodArchiver.VideoJobs {
 						}
 
 						folderpath = TsVideoJob.GetFolder(GetM3U8PathFromM3U(linesbaseurl, VideoQuality));
-						filenames = TsVideoJob.GetFilenamesFromM3U8(linestsnames);
+						downloadInfos = TsVideoJob.GetFilenamesFromM3U8(folderpath, linestsnames);
 					} else {
 						string clientId = Util.TwitchClientId;
 						string m3u = await TwitchV5.GetVodM3U( long.Parse( VideoInfo.VideoId ), clientId );
 						string m3u8path = GetM3U8PathFromM3U( m3u, VideoQuality );
 						folderpath = TsVideoJob.GetFolder( m3u8path );
 						string m3u8 = await TwitchV5.Get( m3u8path, clientId );
-						filenames = TsVideoJob.GetFilenamesFromM3U8( m3u8 );
+						downloadInfos = TsVideoJob.GetFilenamesFromM3U8(folderpath, m3u8);
 					}
 				} catch ( TwitchHttpException e ) {
 					if ( e.StatusCode == System.Net.HttpStatusCode.NotFound && VideoInfo.VideoRecordingState == RecordingState.Live ) {
@@ -87,11 +87,7 @@ namespace VodArchiver.VideoJobs {
 				break;
 			}
 
-			List<string> urls = new List<string>( filenames.Length );
-			foreach ( var filename in filenames ) {
-				urls.Add( folderpath + filename );
-			}
-			return (ResultType.Success, urls.ToArray());
+			return (ResultType.Success, downloadInfos);
 		}
 
 		private string TryGetUserCopyBaseurlM3U(string tmp) {

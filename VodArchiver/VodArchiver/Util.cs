@@ -164,6 +164,23 @@ namespace VodArchiver {
 			return fn;
 		}
 
+		public static string FileSystemEscapeName(string s) {
+			string fn = s;
+			fn = fn.Replace("-", "--" + GetBytesAsHexString(Encoding.UTF8.GetBytes("-")) + "--");
+			foreach (char c in GetCustomInvalidFileNameChars()) {
+				fn = fn.Replace(c.ToString(), "--" + GetBytesAsHexString(Encoding.UTF8.GetBytes(c.ToString())) + "--");
+			}
+			return fn;
+		}
+
+		public static string GetBytesAsHexString(byte[] bytes) {
+			StringBuilder sb = new StringBuilder();
+			foreach (byte b in bytes) {
+				sb.AppendFormat("{0:x2}", b);
+			}
+			return sb.ToString();
+		}
+
 		private static string ToUpperFirstChar( string s ) {
 			if ( s.Length > 0 ) {
 				bool maybeRomanNumeral = s.All( c => "IVX".Contains( c ) );

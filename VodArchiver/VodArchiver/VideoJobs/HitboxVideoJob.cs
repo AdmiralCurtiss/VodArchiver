@@ -25,7 +25,7 @@ namespace VodArchiver.VideoJobs {
 			return base.Serialize( document, node );
 		}
 
-		public override async Task<(ResultType result, string[] urls)> GetFileUrlsOfVod( CancellationToken cancellationToken ) {
+		public override async Task<(ResultType result, List<DownloadInfo> downloadInfos)> GetFileUrlsOfVod( CancellationToken cancellationToken ) {
 			(bool retrieveVideoSuccess, HitboxVideo video) = await Hitbox.RetrieveVideo( VideoInfo.VideoId );
 			if ( !retrieveVideoSuccess ) {
 				return (ResultType.Failure, null);
@@ -46,12 +46,15 @@ namespace VodArchiver.VideoJobs {
 				return (ResultType.Failure, null);
 			}
 
-			string[] filenames = TsVideoJob.GetFilenamesFromM3U8( m3u8 );
-			List<string> urls = new List<string>( filenames.Length );
-			foreach ( var filename in filenames ) {
-				urls.Add( folderpath + filename );
-			}
-			return (ResultType.Success, urls.ToArray());
+			// who cares, hitbox is dead
+			return (ResultType.Failure, null);
+
+			//string[] filenames = TsVideoJob.GetFilenamesFromM3U8( m3u8 );
+			//List<string> urls = new List<string>( filenames.Length );
+			//foreach ( var filename in filenames ) {
+			//	urls.Add( folderpath + filename );
+			//}
+			//return (ResultType.Success, urls.ToArray());
 		}
 
 		public static string GetM3U8PathFromM3U( string m3u ) {
