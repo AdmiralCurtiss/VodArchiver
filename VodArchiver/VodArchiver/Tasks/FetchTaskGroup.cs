@@ -61,10 +61,12 @@ namespace VodArchiver.Tasks {
 							try {
 								await DoFetch(RNG, earliestUserInfo, Form, CancelToken);
 							} finally {
-								earliestUserInfo.LastRefreshedOn = now;
-								if (earliestUserInfo.Persistable) {
-									UserInfoPersister.AddOrUpdate(earliestUserInfo);
-									UserInfoPersister.Save();
+								if (!CancelToken.IsCancellationRequested) {
+									earliestUserInfo.LastRefreshedOn = now;
+									if (earliestUserInfo.Persistable) {
+										UserInfoPersister.AddOrUpdate(earliestUserInfo);
+										UserInfoPersister.Save();
+									}
 								}
 							}
 						}
@@ -85,7 +87,12 @@ namespace VodArchiver.Tasks {
 					FetchReturnValue fetchReturnValue;
 					int Offset = 0;
 					do {
-						await Task.Delay(rng.Next(55000, 95000));
+						try {
+							await Task.Delay(rng.Next(55000, 95000), cancellationToken);
+						} catch (Exception) { }
+						if (cancellationToken.IsCancellationRequested) {
+							break;
+						}
 						fetchReturnValue = await userInfo.Fetch(Offset, true);
 						Offset += fetchReturnValue.VideoCountThisFetch;
 						if (fetchReturnValue.Success) {
@@ -99,7 +106,12 @@ namespace VodArchiver.Tasks {
 				}
 			}
 
-			await Task.Delay(rng.Next(55000, 95000));
+			if (!cancellationToken.IsCancellationRequested) {
+				try {
+					await Task.Delay(rng.Next(55000, 95000), cancellationToken);
+				} catch (Exception) { }
+			}
+			downloadWindow.AddStatusMessage("Fetched " + videos.Count + " items from " + userInfo.ToString() + ".");
 			DownloadFetched(videos, downloadWindow);
 		}
 
