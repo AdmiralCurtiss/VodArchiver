@@ -60,7 +60,7 @@ namespace VodArchiver.VideoJobs {
 					await StallWrite( tempFilepath, 0, cancellationToken ); // don't know expected filesize, so hope we have a sensible value in minimum free space
 					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 					List<string> args = new List<string>() {
-						"-f", "bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
+						"-f", "bestvideo+bestaudio/best",
 						"-o", tempFilepath,
 						"--merge-output-format", "mkv",
 						"--no-color",
