@@ -66,6 +66,7 @@ namespace VodArchiver {
 					case "Youtube (Channel)": userInfo = new YoutubeChannelUserInfo( userIdentifier ); break;
 					case "RSS Feed": userInfo = new RssFeedUserInfo( userIdentifier ); break;
 					case "FFMpeg Reencode": userInfo = new FFMpegJobUserInfo( userIdentifier ); break;
+					case "Archive.org URL": userInfo = new ArchiveOrgUserInfo(userIdentifier); break;
 					default: return new FetchReturnValue { Success = false, HasMore = false };
 				}
 				userInfo.Persistable = checkBoxSaveForLater.Checked;

@@ -76,6 +76,7 @@
             this.columnType,
             this.downloadButton});
 			this.objectListViewVideos.Cursor = System.Windows.Forms.Cursors.Default;
+			this.objectListViewVideos.HideSelection = false;
 			this.objectListViewVideos.Location = new System.Drawing.Point(12, 38);
 			this.objectListViewVideos.Name = "objectListViewVideos";
 			this.objectListViewVideos.Size = new System.Drawing.Size(959, 403);
@@ -170,7 +171,8 @@
             "Youtube (Channel)",
             "Youtube (Playlist)",
             "RSS Feed",
-            "FFMpeg Reencode"});
+            "FFMpeg Reencode",
+            "Archive.org URL"});
 			this.comboBoxService.Location = new System.Drawing.Point(250, 12);
 			this.comboBoxService.Name = "comboBoxService";
 			this.comboBoxService.Size = new System.Drawing.Size(133, 21);

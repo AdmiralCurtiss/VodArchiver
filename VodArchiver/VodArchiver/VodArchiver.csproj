@@ -89,6 +89,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArchiveOrg.cs" />
     <Compile Include="AutoRenameWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -130,6 +131,7 @@
     <Compile Include="Tasks\FetchTaskGroup.cs" />
     <Compile Include="Tasks\VideoTaskGroup.cs" />
     <Compile Include="Twitch.cs" />
+    <Compile Include="UserInfo\ArchiveOrgUserInfo.cs" />
     <Compile Include="UserInfo\FFMpegJobUserInfo.cs" />
     <Compile Include="UserInfo\HitboxUserInfo.cs" />
     <Compile Include="UserInfo\RssFeedUserInfo.cs" />
