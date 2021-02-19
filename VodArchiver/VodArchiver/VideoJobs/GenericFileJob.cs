@@ -51,6 +51,10 @@ namespace VodArchiver.VideoJobs {
 			return StringToFilename( basename, extension );
 		}
 
+		private void ReportDownloadProgress(object sender, DownloadProgressChangedEventArgs e) {
+			Status = string.Format("Downloading... {0}% ({1:F2}/{2:F2} MB)", e.ProgressPercentage, e.BytesReceived / (double)(1024 * 1024), e.TotalBytesToReceive / (double)(1024 * 1024));
+		}
+
 		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {
 			JobStatus = VideoJobStatus.Running;
 			Status = "Downloading...";
@@ -70,6 +74,7 @@ namespace VodArchiver.VideoJobs {
 					bool success = false;
 					using ( var client = new KeepAliveWebClient() )
 					using ( var cancellationCallback = cancellationToken.Register( client.CancelAsync ) ) {
+						client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(ReportDownloadProgress);
 						try {
 							byte[] data = await client.DownloadDataTaskAsync( VideoInfo.VideoId );
 							await StallWrite( tempFilename, data.LongLength, cancellationToken );
