@@ -107,7 +107,10 @@ namespace VodArchiver.VideoJobs {
 						}
 						await StallWrite( combinedFilename, expectedTargetFilesize, cancellationToken );
 						if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
-						await TsVideoJob.Combine( combinedTempname, files );
+						ResultType combineResult = await TsVideoJob.Combine(cancellationToken, combinedTempname, files);
+						if (combineResult != ResultType.Success) {
+							return combineResult;
+						}
 
 						// sanity check
 						Status = "Sanity check on combined video...";
@@ -349,10 +352,16 @@ namespace VodArchiver.VideoJobs {
 			return (ResultType.Success, files.ToArray());
 		}
 
-		public static async Task Combine( string combinedFilename, string[] files ) {
+		public static async Task<ResultType> Combine(CancellationToken cancellationToken, string combinedFilename, string[] files) {
 			Console.WriteLine( "Combining into " + combinedFilename + "..." );
-			using ( var fs = File.Create( combinedFilename + ".tmp" ) ) {
+			string tempname = combinedFilename + ".tmp";
+			using (var fs = File.Create(tempname)) {
 				foreach ( var file in files ) {
+					if (cancellationToken.IsCancellationRequested) {
+						fs.Close();
+						File.Delete(tempname);
+						return ResultType.Cancelled;
+					}
 					using ( var part = File.OpenRead( file ) ) {
 						await part.CopyToAsync( fs );
 						part.Close();
@@ -361,7 +370,8 @@ namespace VodArchiver.VideoJobs {
 
 				fs.Close();
 			}
-			Util.MoveFileOverwrite( combinedFilename + ".tmp", combinedFilename );
+			Util.MoveFileOverwrite(tempname, combinedFilename);
+			return ResultType.Success;
 		}
 
 		public static void Remux( string targetName, string sourceName, string tempName ) {
