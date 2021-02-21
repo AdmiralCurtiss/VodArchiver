@@ -8,6 +8,7 @@ using VodArchiver.VideoInfo;
 using System.Xml;
 using System.Threading;
 using System.Diagnostics;
+using Newtonsoft.Json.Linq;
 
 namespace VodArchiver.VideoJobs {
 	public class TwitchVideoJob : TsVideoJob {
@@ -37,7 +38,7 @@ namespace VodArchiver.VideoJobs {
 			List<DownloadInfo> downloadInfos;
 			while ( true ) {
 				try {
-					bool interactive = true;
+					bool interactive = false;
 					if ( interactive ) {
 						Status = "";
 						string tmp1 = Path.Combine( GetTempFolder(), GetTempFilenameWithoutExtension() + "_baseurl.txt" );
@@ -63,11 +64,13 @@ namespace VodArchiver.VideoJobs {
 						folderpath = TsVideoJob.GetFolder(GetM3U8PathFromM3U(linesbaseurl, VideoQuality));
 						downloadInfos = TsVideoJob.GetFilenamesFromM3U8(folderpath, linestsnames);
 					} else {
-						string clientId = Util.TwitchClientId;
-						string m3u = await TwitchV5.GetVodM3U( long.Parse( VideoInfo.VideoId ), clientId );
-						string m3u8path = GetM3U8PathFromM3U( m3u, VideoQuality );
-						folderpath = TsVideoJob.GetFolder( m3u8path );
-						string m3u8 = await TwitchV5.Get( m3u8path, clientId );
+						var data = await ExternalProgramExecution.RunProgram(@"youtube-dl", new string[] { "-J", "https://www.twitch.tv/videos/" + VideoInfo.VideoId });
+						JToken json = JObject.Parse(data.StdOut);
+						string m3u8path = json["url"].Value<string>();
+						folderpath = TsVideoJob.GetFolder(m3u8path);
+						var client = new System.Net.Http.HttpClient();
+						var result = await client.GetAsync(m3u8path);
+						string m3u8 = await result.Content.ReadAsStringAsync();
 						downloadInfos = TsVideoJob.GetFilenamesFromM3U8(folderpath, m3u8);
 					}
 				} catch ( TwitchHttpException e ) {
