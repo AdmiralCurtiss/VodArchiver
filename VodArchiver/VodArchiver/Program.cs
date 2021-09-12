@@ -11,6 +11,9 @@ namespace VodArchiver {
 		/// </summary>
 		[STAThread]
 		static void Main() {
+			System.Net.HttpWebRequest.DefaultMaximumErrorResponseLength = -1;
+			System.Net.HttpWebRequest.DefaultMaximumResponseHeadersLength = -1;
+
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault( false );
 			Application.Run( new DownloadForm() );
