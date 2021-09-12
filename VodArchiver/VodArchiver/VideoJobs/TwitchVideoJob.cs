@@ -66,7 +66,7 @@ namespace VodArchiver.VideoJobs {
 					} else {
 						var data = await ExternalProgramExecution.RunProgram(@"youtube-dl", new string[] { "-J", "https://www.twitch.tv/videos/" + VideoInfo.VideoId });
 						JToken json = JObject.Parse(data.StdOut);
-						string m3u8path = json["url"].Value<string>();
+						string m3u8path = ExtractM3u8FromJson(json);
 						folderpath = TsVideoJob.GetFolder(m3u8path);
 						var client = new System.Net.Http.HttpClient();
 						var result = await client.GetAsync(m3u8path);
@@ -91,6 +91,25 @@ namespace VodArchiver.VideoJobs {
 			}
 
 			return (ResultType.Success, downloadInfos);
+		}
+
+		private string ExtractM3u8FromJson(JToken json) {
+			try {
+				string url = json["url"].Value<string>();
+				if (url != "") {
+					return url;
+				}
+			} catch (Exception) { }
+
+			foreach (JToken jsonval in json["formats"]) {
+				try {
+					if (jsonval["format_note"].Value<string>() == "Source") {
+						return jsonval["url"].Value<string>();
+					}
+				} catch (Exception) { }
+			}
+
+			throw new Exception("failed to extract twitch url");
 		}
 
 		private string TryGetUserCopyBaseurlM3U(string tmp) {
