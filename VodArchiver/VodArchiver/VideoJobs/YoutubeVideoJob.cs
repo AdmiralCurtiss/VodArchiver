@@ -85,7 +85,7 @@ namespace VodArchiver.VideoJobs {
 					);
 				}
 
-				string finalFilename = "youtube_" + VideoInfo.Username + "_" + VideoInfo.VideoTimestamp.ToString( "yyyy-MM-dd" ) + "_" + VideoInfo.VideoId + "_" + Util.MakeIntercapsFilename( VideoInfo.VideoTitle ).Crop( 80 ) + ".mkv";
+				string finalFilename = GenerateOutputFilename();
 				string finalFilepath = Path.Combine( Util.TargetFolderPath, finalFilename );
 				if ( File.Exists( finalFilepath ) ) {
 					throw new Exception( "File exists: " + finalFilepath );
@@ -119,6 +119,10 @@ namespace VodArchiver.VideoJobs {
 			Status = "Done!";
 			JobStatus = VideoJobStatus.Finished;
 			return ResultType.Success;
+		}
+
+		public override string GenerateOutputFilename() {
+			return "youtube_" + VideoInfo.Username + "_" + VideoInfo.VideoTimestamp.ToString("yyyy-MM-dd") + "_" + VideoInfo.VideoId + "_" + Util.MakeIntercapsFilename(VideoInfo.VideoTitle).Crop(80) + ".mkv";
 		}
 	}
 }

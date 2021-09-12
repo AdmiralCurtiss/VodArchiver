@@ -541,6 +541,15 @@ namespace VodArchiver {
 						}
 					};
 				}
+				{
+					ToolStripItem item = menu.Items.Add("Copy Output Filename");
+					item.Click += (sender, e) => {
+						string fn = job?.GenerateOutputFilename();
+						if (fn != null) {
+							Clipboard.SetText(fn);
+						}
+					};
+				}
 
 				menu.Items.Add(new ToolStripSeparator());
 

@@ -245,6 +245,10 @@ namespace VodArchiver.VideoJobs {
 			return Util.FileSystemEscapeName(l) + "_" + (length == null ? "" : length.Value.ToString()) + "_" + (offset == null ? "" : offset.Value.ToString());
 		}
 
+		public override string GenerateOutputFilename() {
+			return GetFinalFilenameWithoutExtension() + ".mp4";
+		}
+
 		public static async Task<(ResultType result, string[] files)> Download(
 			IVideoJob job, CancellationToken cancellationToken, string targetFolder, List<DownloadInfo> downloadInfos, int delayPerDownload = 0
 		) {

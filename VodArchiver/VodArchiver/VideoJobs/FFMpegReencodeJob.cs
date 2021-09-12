@@ -146,5 +146,9 @@ namespace VodArchiver.VideoJobs {
 			);
 			File.Move( tempName, targetName );
 		}
+
+		public override string GenerateOutputFilename() {
+			return "too lazy to extract this right now, whatever, this job type is not important anyway";
+		}
 	}
 }

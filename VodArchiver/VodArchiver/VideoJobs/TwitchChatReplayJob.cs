@@ -38,6 +38,10 @@ namespace VodArchiver.VideoJobs {
 			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoTimestamp.ToString("yyyy-MM-dd_HH-mm-ss") + "_v" + VideoInfo.VideoId + "_" + "chat5";
 		}
 
+		public override string GenerateOutputFilename() {
+			return GetTargetFilenameWithoutExtension() + ".json";
+		}
+
 		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {
 			if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
 

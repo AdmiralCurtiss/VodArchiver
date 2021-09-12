@@ -38,29 +38,34 @@ namespace VodArchiver.VideoJobs {
 			return n;
 		}
 
-		private static string GenerateOutputName( string inputName ) {
-			string dir = System.IO.Path.GetDirectoryName( inputName );
-			string fn = System.IO.Path.GetFileNameWithoutExtension( inputName );
-			string ext = System.IO.Path.GetExtension( inputName );
-			var split = fn.Split( new char[] { '_' }, StringSplitOptions.None );
+		private string GenerateOutputName(string inputName) {
+			string dir = System.IO.Path.GetDirectoryName(inputName);
+			return System.IO.Path.Combine(dir, GenerateOutputFilename());
+		}
+
+		public override string GenerateOutputFilename() {
+			string inputName = Path.GetFileName(VideoInfo.VideoId);
+			string fn = System.IO.Path.GetFileNameWithoutExtension(inputName);
+			string ext = System.IO.Path.GetExtension(inputName);
+			var split = fn.Split(new char[] { '_' }, StringSplitOptions.None);
 			List<string> output = new List<string>();
 
 			bool added = false;
-			foreach ( string s in split ) {
+			foreach (string s in split) {
 				ulong val;
-				if ( !added && s.StartsWith( "v" ) && ulong.TryParse( s.Substring( 1 ), out val ) ) {
-					output.Add( s + "-p%d" );
+				if (!added && s.StartsWith("v") && ulong.TryParse(s.Substring(1), out val)) {
+					output.Add(s + "-p%d");
 					added = true;
 				} else {
-					output.Add( s );
+					output.Add(s);
 				}
 			}
 
-			if ( !added ) {
-				output.Add( "%d" );
+			if (!added) {
+				output.Add("%d");
 			}
 
-			return System.IO.Path.Combine( dir, string.Join( "_", output ) + ext );
+			return string.Join("_", output) + ext;
 		}
 
 		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {

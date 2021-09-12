@@ -55,6 +55,10 @@ namespace VodArchiver.VideoJobs {
 			Status = string.Format("Downloading... {0}% ({1:F2}/{2:F2} MB)", e.ProgressPercentage, e.BytesReceived / (double)(1024 * 1024), e.TotalBytesToReceive / (double)(1024 * 1024));
 		}
 
+		public override string GenerateOutputFilename() {
+			return GetTargetFilename();
+		}
+
 		public override async Task<ResultType> Run( CancellationToken cancellationToken ) {
 			JobStatus = VideoJobStatus.Running;
 			Status = "Downloading...";

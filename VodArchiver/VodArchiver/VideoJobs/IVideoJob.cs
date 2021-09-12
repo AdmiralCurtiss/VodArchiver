@@ -140,5 +140,7 @@ namespace VodArchiver.VideoJobs {
 				}
 			}
 		}
+
+		public abstract string GenerateOutputFilename();
 	}
 }
