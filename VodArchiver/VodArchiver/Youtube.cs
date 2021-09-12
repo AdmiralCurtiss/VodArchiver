@@ -55,6 +55,7 @@ namespace VodArchiver {
 			y.VideoId = json["id"].Value<string>();
 			y.VideoTitle = json["title"].Value<string>();
 			y.Username = usernameIfNotInJson;
+			y.VideoTimestamp = DateTime.UtcNow;
 			return (true, y);
 		}
 
