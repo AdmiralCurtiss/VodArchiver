@@ -27,10 +27,23 @@ namespace VodArchiver {
 		}
 
 		public struct RunProgramReturnValue { public string StdOut; public string StdErr; }
-		public static async Task<RunProgramReturnValue> RunProgram( string prog, string[] args, System.Diagnostics.DataReceivedEventHandler[] stdoutCallbacks = null, System.Diagnostics.DataReceivedEventHandler[] stderrCallbacks = null ) {
-			return await Task.Run( () => RunProgramSynchronous( prog, args, stdoutCallbacks, stderrCallbacks ) );
+		public static async Task<RunProgramReturnValue> RunProgram(
+			string prog,
+			string[] args,
+			System.Diagnostics.DataReceivedEventHandler[] stdoutCallbacks = null,
+			System.Diagnostics.DataReceivedEventHandler[] stderrCallbacks = null,
+			bool youtubeSpeedWorkaround = false
+		) {
+			return await Task.Run(() => RunProgramSynchronous(prog, args, stdoutCallbacks, stderrCallbacks, youtubeSpeedWorkaround));
 		}
-		public static RunProgramReturnValue RunProgramSynchronous( string prog, string[] args, System.Diagnostics.DataReceivedEventHandler[] stdoutCallbacks = null, System.Diagnostics.DataReceivedEventHandler[] stderrCallbacks = null ) {
+
+		public static RunProgramReturnValue RunProgramSynchronous(
+			string prog,
+			string[] args,
+			System.Diagnostics.DataReceivedEventHandler[] stdoutCallbacks = null,
+			System.Diagnostics.DataReceivedEventHandler[] stderrCallbacks = null,
+			bool youtubeSpeedWorkaround = false
+		) {
 			System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
 			startInfo.CreateNoWindow = true;
 			startInfo.UseShellExecute = false;
@@ -48,11 +61,26 @@ namespace VodArchiver {
 			startInfo.RedirectStandardInput = false;
 
 			using ( System.Diagnostics.Process exeProcess = new System.Diagnostics.Process() ) {
+				int youtubeSpeedWorkaroundCounter = 0;
+
 				StringBuilder outputData = new StringBuilder();
 				StringBuilder errorData = new StringBuilder();
 				exeProcess.OutputDataReceived += ( sender, received ) => {
 					if ( !String.IsNullOrEmpty( received.Data ) ) {
 						outputData.Append( received.Data );
+
+						if (youtubeSpeedWorkaround) {
+							if (IsSlowYoutubeSpeed(received.Data)) {
+								++youtubeSpeedWorkaroundCounter;
+								if (youtubeSpeedWorkaroundCounter > 100) {
+									try {
+										exeProcess.Kill();
+									} catch (Exception) { }
+								}
+							} else {
+								youtubeSpeedWorkaroundCounter = 0;
+							}
+						}
 					}
 				};
 				if ( stdoutCallbacks != null ) {
@@ -88,6 +116,27 @@ namespace VodArchiver {
 
 				return new RunProgramReturnValue() { StdOut = output, StdErr = err };
 			}
+		}
+
+		private static bool IsSlowYoutubeSpeed(string data) {
+			if (data == null || !data.StartsWith("[download]"))
+				return false;
+			int kibsidx = data.IndexOf("KiB/s");
+			if (kibsidx == -1)
+				return false;
+			int previdx = kibsidx - 1;
+			while (true) {
+				if (previdx < 0)
+					return false;
+				if (data[previdx] == ' ')
+					break;
+				--previdx;
+			}
+			string kibss = data.Substring(previdx + 1, kibsidx - (previdx + 1));
+			float kibs;
+			if (!float.TryParse(kibss, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out kibs))
+				return false;
+			return kibs < 100.0f;
 		}
 	}
 }

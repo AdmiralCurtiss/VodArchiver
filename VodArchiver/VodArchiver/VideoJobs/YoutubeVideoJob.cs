@@ -74,7 +74,7 @@ namespace VodArchiver.VideoJobs {
 					}
 					args.Add( "https://www.youtube.com/watch?v=" + VideoInfo.VideoId );
 					var data = await ExternalProgramExecution.RunProgram(
-						@"youtube-dl", args.ToArray(),
+						@"youtube-dl", args.ToArray(), youtubeSpeedWorkaround: true,
 						stdoutCallbacks: new System.Diagnostics.DataReceivedEventHandler[1] {
 							( sender, received ) => {
 								if ( !String.IsNullOrEmpty( received.Data ) ) {
