@@ -41,6 +41,8 @@
 			this.label7 = new System.Windows.Forms.Label();
 			this.label8 = new System.Windows.Forms.Label();
 			this.textBoxYoutubeSpeedLimit = new System.Windows.Forms.TextBox();
+			this.textBoxTwitchClientSecret = new System.Windows.Forms.TextBox();
+			this.label9 = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this.numericUpDownMinimumFreeSpace)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -137,7 +139,7 @@
 			// 
 			this.textBoxTwitchRedirectURI.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.textBoxTwitchRedirectURI.Location = new System.Drawing.Point(131, 156);
+			this.textBoxTwitchRedirectURI.Location = new System.Drawing.Point(131, 182);
 			this.textBoxTwitchRedirectURI.Name = "textBoxTwitchRedirectURI";
 			this.textBoxTwitchRedirectURI.Size = new System.Drawing.Size(360, 20);
 			this.textBoxTwitchRedirectURI.TabIndex = 12;
@@ -145,7 +147,7 @@
 			// label4
 			// 
 			this.label4.AutoSize = true;
-			this.label4.Location = new System.Drawing.Point(12, 159);
+			this.label4.Location = new System.Drawing.Point(12, 185);
 			this.label4.Name = "label4";
 			this.label4.Size = new System.Drawing.Size(104, 13);
 			this.label4.TabIndex = 11;
@@ -176,7 +178,7 @@
             0,
             0,
             0});
-			this.numericUpDownMinimumFreeSpace.Location = new System.Drawing.Point(131, 183);
+			this.numericUpDownMinimumFreeSpace.Location = new System.Drawing.Point(131, 209);
 			this.numericUpDownMinimumFreeSpace.Maximum = new decimal(new int[] {
             1879048191,
             -1291644761,
@@ -189,7 +191,7 @@
 			// label6
 			// 
 			this.label6.AutoSize = true;
-			this.label6.Location = new System.Drawing.Point(12, 185);
+			this.label6.Location = new System.Drawing.Point(12, 211);
 			this.label6.Name = "label6";
 			this.label6.Size = new System.Drawing.Size(106, 13);
 			this.label6.TabIndex = 14;
@@ -198,7 +200,7 @@
 			// label7
 			// 
 			this.label7.AutoSize = true;
-			this.label7.Location = new System.Drawing.Point(279, 185);
+			this.label7.Location = new System.Drawing.Point(279, 211);
 			this.label7.Name = "label7";
 			this.label7.Size = new System.Drawing.Size(33, 13);
 			this.label7.TabIndex = 15;
@@ -207,7 +209,7 @@
 			// label8
 			// 
 			this.label8.AutoSize = true;
-			this.label8.Location = new System.Drawing.Point(12, 212);
+			this.label8.Location = new System.Drawing.Point(12, 238);
 			this.label8.Name = "label8";
 			this.label8.Size = new System.Drawing.Size(105, 13);
 			this.label8.TabIndex = 16;
@@ -217,16 +219,36 @@
 			// 
 			this.textBoxYoutubeSpeedLimit.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.textBoxYoutubeSpeedLimit.Location = new System.Drawing.Point(131, 209);
+			this.textBoxYoutubeSpeedLimit.Location = new System.Drawing.Point(131, 235);
 			this.textBoxYoutubeSpeedLimit.Name = "textBoxYoutubeSpeedLimit";
 			this.textBoxYoutubeSpeedLimit.Size = new System.Drawing.Size(360, 20);
 			this.textBoxYoutubeSpeedLimit.TabIndex = 17;
+			// 
+			// textBoxTwitchClientSecret
+			// 
+			this.textBoxTwitchClientSecret.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.textBoxTwitchClientSecret.Location = new System.Drawing.Point(131, 156);
+			this.textBoxTwitchClientSecret.Name = "textBoxTwitchClientSecret";
+			this.textBoxTwitchClientSecret.Size = new System.Drawing.Size(360, 20);
+			this.textBoxTwitchClientSecret.TabIndex = 19;
+			// 
+			// label9
+			// 
+			this.label9.AutoSize = true;
+			this.label9.Location = new System.Drawing.Point(12, 159);
+			this.label9.Name = "label9";
+			this.label9.Size = new System.Drawing.Size(102, 13);
+			this.label9.TabIndex = 18;
+			this.label9.Text = "Twitch Client Secret";
 			// 
 			// SettingsWindow
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(503, 319);
+			this.Controls.Add(this.textBoxTwitchClientSecret);
+			this.Controls.Add(this.label9);
 			this.Controls.Add(this.textBoxYoutubeSpeedLimit);
 			this.Controls.Add(this.label8);
 			this.Controls.Add(this.label7);
@@ -273,5 +295,7 @@
 		private System.Windows.Forms.Label label7;
 		private System.Windows.Forms.Label label8;
 		private System.Windows.Forms.TextBox textBoxYoutubeSpeedLimit;
+		private System.Windows.Forms.TextBox textBoxTwitchClientSecret;
+		private System.Windows.Forms.Label label9;
 	}
 }

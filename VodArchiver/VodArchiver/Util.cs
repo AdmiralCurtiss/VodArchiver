@@ -49,6 +49,7 @@ namespace VodArchiver {
 		public static string UserSerializationXmlTempPath { get { return System.IO.Path.Combine( PersistentDataPath, "users.tmp" ); } }
 
 		public static string TwitchClientId { get { return Properties.Settings.Default.TwitchClientID; } }
+		public static string TwitchClientSecret { get { return Properties.Settings.Default.TwitchClientSecret; } }
 		public static string TwitchRedirectURI { get { return Properties.Settings.Default.TwitchRedirectURI; } }
 
 		public static string YoutubeSpeedLimit { get { return Properties.Settings.Default.YoutubeSpeedLimit ?? ""; } }
@@ -119,6 +120,37 @@ namespace VodArchiver {
 			} else {
 				return UInt32.Parse( s );
 			}
+		}
+
+		public static long ParseTwitchDuration(string v) {
+			long duration = 0;
+			StringBuilder sb = new StringBuilder();
+			foreach (char c in v) {
+				if (c >= '0' && c <= '9') {
+					sb.Append(c);
+				} else {
+					long d = long.Parse(sb.ToString());
+					switch (c) {
+						case 'd':
+							duration += d * 60 * 60 * 24;
+							break;
+						case 'h':
+							duration += d * 60 * 60;
+							break;
+						case 'm':
+							duration += d * 60;
+							break;
+						case 's':
+							duration += d;
+							break;
+						default:
+							throw new Exception("Invalid format: " + v);
+					}
+					sb.Clear();
+				}
+			}
+
+			return duration;
 		}
 
 		public static string GetParameterFromUri( Uri uri, string parameter ) {

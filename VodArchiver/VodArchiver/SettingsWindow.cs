@@ -17,6 +17,7 @@ namespace VodArchiver {
 			checkBoxCustomLocationPersistentData.Checked = Util.EnableCustomDataPath;
 			textBoxCustomLocationPersistentData.Text = Util.PersistentDataPath;
 			textBoxTwitchClientID.Text = Util.TwitchClientId;
+			textBoxTwitchClientSecret.Text = Util.TwitchClientSecret;
 			textBoxTwitchRedirectURI.Text = Util.TwitchRedirectURI;
 			numericUpDownMinimumFreeSpace.Value = Util.MinimumFreeSpaceBytes;
 			textBoxYoutubeSpeedLimit.Text = Util.YoutubeSpeedLimit;
@@ -28,6 +29,7 @@ namespace VodArchiver {
 			Properties.Settings.Default.EnableCustomDataPath = checkBoxCustomLocationPersistentData.Checked;
 			Properties.Settings.Default.CustomDataPath = Properties.Settings.Default.EnableCustomDataPath ? textBoxCustomLocationPersistentData.Text : "";
 			Properties.Settings.Default.TwitchClientID = textBoxTwitchClientID.Text;
+			Properties.Settings.Default.TwitchClientSecret = textBoxTwitchClientSecret.Text;
 			Properties.Settings.Default.TwitchRedirectURI = textBoxTwitchRedirectURI.Text;
 			Properties.Settings.Default.MinimumFreeSpaceBytes = (long)numericUpDownMinimumFreeSpace.Value;
 			Properties.Settings.Default.YoutubeSpeedLimit = textBoxYoutubeSpeedLimit.Text;

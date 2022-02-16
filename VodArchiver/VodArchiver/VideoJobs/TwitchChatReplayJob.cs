@@ -47,7 +47,8 @@ namespace VodArchiver.VideoJobs {
 
 			JobStatus = VideoJobStatus.Running;
 			Status = "Retrieving video info...";
-			VideoInfo = new TwitchVideoInfo( await TwitchV5.GetVideo( long.Parse( VideoInfo.VideoId ), Util.TwitchClientId ), StreamService.TwitchChatReplay );
+			var video_json = await TwitchYTDL.GetVideoJson(long.Parse(VideoInfo.VideoId));
+			VideoInfo = new TwitchVideoInfo(TwitchYTDL.VideoFromJson(video_json), StreamService.TwitchChatReplay);
 			if ( !AssumeFinished && VideoInfo.VideoRecordingState == RecordingState.Live ) {
 				_UserInputRequest = new UserInputRequestStreamLive( this );
 				return ResultType.TemporarilyUnavailable;
@@ -78,7 +79,7 @@ namespace VodArchiver.VideoJobs {
 									return ResultType.Cancelled;
 								}
 
-								string commentJson = await TwitchV5.Get( url, Util.TwitchClientId );
+								string commentJson = await TwitchAPI.GetLegacy(url, Util.TwitchClientId);
 								JObject responseObject = JObject.Parse( commentJson );
 								if ( responseObject["comments"] == null ) {
 									throw new Exception( "Nonsense JSON returned, no comments." );

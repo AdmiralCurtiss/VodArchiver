@@ -34,82 +34,128 @@ namespace VodArchiver {
 		public long TotalVideoCount;
 	}
 
-	public static class TwitchV5 {
-		private static readonly string Kraken = "https://api.twitch.tv/kraken/";
+	public static class TwitchYTDL {
+		public static async Task<JObject> GetVideoJson(long id) {
+			List<string> args = new List<string>() {
+				"-J", "https://www.twitch.tv/videos/" + id,
+			};
+			var data = await ExternalProgramExecution.RunProgram(@"yt-dlp", args.ToArray());
+			return JObject.Parse(data.StdOut);
+		}
+
+		public static TwitchVideo VideoFromJson(JObject json) {
+			TwitchVideo v = new TwitchVideo();
+			v.ID = long.Parse(((string)json["id"]).TrimStart('v'));
+			v.UserID = 0; // we don't get this from yt-dlp and it's not really important anyway
+			v.Username = (string)json["uploader"];
+			v.Title = (string)json["title"];
+			v.Game = "?";
+			v.Description = "?";
+			v.CreatedAt = Util.DateTimeFromUnixTime(ulong.Parse((string)json["timestamp"], Util.SerializationFormatProvider));
+			v.PublishedAt = v.CreatedAt;
+			v.Duration = long.Parse((string)json["duration"]);
+			v.ViewCount = long.Parse((string)json["view_count"]);
+			bool is_live = (bool)json["is_live"];
+			bool was_live = (bool)json["was_live"];
+			if (is_live || was_live) {
+				v.Type = TwitchVideoType.Archive;
+			} else {
+				v.Type = TwitchVideoType.Upload;
+			}
+			v.State = is_live ? RecordingState.Live : RecordingState.Recorded;
+			return v;
+		}
+	}
+
+	public static class TwitchAPI {
+		private static readonly string Helix = "https://api.twitch.tv/helix/";
 		private static readonly string Api = "https://api.twitch.tv/api/";
 		private static readonly string Usher = "http://usher.twitch.tv/";
 
-		public static async Task<TwitchVideo> GetVideo( long id, string clientId ) {
-			string result = await Get( Kraken + "videos/" + id.ToString(), clientId );
-			JObject json = JObject.Parse( result );
-			return VideoFromJson( json );
-		}
-
-		private static TwitchVideo VideoFromJson( JObject json ) {
-			TwitchVideo v = new TwitchVideo();
-			v.ID = long.Parse( ( (string)json["_id"] ).TrimStart( 'v' ) );
-			v.UserID = long.Parse( (string)json["channel"]["_id"] );
-			v.Username = (string)json["channel"]["display_name"];
-			v.Title = (string)json["title"];
-			v.Game = (string)json["game"];
-			v.Description = (string)json["description"];
-			v.CreatedAt = DateTime.Parse( (string)json["created_at"], Util.SerializationFormatProvider );
-			v.PublishedAt = DateTime.Parse( (string)json["published_at"], Util.SerializationFormatProvider );
-			v.Duration = long.Parse( (string)json["length"] );
-			v.ViewCount = long.Parse( (string)json["views"] );
-			switch ( (string)json["broadcast_type"] ) {
-				case "upload": v.Type = TwitchVideoType.Upload; break;
-				case "highlight": v.Type = TwitchVideoType.Highlight; break;
-				case "archive": v.Type = TwitchVideoType.Archive; break;
-				default: throw new Exception( "Unknown twitch broadcast type '" + (string)json["broadcast_type"] + "'" );
-			}
-			switch ( (string)json["status"] ) {
-				case "recorded": v.State = RecordingState.Recorded; break;
-				case "recording": v.State = RecordingState.Live; break;
-				default: v.State = RecordingState.Unknown; break;
-			}
-			return v;
-		}
-
-		public static async Task<string> GetVodM3U( long id, string clientId ) {
+		public static async Task<string> GetVodM3U(long id, string clientId) {
 			string token;
 			string sig;
 			{
-				string result = await Get( Api + "vods/" + id.ToString() + "/access_token", clientId );
-				JObject json = JObject.Parse( result );
+				string result = await GetLegacy(Api + "vods/" + id.ToString() + "/access_token", clientId);
+				JObject json = JObject.Parse(result);
 				token = (string)json["token"];
 				sig = (string)json["sig"];
 			}
 
-			return await Get( Usher + "vod/" + id.ToString() + "?nauthsig=" + sig + "&nauth=" + Uri.EscapeDataString( token ), clientId );
+			return await GetLegacy(Usher + "vod/" + id.ToString() + "?nauthsig=" + sig + "&nauth=" + Uri.EscapeDataString(token), clientId);
 		}
 
-		public static async Task<long> GetUserIdFromUsername( string username, string clientId ) {
-			string result = await Get( Kraken + "users?login=" + Uri.EscapeDataString( username ), clientId );
-			JObject json = JObject.Parse( result );
-			return (long)json["users"][0]["_id"];
+		public static async Task<long> GetUserIdFromUsername(string username, string clientId, string clientSecret) {
+			string result = await Get(Helix + "users?login=" + Uri.EscapeDataString(username), clientId, clientSecret);
+			JObject json = JObject.Parse(result);
+			return (long)json["data"][0]["id"];
 		}
 
-		public static async Task<TwitchVodFetchResult> GetVideos( long channelId, bool highlights, int offset, int limit, string clientId ) {
-			string result = await Get( Kraken + "channels/" + channelId + "/videos?limit=" + limit + "&offset=" + offset + "&broadcast_type=" + ( highlights ? "highlight" : "archive" ), clientId );
-			JObject json = JObject.Parse( result );
+		public static async Task<TwitchVodFetchResult> GetVideos(long channelId, bool highlights, int offset, int limit, string clientId, string clientSecret) {
+			//string result = await Get(Helix + "videos?user_id=" + channelId + "&limit=" + limit + "&offset=" + offset + "&broadcast_type=" + (highlights ? "highlight" : "archive"), clientId, clientSecret);
+			string result = await Get(Helix + "videos?user_id=" + channelId + "&first=" + limit + "&type=" + (highlights ? "highlight" : "archive"), clientId, clientSecret);
+			JObject json = JObject.Parse(result);
 
 			TwitchVodFetchResult r = new TwitchVodFetchResult();
 			r.Videos = new List<TwitchVideo>();
-			foreach ( JObject jv in (JArray)json["videos"] ) {
-				r.Videos.Add( VideoFromJson( jv ) );
+			foreach (JObject jv in (JArray)json["data"]) {
+				r.Videos.Add(VideoFromJson(jv));
 			}
-			r.TotalVideoCount = (long)json["_total"];
+			r.TotalVideoCount = 1; // TODO
 
 			return r;
 		}
 
-		public static async Task<string> Get( string url, string clientId ) {
+		public static TwitchVideo VideoFromJson(JObject json) {
+			TwitchVideo v = new TwitchVideo();
+			v.ID = long.Parse(((string)json["id"]).TrimStart('v'));
+			v.UserID = long.Parse((string)json["user_id"]);
+			v.Username = (string)json["user_name"];
+			v.Title = (string)json["title"];
+			v.Game = "?";
+			v.Description = (string)json["description"];
+			v.CreatedAt = DateTime.Parse((string)json["created_at"], Util.SerializationFormatProvider);
+			v.PublishedAt = DateTime.Parse((string)json["published_at"], Util.SerializationFormatProvider);
+			v.Duration = Util.ParseTwitchDuration((string)json["duration"]);
+			v.ViewCount = long.Parse((string)json["view_count"]);
+			switch ((string)json["type"]) {
+				case "upload": v.Type = TwitchVideoType.Upload; break;
+				case "highlight": v.Type = TwitchVideoType.Highlight; break;
+				case "archive": v.Type = TwitchVideoType.Archive; break;
+				default: throw new Exception("Unknown twitch broadcast type '" + (string)json["broadcast_type"] + "'");
+			}
+			v.State = RecordingState.Unknown;
+			return v;
+		}
+
+		public static async Task<string> GetLegacy(string url, string clientId) {
 			HttpClient client = new HttpClient();
-			client.DefaultRequestHeaders.Add( "Accept", "application/vnd.twitchtv.v5+json" );
-			client.DefaultRequestHeaders.Add( "Client-ID", clientId );
-			var result = await client.GetAsync( url );
-			if ( result.IsSuccessStatusCode ) {
+			client.DefaultRequestHeaders.Add("Accept", "application/vnd.twitchtv.v5+json");
+			client.DefaultRequestHeaders.Add("Client-ID", clientId);
+			var result = await client.GetAsync(url);
+			if (result.IsSuccessStatusCode) {
+				return await result.Content.ReadAsStringAsync();
+			} else {
+				throw new TwitchHttpException() { StatusCode = result.StatusCode };
+			}
+		}
+
+		private static async Task<string> Get(string url, string clientId, string clientSecret) {
+			string OAuthUrl = "https://id.twitch.tv/oauth2/token";
+			HttpClient client2 = new HttpClient();
+			HttpResponseMessage token_response = (await client2.PostAsync(OAuthUrl, new FormUrlEncodedContent(new Dictionary<string, string> {
+				{ "client_id", clientId },
+				{ "client_secret", clientSecret },
+				{ "grant_type", "client_credentials" },
+			}))).EnsureSuccessStatusCode();
+			JObject token_json = JObject.Parse(await token_response.Content.ReadAsStringAsync());
+			string token = (string)token_json["access_token"];
+
+			HttpClient client = new HttpClient();
+			client.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
+			client.DefaultRequestHeaders.Add("Client-ID", clientId);
+			var result = await client.GetAsync(url);
+			if (result.IsSuccessStatusCode) {
 				return await result.Content.ReadAsStringAsync();
 			} else {
 				throw new TwitchHttpException() { StatusCode = result.StatusCode };

@@ -32,7 +32,8 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public override async Task<(ResultType result, List<DownloadInfo> downloadInfos)> GetFileUrlsOfVod( CancellationToken cancellationToken ) {
-			VideoInfo = new TwitchVideoInfo( await TwitchV5.GetVideo( long.Parse( VideoInfo.VideoId ), Util.TwitchClientId ) );
+			var video_json = await TwitchYTDL.GetVideoJson(long.Parse(VideoInfo.VideoId));
+			VideoInfo = new TwitchVideoInfo(TwitchYTDL.VideoFromJson(video_json));
 
 			string folderpath;
 			List<DownloadInfo> downloadInfos;
@@ -64,9 +65,7 @@ namespace VodArchiver.VideoJobs {
 						folderpath = TsVideoJob.GetFolder(GetM3U8PathFromM3U(linesbaseurl, VideoQuality));
 						downloadInfos = TsVideoJob.GetFilenamesFromM3U8(folderpath, linestsnames);
 					} else {
-						var data = await ExternalProgramExecution.RunProgram(@"yt-dlp", new string[] { "-J", "https://www.twitch.tv/videos/" + VideoInfo.VideoId });
-						JToken json = JObject.Parse(data.StdOut);
-						string m3u8path = ExtractM3u8FromJson(json);
+						string m3u8path = ExtractM3u8FromJson(video_json);
 						folderpath = TsVideoJob.GetFolder(m3u8path);
 						var client = new System.Net.Http.HttpClient();
 						var result = await client.GetAsync(m3u8path);
@@ -81,7 +80,8 @@ namespace VodArchiver.VideoJobs {
 						} catch ( TaskCanceledException ) {
 							return (ResultType.Cancelled, null);
 						}
-						VideoInfo = new TwitchVideoInfo( await TwitchV5.GetVideo( long.Parse( VideoInfo.VideoId ), Util.TwitchClientId ) );
+						video_json = await TwitchYTDL.GetVideoJson(long.Parse(VideoInfo.VideoId));
+						VideoInfo = new TwitchVideoInfo(TwitchYTDL.VideoFromJson(video_json));
 						continue;
 					} else {
 						throw;
