@@ -68,8 +68,15 @@ namespace VodArchiver {
 		}
 
 		public enum RetrieveVideoResult { Success, FetchFailure, ParseFailure }
-		public static async Task<(RetrieveVideoResult result, IVideoInfo info)> RetrieveVideo( string id, string usernameIfNotInJson ) {
-			var data = await ExternalProgramExecution.RunProgram( @"youtube-dl", new string[] { "-j", "https://www.youtube.com/watch?v=" + id } );
+		public static async Task<(RetrieveVideoResult result, IVideoInfo info)> RetrieveVideo(string id, string usernameIfNotInJson, bool wantCookies) {
+			List<string> args = new List<string>() {
+				"-j", "https://www.youtube.com/watch?v=" + id,
+			};
+			if (wantCookies) {
+				args.Add("--cookies");
+				args.Add(@"d:\cookies.txt");
+			}
+			var data = await ExternalProgramExecution.RunProgram(@"yt-dlp", args.ToArray());
 			var json = JObject.Parse( data.StdOut );
 			var parsed = ParseFromJson( json, false, usernameIfNotInJson );
 			return (parsed.success ? RetrieveVideoResult.Success : RetrieveVideoResult.ParseFailure, parsed.info);
@@ -85,7 +92,7 @@ namespace VodArchiver {
 				args.Add( "--ignore-errors" );
 				args.Add( "-J" );
 				args.Add( parameter );
-				ExternalProgramExecution.RunProgramReturnValue data = await ExternalProgramExecution.RunProgram( @"youtube-dl", args.ToArray() );
+				ExternalProgramExecution.RunProgramReturnValue data = await ExternalProgramExecution.RunProgram( @"yt-dlp", args.ToArray() );
 				raw = data.StdOut;
 			} catch ( ExternalProgramReturnNonzeroException ex ) {
 				// try anyway, this gets thrown when a video is unavailable for copyright reasons

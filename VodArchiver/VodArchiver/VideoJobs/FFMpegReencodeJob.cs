@@ -134,7 +134,7 @@ namespace VodArchiver.VideoJobs {
 			args.Add( tempName );
 
 			await VodArchiver.ExternalProgramExecution.RunProgram(
-				"ffmpeg",
+				"ffmpeg_encode",
 				args.ToArray(),
 				stderrCallbacks: new System.Diagnostics.DataReceivedEventHandler[1] {
 					( sender, received ) => {

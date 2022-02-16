@@ -32,7 +32,8 @@ namespace VodArchiver.VideoJobs {
 			JobStatus = VideoJobStatus.Running;
 			if ( ( VideoInfo as YoutubeVideoInfo ) == null ) {
 				Status = "Retrieving video info...";
-				var result = await Youtube.RetrieveVideo( VideoInfo.VideoId, VideoInfo.Username );
+				bool wantCookies = Notes != null && Notes.Contains("cookies");
+				var result = await Youtube.RetrieveVideo(VideoInfo.VideoId, VideoInfo.Username, wantCookies);
 
 				switch ( result.result ) {
 					case Youtube.RetrieveVideoResult.Success:
@@ -66,15 +67,22 @@ namespace VodArchiver.VideoJobs {
 						"--no-color",
 						"--abort-on-error",
 						"--abort-on-unavailable-fragment",
+						"--no-sponsorblock",
 					};
 					string limit = Util.YoutubeSpeedLimit;
 					if ( limit != "" ) {
 						args.Add( "--rate-limit" );
 						args.Add( limit );
 					}
+					bool wantCookies = Notes != null && Notes.Contains("cookies");
+					if (wantCookies) {
+						args.Add("--cookies");
+						args.Add(@"d:\cookies.txt");
+					}
+					bool nokill = Notes != null && Notes.Contains("nokill");
 					args.Add( "https://www.youtube.com/watch?v=" + VideoInfo.VideoId );
 					var data = await ExternalProgramExecution.RunProgram(
-						@"youtube-dl", args.ToArray(), youtubeSpeedWorkaround: true,
+						@"yt-dlp", args.ToArray(), youtubeSpeedWorkaround: !nokill,
 						stdoutCallbacks: new System.Diagnostics.DataReceivedEventHandler[1] {
 							( sender, received ) => {
 								if ( !String.IsNullOrEmpty( received.Data ) ) {

@@ -79,7 +79,7 @@
 			this.objectListViewVideos.HideSelection = false;
 			this.objectListViewVideos.Location = new System.Drawing.Point(12, 38);
 			this.objectListViewVideos.Name = "objectListViewVideos";
-			this.objectListViewVideos.Size = new System.Drawing.Size(959, 403);
+			this.objectListViewVideos.Size = new System.Drawing.Size(1011, 442);
 			this.objectListViewVideos.TabIndex = 9;
 			this.objectListViewVideos.UseCompatibleStateImageBehavior = false;
 			this.objectListViewVideos.View = System.Windows.Forms.View.Details;
@@ -161,6 +161,7 @@
 			// 
 			// comboBoxService
 			// 
+			this.comboBoxService.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.comboBoxService.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.comboBoxService.FormattingEnabled = true;
 			this.comboBoxService.Items.AddRange(new object[] {
@@ -173,24 +174,24 @@
             "RSS Feed",
             "FFMpeg Reencode",
             "Archive.org URL"});
-			this.comboBoxService.Location = new System.Drawing.Point(250, 12);
+			this.comboBoxService.Location = new System.Drawing.Point(378, 12);
 			this.comboBoxService.Name = "comboBoxService";
 			this.comboBoxService.Size = new System.Drawing.Size(133, 21);
 			this.comboBoxService.TabIndex = 8;
 			// 
 			// textboxUsername
 			// 
-			this.textboxUsername.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.textboxUsername.Location = new System.Drawing.Point(450, 12);
+			this.textboxUsername.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.textboxUsername.Location = new System.Drawing.Point(578, 12);
 			this.textboxUsername.Name = "textboxUsername";
-			this.textboxUsername.Size = new System.Drawing.Size(201, 20);
+			this.textboxUsername.Size = new System.Drawing.Size(125, 20);
 			this.textboxUsername.TabIndex = 7;
 			// 
 			// labelUsername
 			// 
+			this.labelUsername.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.labelUsername.AutoSize = true;
-			this.labelUsername.Location = new System.Drawing.Point(389, 15);
+			this.labelUsername.Location = new System.Drawing.Point(517, 15);
 			this.labelUsername.Name = "labelUsername";
 			this.labelUsername.Size = new System.Drawing.Size(55, 13);
 			this.labelUsername.TabIndex = 6;
@@ -199,7 +200,7 @@
 			// buttonFetch
 			// 
 			this.buttonFetch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonFetch.Location = new System.Drawing.Point(755, 12);
+			this.buttonFetch.Location = new System.Drawing.Point(807, 12);
 			this.buttonFetch.Name = "buttonFetch";
 			this.buttonFetch.Size = new System.Drawing.Size(113, 20);
 			this.buttonFetch.TabIndex = 5;
@@ -209,18 +210,20 @@
 			// 
 			// comboBoxKnownUsers
 			// 
+			this.comboBoxKnownUsers.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.comboBoxKnownUsers.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.comboBoxKnownUsers.FormattingEnabled = true;
 			this.comboBoxKnownUsers.Location = new System.Drawing.Point(12, 12);
 			this.comboBoxKnownUsers.Name = "comboBoxKnownUsers";
-			this.comboBoxKnownUsers.Size = new System.Drawing.Size(232, 21);
+			this.comboBoxKnownUsers.Size = new System.Drawing.Size(360, 21);
 			this.comboBoxKnownUsers.TabIndex = 10;
 			this.comboBoxKnownUsers.SelectedIndexChanged += new System.EventHandler(this.comboBoxKnownUsers_SelectedIndexChanged);
 			// 
 			// buttonDownloadFetched
 			// 
 			this.buttonDownloadFetched.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonDownloadFetched.Location = new System.Drawing.Point(813, 447);
+			this.buttonDownloadFetched.Location = new System.Drawing.Point(865, 486);
 			this.buttonDownloadFetched.Name = "buttonDownloadFetched";
 			this.buttonDownloadFetched.Size = new System.Drawing.Size(158, 23);
 			this.buttonDownloadFetched.TabIndex = 11;
@@ -231,7 +234,7 @@
 			// buttonClear
 			// 
 			this.buttonClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonClear.Location = new System.Drawing.Point(874, 12);
+			this.buttonClear.Location = new System.Drawing.Point(926, 12);
 			this.buttonClear.Name = "buttonClear";
 			this.buttonClear.Size = new System.Drawing.Size(97, 20);
 			this.buttonClear.TabIndex = 12;
@@ -242,7 +245,7 @@
 			// buttonDownloadAllKnown
 			// 
 			this.buttonDownloadAllKnown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.buttonDownloadAllKnown.Location = new System.Drawing.Point(649, 447);
+			this.buttonDownloadAllKnown.Location = new System.Drawing.Point(701, 486);
 			this.buttonDownloadAllKnown.Name = "buttonDownloadAllKnown";
 			this.buttonDownloadAllKnown.Size = new System.Drawing.Size(158, 23);
 			this.buttonDownloadAllKnown.TabIndex = 13;
@@ -254,7 +257,7 @@
 			// 
 			this.checkBoxAutoDownload.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.checkBoxAutoDownload.AutoSize = true;
-			this.checkBoxAutoDownload.Location = new System.Drawing.Point(13, 453);
+			this.checkBoxAutoDownload.Location = new System.Drawing.Point(13, 492);
 			this.checkBoxAutoDownload.Name = "checkBoxAutoDownload";
 			this.checkBoxAutoDownload.Size = new System.Drawing.Size(151, 17);
 			this.checkBoxAutoDownload.TabIndex = 14;
@@ -266,7 +269,7 @@
 			// 
 			this.checkBoxFlat.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.checkBoxFlat.AutoSize = true;
-			this.checkBoxFlat.Location = new System.Drawing.Point(710, 14);
+			this.checkBoxFlat.Location = new System.Drawing.Point(762, 14);
 			this.checkBoxFlat.Name = "checkBoxFlat";
 			this.checkBoxFlat.Size = new System.Drawing.Size(43, 17);
 			this.checkBoxFlat.TabIndex = 15;
@@ -277,7 +280,7 @@
 			// 
 			this.checkBoxSaveForLater.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.checkBoxSaveForLater.AutoSize = true;
-			this.checkBoxSaveForLater.Location = new System.Drawing.Point(657, 14);
+			this.checkBoxSaveForLater.Location = new System.Drawing.Point(709, 14);
 			this.checkBoxSaveForLater.Name = "checkBoxSaveForLater";
 			this.checkBoxSaveForLater.Size = new System.Drawing.Size(51, 17);
 			this.checkBoxSaveForLater.TabIndex = 16;
@@ -289,7 +292,7 @@
 			this.AcceptButton = this.buttonFetch;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(983, 482);
+			this.ClientSize = new System.Drawing.Size(1035, 521);
 			this.Controls.Add(this.checkBoxSaveForLater);
 			this.Controls.Add(this.checkBoxFlat);
 			this.Controls.Add(this.checkBoxAutoDownload);

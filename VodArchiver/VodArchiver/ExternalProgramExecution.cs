@@ -119,24 +119,40 @@ namespace VodArchiver {
 		}
 
 		private static bool IsSlowYoutubeSpeed(string data) {
-			if (data == null || !data.StartsWith("[download]"))
-				return false;
-			int kibsidx = data.IndexOf("KiB/s");
-			if (kibsidx == -1)
-				return false;
-			int previdx = kibsidx - 1;
-			while (true) {
-				if (previdx < 0)
+			try {
+				if (data == null || !data.StartsWith("[download]"))
 					return false;
-				if (data[previdx] == ' ')
-					break;
-				--previdx;
-			}
-			string kibss = data.Substring(previdx + 1, kibsidx - (previdx + 1));
-			float kibs;
-			if (!float.TryParse(kibss, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out kibs))
+				int kibsidx = data.IndexOf("KiB/s");
+				if (kibsidx == -1)
+					return false;
+				int previdx = kibsidx - 1;
+				while (true) {
+					if (previdx < 0)
+						return false;
+					if (data[previdx] == ' ')
+						break;
+					--previdx;
+				}
+				string kibss = data.Substring(previdx + 1, kibsidx - (previdx + 1));
+				float kibs;
+				if (!float.TryParse(kibss, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out kibs))
+					return false;
+				if (kibs >= 100.0f)
+					return false;
+
+				int etaidx = data.LastIndexOf("ETA ");
+				if (etaidx == -1)
+					return true;
+				etaidx += 4;
+				string etastr = data.Substring(etaidx, data.Length - etaidx);
+				int coloncount = etastr.Count(x => x == ':');
+				if (coloncount != 1)
+					return coloncount > 1;
+				var minsec = etastr.Split(':');
+				return int.Parse(minsec[0]) > 59;
+			} catch (Exception) {
 				return false;
-			return kibs < 100.0f;
+			}
 		}
 	}
 }

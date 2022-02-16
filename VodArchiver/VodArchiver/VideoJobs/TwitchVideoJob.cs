@@ -64,7 +64,7 @@ namespace VodArchiver.VideoJobs {
 						folderpath = TsVideoJob.GetFolder(GetM3U8PathFromM3U(linesbaseurl, VideoQuality));
 						downloadInfos = TsVideoJob.GetFilenamesFromM3U8(folderpath, linestsnames);
 					} else {
-						var data = await ExternalProgramExecution.RunProgram(@"youtube-dl", new string[] { "-J", "https://www.twitch.tv/videos/" + VideoInfo.VideoId });
+						var data = await ExternalProgramExecution.RunProgram(@"yt-dlp", new string[] { "-J", "https://www.twitch.tv/videos/" + VideoInfo.VideoId });
 						JToken json = JObject.Parse(data.StdOut);
 						string m3u8path = ExtractM3u8FromJson(json);
 						folderpath = TsVideoJob.GetFolder(m3u8path);

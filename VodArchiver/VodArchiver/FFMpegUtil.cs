@@ -34,6 +34,7 @@ namespace VodArchiver {
 					CodecTag = Util.ParseDecOrHex( jsonStream["codec_tag"].ToString() ),
 					CodecType = jsonStream["codec_type"].ToString(),
 					Duration = jsonStream["duration"] != null ? TimeSpan.FromSeconds( (double)jsonStream["duration"] ) : (TimeSpan?)null,
+					Framerate = jsonStream["r_frame_rate"] != null ? ParseFramerate((string)jsonStream["r_frame_rate"]) : 0.0f,
 				} );
 			}
 
@@ -45,6 +46,15 @@ namespace VodArchiver {
 				Duration = duration,
 				Streams = streams,
 			};
+		}
+
+		private static float ParseFramerate(string v) {
+			try {
+				string[] arr = v.Split('/');
+				return (float)(((double)long.Parse(arr[0])) / ((double)long.Parse(arr[1])));
+			} catch (Exception) {
+				return 0.0f;
+			}
 		}
 	}
 
@@ -62,5 +72,6 @@ namespace VodArchiver {
 		public uint CodecTag;
 		public string CodecType;
 		public TimeSpan? Duration;
+		public float Framerate;
 	}
 }

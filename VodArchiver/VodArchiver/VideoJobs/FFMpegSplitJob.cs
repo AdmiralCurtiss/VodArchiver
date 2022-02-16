@@ -117,7 +117,7 @@ namespace VodArchiver.VideoJobs {
 			try {
 				Status = "Splitting...";
 				await StallWrite( exampleOutname, new FileInfo( inname ).Length, cancellationToken );
-				await VodArchiver.ExternalProgramExecution.RunProgram( "ffmpeg", args.ToArray() );
+				await VodArchiver.ExternalProgramExecution.RunProgram( "ffmpeg_split", args.ToArray() );
 			} finally {
 				Util.ExpensiveDiskIOSemaphore.Release();
 			}

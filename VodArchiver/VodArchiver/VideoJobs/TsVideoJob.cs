@@ -382,7 +382,7 @@ namespace VodArchiver.VideoJobs {
 			Directory.CreateDirectory( Path.GetDirectoryName( targetName ) );
 			Console.WriteLine( "Remuxing to " + targetName + "..." );
 			VodArchiver.ExternalProgramExecution.RunProgramSynchronous(
-				"ffmpeg",
+				"ffmpeg_remux",
 				new string[] {
 					"-i", sourceName,
 					"-codec", "copy",

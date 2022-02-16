@@ -63,9 +63,11 @@ namespace VodArchiver.Tasks {
 				case StreamService.FFMpegJob:
 					return 1;
 				case StreamService.Twitch:
+					return 1;
+				case StreamService.TwitchChatReplay:
 					return 3;
 				default:
-					return 3;
+					return 1;
 			}
 		}
 

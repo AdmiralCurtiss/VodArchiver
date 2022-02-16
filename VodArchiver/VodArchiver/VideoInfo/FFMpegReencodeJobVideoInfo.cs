@@ -11,7 +11,7 @@ namespace VodArchiver.VideoInfo {
 		public override RecordingState VideoRecordingState { get => RecordingState.Recorded; set => throw new Exception(); }
 		public override VideoFileType VideoType { get => VideoFileType.Unknown; set => throw new Exception(); }
 		public override string Username { get => PostfixNew; set => throw new Exception(); }
-		public override string VideoGame { get => String.Format( "{0:#,#} MB; {1:#,#} kbps", Filesize / 1000000, Bitrate / 1000 ); set => throw new Exception(); }
+		public override string VideoGame { get => String.Format( "{0:#,#} MB; {1:#,#} kbps, {2} fps", Filesize / 1000000, Bitrate / 1000, Framerate ); set => throw new Exception(); }
 
 		public List<string> FFMpegOptions;
 		public string PostfixOld;
@@ -20,12 +20,14 @@ namespace VodArchiver.VideoInfo {
 
 		private ulong Filesize;
 		private ulong Bitrate;
+		private float Framerate;
 
 		public FFMpegReencodeJobVideoInfo( string filename, FFProbeResult probe, List<string> ffmpegOptions, string postfixOld, string postfixNew, string outputformat ) {
 			VideoTitle = System.IO.Path.GetFileNameWithoutExtension( filename );
 			VideoId = System.IO.Path.GetFullPath( filename );
 			Filesize = probe.Filesize;
 			Bitrate = probe.Bitrate;
+			Framerate = probe.Streams?.Where(x => x.Framerate > 0.0f)?.FirstOrDefault()?.Framerate ?? 0.0f;
 			VideoTimestamp = probe.Timestamp;
 			VideoLength = probe.Duration;
 			FFMpegOptions = ffmpegOptions;
@@ -51,6 +53,11 @@ namespace VodArchiver.VideoInfo {
 					Bitrate = 0;
 				}
 			}
+			try {
+				Framerate = float.Parse(node.Attributes["framerate"].Value, Util.SerializationFormatProvider);
+			} catch (Exception) {
+				Framerate = 0.0f;
+			}
 			VideoTimestamp = DateTime.FromBinary( long.Parse( node.Attributes["videoTimestamp"].Value, Util.SerializationFormatProvider ) );
 			try {
 				VideoLength = TimeSpan.FromSeconds( double.Parse( node.Attributes["videoLength"].Value, Util.SerializationFormatProvider ) );
@@ -74,6 +81,7 @@ namespace VodArchiver.VideoInfo {
 			node.AppendAttribute( document, "videoId", VideoId );
 			node.AppendAttribute( document, "filesize", Filesize.ToString( Util.SerializationFormatProvider ) );
 			node.AppendAttribute( document, "bitrate", Bitrate.ToString( Util.SerializationFormatProvider ) );
+			node.AppendAttribute( document, "framerate", Framerate.ToString( Util.SerializationFormatProvider ) );
 			node.AppendAttribute( document, "videoTimestamp", VideoTimestamp.ToBinary().ToString( Util.SerializationFormatProvider ) );
 			node.AppendAttribute( document, "videoLength", VideoLength.TotalSeconds.ToString( Util.SerializationFormatProvider ) );
 			node.AppendAttribute( document, "postfixOld", PostfixOld );

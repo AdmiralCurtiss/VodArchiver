@@ -10,13 +10,13 @@ namespace VodArchiver {
 		/// The main entry point for the application.
 		/// </summary>
 		[STAThread]
-		static void Main() {
+		static void Main(string[] args) {
 			System.Net.HttpWebRequest.DefaultMaximumErrorResponseLength = -1;
 			System.Net.HttpWebRequest.DefaultMaximumResponseHeadersLength = -1;
 
 			Application.EnableVisualStyles();
-			Application.SetCompatibleTextRenderingDefault( false );
-			Application.Run( new DownloadForm() );
+			Application.SetCompatibleTextRenderingDefault(false);
+			Application.Run(new DownloadForm());
 		}
 	}
 }
