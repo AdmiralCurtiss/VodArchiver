@@ -275,6 +275,18 @@ namespace VodArchiver.VideoJobs {
 					if ( await Util.FileExists( outpath_temp ) ) {
 						await Util.DeleteFile( outpath_temp );
 					}
+
+					if (outpath.EndsWith("--2d--muted--2e--ts__.ts")) {
+						string alt_outpath = outpath.Substring(0, outpath.Length - "--2d--muted--2e--ts__.ts".Length) + "--2e--ts__.ts";
+						if (await Util.FileExists(alt_outpath)) {
+							if ( i % 100 == 99 ) {
+								job.Status = "Already have part " + ( i + 1 ) + "/" + downloadInfos.Count + "...";
+							}
+							files.Add(alt_outpath);
+							continue;
+						}
+					}
+
 					if ( await Util.FileExists( outpath ) ) {
 						if ( i % 100 == 99 ) {
 							job.Status = "Already have part " + ( i + 1 ) + "/" + downloadInfos.Count + "...";
