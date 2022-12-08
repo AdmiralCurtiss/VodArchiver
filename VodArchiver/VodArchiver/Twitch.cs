@@ -91,18 +91,35 @@ namespace VodArchiver {
 			return (long)json["data"][0]["id"];
 		}
 
-		public static async Task<TwitchVodFetchResult> GetVideos(long channelId, bool highlights, int offset, int limit, string clientId, string clientSecret) {
-			//string result = await Get(Helix + "videos?user_id=" + channelId + "&limit=" + limit + "&offset=" + offset + "&broadcast_type=" + (highlights ? "highlight" : "archive"), clientId, clientSecret);
-			string result = await Get(Helix + "videos?user_id=" + channelId + "&first=" + limit + "&type=" + (highlights ? "highlight" : "archive"), clientId, clientSecret);
+		public static async Task GetVideosInternal(TwitchVodFetchResult r, long channelId, bool highlights, int offset, int limit, string clientId, string clientSecret, string after) {
+			string result = await Get(Helix + "videos?user_id=" + channelId + "&first=" + 100 + "&type=" + (highlights ? "highlight" : "archive") + (after != null ? ("&after=" + after) : ""), clientId, clientSecret);
 			JObject json = JObject.Parse(result);
 
-			TwitchVodFetchResult r = new TwitchVodFetchResult();
-			r.Videos = new List<TwitchVideo>();
+			if (r.Videos == null) {
+				r.Videos = new List<TwitchVideo>();
+			}
 			foreach (JObject jv in (JArray)json["data"]) {
 				r.Videos.Add(VideoFromJson(jv));
 			}
-			r.TotalVideoCount = 1; // TODO
 
+			try {
+				var pagination = (JObject)json["pagination"];
+				if (pagination != null) {
+					string cursor = (string)pagination["cursor"];
+					if (cursor != null && cursor != "") {
+						await GetVideosInternal(r, channelId, highlights, offset, limit, clientId, clientSecret, cursor);
+						return;
+					}
+				}
+			} catch (Exception) {
+				return;
+			}
+		}
+
+		public static async Task<TwitchVodFetchResult> GetVideos(long channelId, bool highlights, int offset, int limit, string clientId, string clientSecret) {
+			TwitchVodFetchResult r = new TwitchVodFetchResult();
+			await GetVideosInternal(r, channelId, highlights, offset, limit, clientId, clientSecret, null);
+			r.TotalVideoCount = 1; // TODO
 			return r;
 		}
 

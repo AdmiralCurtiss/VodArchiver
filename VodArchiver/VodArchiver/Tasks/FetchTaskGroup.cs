@@ -88,7 +88,7 @@ namespace VodArchiver.Tasks {
 					int Offset = 0;
 					do {
 						try {
-							await Task.Delay(rng.Next(55000, 95000), cancellationToken);
+							await Task.Delay(rng.Next(155000, 195000), cancellationToken);
 						} catch (Exception) { }
 						if (cancellationToken.IsCancellationRequested) {
 							break;

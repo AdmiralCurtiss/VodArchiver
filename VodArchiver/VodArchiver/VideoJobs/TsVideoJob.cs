@@ -61,7 +61,7 @@ namespace VodArchiver.VideoJobs {
 							return downloadResult.result;
 						}
 						files = downloadResult.files;
-						if ( this.AssumeFinished || this.VideoInfo.VideoRecordingState != RecordingState.Live ) {
+						if ( this.AssumeFinished || this.VideoInfo.VideoRecordingState == RecordingState.Recorded ) {
 							break;
 						} else {
 							// we're downloading a stream that is still streaming

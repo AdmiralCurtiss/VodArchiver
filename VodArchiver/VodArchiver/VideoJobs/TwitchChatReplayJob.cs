@@ -122,7 +122,7 @@ namespace VodArchiver.VideoJobs {
 									// presumably done?
 									break;
 								}
-							} catch ( System.Net.WebException ex ) {
+							} catch ( Exception ex ) {
 								Console.WriteLine( ex.ToString() );
 								--attemptsLeft;
 								Status = "Downloading chat (Error; " + attemptsLeft + " attempts left)...";
