@@ -211,7 +211,12 @@ namespace VodArchiver {
 				return;
 			}
 
-			CreateAndEnqueueJob( service, id );
+			if (service == StreamService.Twitch) {
+				CreateAndEnqueueJob(StreamService.Twitch, id);
+				CreateAndEnqueueJob(StreamService.TwitchChatReplay, id);
+			} else {
+				CreateAndEnqueueJob(service, id);
+			}
 			textboxMediaId.Text = "";
 		}
 
