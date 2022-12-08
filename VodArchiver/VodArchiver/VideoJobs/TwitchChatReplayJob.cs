@@ -31,11 +31,11 @@ namespace VodArchiver.VideoJobs {
 		}
 
 		public string GetTempFilenameWithoutExtension() {
-			return "twitch_" + VideoInfo.Username + "_v" + VideoInfo.VideoId + "_" + "chat5";
+			return "twitch_" + VideoInfo.Username + "_v" + VideoInfo.VideoId + "_" + "chat_gql";
 		}
 
 		public string GetTargetFilenameWithoutExtension() {
-			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoTimestamp.ToString("yyyy-MM-dd_HH-mm-ss") + "_v" + VideoInfo.VideoId + "_" + "chat5";
+			return "twitch_" + VideoInfo.Username + "_" + VideoInfo.VideoTimestamp.ToString("yyyy-MM-dd_HH-mm-ss") + "_v" + VideoInfo.VideoId + "_" + "chat_gql";
 		}
 
 		public override string GenerateOutputFilename() {
@@ -54,110 +54,30 @@ namespace VodArchiver.VideoJobs {
 				return ResultType.TemporarilyUnavailable;
 			}
 
-			string tempname = Path.Combine( Util.TempFolderPath, GetTempFilenameWithoutExtension() + ".json.tmp" );
-			string finalintmpname = Path.Combine( Util.TempFolderPath, GetTempFilenameWithoutExtension() + ".json" );
-			string filename = Path.Combine( Util.TargetFolderPath, GetTargetFilenameWithoutExtension() + ".json" );
-			Random rng = new Random( int.Parse( VideoInfo.VideoId ) );
+			string tempfolder = Path.Combine(Util.TempFolderPath, GetTempFilenameWithoutExtension());
+			string tempname = Path.Combine(tempfolder, "a.json");
+			string rawtempname = Path.Combine(tempfolder, "a.json.raw");
+			string filename = Path.Combine(Util.TargetFolderPath, GetTargetFilenameWithoutExtension() + ".json");
+			string rawfilename = Path.Combine(Util.TargetFolderPath, GetTargetFilenameWithoutExtension() + ".raw");
 
-			if ( !await Util.FileExists( filename ) ) {
-				if ( !await Util.FileExists( finalintmpname ) ) {
-					Status = "Downloading chat (Initial)...";
-					StringBuilder concatJson = new StringBuilder();
-					string url = GetStartUrl( VideoInfo );
-					int attemptsLeft = 5;
-					TimeSpan? lastTimeSpan = new TimeSpan( 0 );
-					int nextDelayMilliseconds = 0;
-					while ( true ) {
-						using ( var client = new KeepAliveWebClient() )
-						using ( var cancellationCallback = cancellationToken.Register( client.CancelAsync ) ) {
-							try {
-								try {
-									if ( nextDelayMilliseconds != 0 ) {
-										await Task.Delay( nextDelayMilliseconds > 0 ? nextDelayMilliseconds : rng.Next( 90000, 270000 ), cancellationToken );
-									}
-								} catch ( TaskCanceledException ) {
-									return ResultType.Cancelled;
-								}
-
-								string commentJson = await TwitchAPI.GetLegacy(url, Util.TwitchClientId);
-								JObject responseObject = JObject.Parse( commentJson );
-								if ( responseObject["comments"] == null ) {
-									throw new Exception( "Nonsense JSON returned, no comments." );
-								}
-
-								string offset = "Unknown";
-								try {
-									JToken c = ( (JArray)responseObject["comments"] ).Last;
-									double val = (double)c["content_offset_seconds"];
-									TimeSpan ts = TimeSpan.FromSeconds( val );
-									if ( lastTimeSpan != null ) {
-										TimeSpan diff = ts - lastTimeSpan.Value;
-										double delay = diff.TotalMilliseconds;
-										if ( delay < 0.0 ) {
-											nextDelayMilliseconds = -1;
-										} else if ( delay < 90000.0 ) {
-											nextDelayMilliseconds = (int)delay;
-										} else if ( delay < 270000.0 ) {
-											nextDelayMilliseconds = rng.Next( 90000, (int)delay );
-										} else {
-											nextDelayMilliseconds = -1;
-										}
-									} else {
-										nextDelayMilliseconds = -1;
-									}
-									lastTimeSpan = ts;
-									offset = ts.ToString();
-								} catch ( Exception ) {
-									lastTimeSpan = null;
-									nextDelayMilliseconds = -1;
-								}
-
-								concatJson.Append( commentJson );
-								if ( responseObject["_next"] != null ) {
-									string next = (string)responseObject["_next"];
-									attemptsLeft = 5;
-									Status = "Downloading chat (Last offset: " + offset + "; next file: " + next + ")...";
-									url = GetNextUrl( VideoInfo, next );
-								} else {
-									// presumably done?
-									break;
-								}
-							} catch ( Exception ex ) {
-								Console.WriteLine( ex.ToString() );
-								--attemptsLeft;
-								Status = "Downloading chat (Error; " + attemptsLeft + " attempts left)...";
-								if ( attemptsLeft <= 0 ) {
-									throw;
-								}
-								continue;
-							}
-						}
-					}
-
-					await StallWrite( tempname, concatJson.Length * 4, cancellationToken ); // size not accurate because encoding but whatever
-					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
-					File.WriteAllText( tempname, concatJson.ToString() );
-					File.Move( tempname, finalintmpname );
-				}
-
-				if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
-				Status = "Moving to final location...";
-				await StallWrite( filename, new FileInfo( finalintmpname ).Length, cancellationToken );
-				if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
-				Util.MoveFileOverwrite( finalintmpname, filename );
+			if (Directory.Exists(tempfolder)) {
+				Directory.Delete(tempfolder);
 			}
+			Directory.CreateDirectory(tempfolder);
+
+			Status = "Downloading chat data...";
+			var result = await ExternalProgramExecution.RunProgram(@"TwitchDownloaderCLI\TwitchDownloaderCLI.exe", new string[] {
+				"chatdownload", "-E", "--id", VideoInfo.VideoId, "-o", tempname
+			});
+
+			Util.MoveFileOverwrite(rawtempname, rawfilename);
+			Util.MoveFileOverwrite(tempname, filename);
+
+			Directory.Delete(tempfolder);
 
 			Status = "Done!";
 			JobStatus = VideoJobStatus.Finished;
 			return ResultType.Success;
-		}
-
-		public string GetStartUrl( IVideoInfo info ) {
-			return "https://api.twitch.tv/v5/videos/" + info.VideoId + "/comments?content_offset_seconds=0";
-		}
-
-		public string GetNextUrl( IVideoInfo info, string next ) {
-			return "https://api.twitch.tv/v5/videos/" + info.VideoId + "/comments?cursor=" + next;
 		}
 
 		protected override bool ShouldStallWrite( string path, long filesize ) {
