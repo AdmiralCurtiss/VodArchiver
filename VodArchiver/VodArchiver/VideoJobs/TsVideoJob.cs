@@ -160,6 +160,7 @@ namespace VodArchiver.VideoJobs {
 					}
 
 					Util.MoveFileOverwrite( remuxedFilename, targetFilename );
+					await Util.DeleteFile( combinedFilename );
 				} finally {
 					Util.ExpensiveDiskIOSemaphore.Release();
 				}
