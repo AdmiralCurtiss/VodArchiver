@@ -141,6 +141,7 @@
     <Compile Include="UserInfo\IUserInfo.cs" />
     <Compile Include="UserInfo\YoutubeChannelUserInfo.cs" />
     <Compile Include="UserInfo\YoutubePlaylistUserInfo.cs" />
+    <Compile Include="UserInfo\YoutubeUrlUserInfo.cs" />
     <Compile Include="UserInfo\YoutubeUserUserInfo.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="VideoInfo\FFMpegReencodeJobVideoInfo.cs" />

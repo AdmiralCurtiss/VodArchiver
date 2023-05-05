@@ -171,6 +171,7 @@
             "Youtube (User)",
             "Youtube (Channel)",
             "Youtube (Playlist)",
+            "Youtube (Url)",
             "RSS Feed",
             "FFMpeg Reencode",
             "Archive.org URL"});

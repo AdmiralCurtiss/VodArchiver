@@ -122,8 +122,12 @@ namespace VodArchiver {
 			return await RetrieveVideosFromParameterString( "https://www.youtube.com/channel/" + channel, flat, usernameIfNotInJson );
 		}
 
-		public static async Task<List<IVideoInfo>> RetrieveVideosFromUser( string user, bool flat ) {
-			return await RetrieveVideosFromParameterString( "ytuser:" + user, flat, user );
+		public static async Task<List<IVideoInfo>> RetrieveVideosFromUser(string user, bool flat) {
+			return await RetrieveVideosFromParameterString("ytuser:" + user, flat, user);
+		}
+
+		public static async Task<List<IVideoInfo>> RetrieveVideosFromUrl(string url, bool flat) {
+			return await RetrieveVideosFromParameterString(url, flat, url);
 		}
 	}
 }

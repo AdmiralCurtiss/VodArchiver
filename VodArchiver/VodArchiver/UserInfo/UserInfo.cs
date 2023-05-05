@@ -19,6 +19,7 @@ namespace VodArchiver.UserInfo {
 		RssFeed,
 		FFMpegJob,
 		ArchiveOrg,
+		YoutubeUrl,
 	}
 
 	public static class ServiceVideoCategoryGroups {

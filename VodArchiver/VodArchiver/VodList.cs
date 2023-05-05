@@ -63,6 +63,7 @@ namespace VodArchiver {
 					case "Hitbox": userInfo = new HitboxUserInfo( userIdentifier ); break;
 					case "Youtube (Playlist)": userInfo = new YoutubePlaylistUserInfo( userIdentifier ); break;
 					case "Youtube (User)": userInfo = new YoutubeUserUserInfo( userIdentifier ); break;
+					case "Youtube (Url)": userInfo = new YoutubeUrlUserInfo( userIdentifier ); break;
 					case "Youtube (Channel)": userInfo = new YoutubeChannelUserInfo( userIdentifier ); break;
 					case "RSS Feed": userInfo = new RssFeedUserInfo( userIdentifier ); break;
 					case "FFMpeg Reencode": userInfo = new FFMpegJobUserInfo( userIdentifier ); break;
