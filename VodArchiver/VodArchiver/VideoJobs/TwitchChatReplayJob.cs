@@ -56,9 +56,7 @@ namespace VodArchiver.VideoJobs {
 
 			string tempfolder = Path.Combine(Util.TempFolderPath, GetTempFilenameWithoutExtension());
 			string tempname = Path.Combine(tempfolder, "a.json");
-			string rawtempname = Path.Combine(tempfolder, "a.json.raw");
 			string filename = Path.Combine(Util.TargetFolderPath, GetTargetFilenameWithoutExtension() + ".json");
-			string rawfilename = Path.Combine(Util.TargetFolderPath, GetTargetFilenameWithoutExtension() + ".raw");
 
 			if (Directory.Exists(tempfolder)) {
 				Directory.Delete(tempfolder);
@@ -67,10 +65,9 @@ namespace VodArchiver.VideoJobs {
 
 			Status = "Downloading chat data...";
 			var result = await ExternalProgramExecution.RunProgram(@"TwitchDownloaderCLI\TwitchDownloaderCLI.exe", new string[] {
-				"chatdownload", "-E", "--id", VideoInfo.VideoId, "-o", tempname
+				"chatdownload", "-E", "--chat-connections", "1", "--id", VideoInfo.VideoId, "-o", tempname
 			});
 
-			Util.MoveFileOverwrite(rawtempname, rawfilename);
 			Util.MoveFileOverwrite(tempname, filename);
 
 			Directory.Delete(tempfolder);
