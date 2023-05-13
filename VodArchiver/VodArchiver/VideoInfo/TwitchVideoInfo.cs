@@ -7,7 +7,7 @@ using System.Xml;
 
 namespace VodArchiver.VideoInfo {
 	public class TwitchVideoInfo : IVideoInfo {
-		TwitchVideo _Video;
+		public TwitchVideo _Video;
 		StreamService _Service;
 
 		public TwitchVideoInfo( TwitchVideo video, StreamService service = StreamService.Twitch ) {

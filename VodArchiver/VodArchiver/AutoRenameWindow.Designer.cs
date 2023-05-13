@@ -28,6 +28,7 @@
 			this.labelPath = new System.Windows.Forms.Label();
 			this.buttonGenDurationDiff = new System.Windows.Forms.Button();
 			this.textBoxDurationDiff = new System.Windows.Forms.TextBox();
+			this.buttonGenMeta = new System.Windows.Forms.Button();
 			this.SuspendLayout();
 			// 
 			// textBoxPath
@@ -80,11 +81,22 @@
 			this.textBoxDurationDiff.Size = new System.Drawing.Size(776, 127);
 			this.textBoxDurationDiff.TabIndex = 4;
 			// 
+			// buttonGenMeta
+			// 
+			this.buttonGenMeta.Location = new System.Drawing.Point(158, 57);
+			this.buttonGenMeta.Name = "buttonGenMeta";
+			this.buttonGenMeta.Size = new System.Drawing.Size(140, 23);
+			this.buttonGenMeta.TabIndex = 5;
+			this.buttonGenMeta.Text = "Generate Metadata";
+			this.buttonGenMeta.UseVisualStyleBackColor = true;
+			this.buttonGenMeta.Click += new System.EventHandler(this.buttonGenMeta_Click);
+			// 
 			// AutoRenameWindow
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(800, 450);
+			this.Controls.Add(this.buttonGenMeta);
 			this.Controls.Add(this.textBoxDurationDiff);
 			this.Controls.Add(this.buttonGenDurationDiff);
 			this.Controls.Add(this.labelPath);
@@ -104,5 +116,6 @@
 		private System.Windows.Forms.Label labelPath;
 		private System.Windows.Forms.Button buttonGenDurationDiff;
 		private System.Windows.Forms.TextBox textBoxDurationDiff;
+		private System.Windows.Forms.Button buttonGenMeta;
 	}
 }

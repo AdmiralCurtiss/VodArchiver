@@ -135,5 +135,78 @@ namespace VodArchiver {
 				}
 			} catch (Exception) { }
 		}
+
+		private async void buttonGenMeta_Click(object sender, EventArgs e) {
+			string path = textBoxPath.Text.Trim();
+			if (path != "") {
+				StringBuilder sb = new StringBuilder();
+				await GenMetadataOutputForFiles(sb, path);
+				textBoxDurationDiff.Text = sb.ToString();
+			}
+		}
+
+		private static void AppendCsvRow(StringBuilder sb, List<string> stuff) {
+			bool first = true;
+			foreach (string s in stuff) {
+				if (first) {
+					first = false;
+				} else {
+					sb.Append(',');
+				}
+				if (s == null) {
+					continue;
+				}
+				if (s.Any(x => x == '"' || x == '\0' || x == ',' || x == '\n' || x == '\\' || x == '\'')) {
+					sb.Append('"').Append(s.Replace("\"", "\"\"")).Append('"');
+				} else {
+					sb.Append(s);
+				}
+			}
+			sb.AppendLine();
+		}
+
+		private async Task GenMetadataOutputForFiles(StringBuilder sb, string path) {
+			sb.AppendFormat("Scanning {0}...", path).AppendLine();
+			List<string> filesInDir = Directory.EnumerateFiles(path).ToList();
+
+			foreach (string filepath in filesInDir) {
+				string filename = Path.GetFileName(filepath);
+
+				foreach (IVideoJob job in Jobs) {
+					if (job != null && (job.VideoInfo.Service == StreamService.Twitch || job.VideoInfo.Service == StreamService.TwitchChatReplay)) {
+						string filestart = "twitch_" + job.VideoInfo.Username + "_";
+						string filemid = "_v" + job.VideoInfo.VideoId + "_";
+						string fileend = ".mp4";
+						bool typeMatches = filename.EndsWith(fileend) == (job.VideoInfo.Service == StreamService.Twitch);
+						if (typeMatches && filename.StartsWith(filestart) && filename.Contains(filemid)) {
+							TimeSpan? actualVideoLength = null;
+							if (filename.EndsWith(fileend)) {
+								Console.WriteLine("Probing {0}", filepath);
+								actualVideoLength = (await FFMpegUtil.Probe(filepath)).Duration;
+							}
+
+							List<string> stuff = new List<string>();
+							stuff.Add(filename);
+							stuff.Add(actualVideoLength.HasValue ? actualVideoLength.Value.TotalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture) : "");
+							stuff.Add(job.VideoInfo.VideoId);
+							stuff.Add(job.VideoInfo.VideoTitle);
+							stuff.Add(job.VideoInfo.VideoGame);
+							stuff.Add((job.VideoInfo as TwitchVideoInfo)?._Video?.Description ?? "");
+							stuff.Add(job.VideoInfo.VideoTimestamp.ToString("s", System.Globalization.CultureInfo.InvariantCulture));
+							stuff.Add(new FileInfo(filepath).Length.ToString());
+							AppendCsvRow(sb, stuff);
+						}
+					}
+				}
+			}
+
+			try {
+				foreach (string subdir in Directory.EnumerateDirectories(path)) {
+					try {
+						await GenDurationTwitch(sb, subdir);
+					} catch (Exception) { }
+				}
+			} catch (Exception) { }
+		}
 	}
 }
