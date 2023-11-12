@@ -31,8 +31,11 @@ namespace VodArchiver.VideoJobs {
 			return Util.MakeStringFileSystemSafeBaseName( basename ) + "." + extension;
 		}
 
-		public string GetTempFilename() {
-			return GetTargetFilename() + ".tmp";
+		static long Counter = 0;
+
+		public string GetTempFoldername() {
+			long c = Interlocked.Increment(ref Counter);
+			return "rawurl_" + c;
 		}
 
 		public string GetTargetFilename() {
@@ -51,10 +54,6 @@ namespace VodArchiver.VideoJobs {
 			return StringToFilename( basename, extension );
 		}
 
-		private void ReportDownloadProgress(object sender, DownloadProgressChangedEventArgs e) {
-			Status = string.Format("Downloading... {0}% ({1:F2}/{2:F2} MB)", e.ProgressPercentage, e.BytesReceived / (double)(1024 * 1024), e.TotalBytesToReceive / (double)(1024 * 1024));
-		}
-
 		public override string GenerateOutputFilename() {
 			return GetTargetFilename();
 		}
@@ -63,47 +62,43 @@ namespace VodArchiver.VideoJobs {
 			JobStatus = VideoJobStatus.Running;
 			Status = "Downloading...";
 
-			string tempFilename = Path.Combine( Util.TempFolderPath, GetTempFilename() );
-			string movedFilename = Path.Combine( Util.TempFolderPath, GetTargetFilename() );
-			string targetFilename = Path.Combine( Util.TargetFolderPath, GetTargetFilename() );
+			string tempFoldername = Path.Combine(Util.TempFolderPath, GetTempFoldername());
+			string urlFilename = Path.Combine(tempFoldername, "url.txt");
+			string downloadFilename = Path.Combine(tempFoldername, "wip.bin");
+			string movedFilename = Path.Combine(tempFoldername, "done.bin");
+			string targetFilename = Path.Combine(Util.TargetFolderPath, GetTargetFilename());
 
-			if ( !await Util.FileExists( targetFilename ) ) {
-				if ( !await Util.FileExists( movedFilename ) ) {
-					if ( await Util.FileExists( tempFilename ) ) {
-						await Util.DeleteFile( tempFilename );
+			if (!await Util.FileExists(targetFilename)) {
+				if (!await Util.FileExists(movedFilename)) {
+					if (Directory.Exists(tempFoldername)) {
+						Directory.Delete(tempFoldername, true);
 					}
+					Directory.CreateDirectory(tempFoldername);
 
-					if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
+					if (cancellationToken.IsCancellationRequested) { return ResultType.Cancelled; }
 
-					bool success = false;
-					using ( var client = new KeepAliveWebClient() )
-					using ( var cancellationCallback = cancellationToken.Register( client.CancelAsync ) ) {
-						client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(ReportDownloadProgress);
-						try {
-							byte[] data = await client.DownloadDataTaskAsync( VideoInfo.VideoId );
-							await StallWrite( tempFilename, data.LongLength, cancellationToken );
-							if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
-							using ( FileStream fs = File.Create( tempFilename ) ) {
-								await fs.WriteAsync( data, 0, data.Length );
-								success = true;
+					File.WriteAllText(urlFilename, VideoInfo.VideoId);
+
+					var result = await ExternalProgramExecution.RunProgram("wget", new string[] {
+						"-i", urlFilename, "-O", downloadFilename
+					}, stdoutCallbacks: new System.Diagnostics.DataReceivedEventHandler[1] {
+							(sender, received) => {
+								if (!String.IsNullOrEmpty(received.Data)) {
+									Status = received.Data;
+								}
 							}
-						} catch ( WebException ) {
-							if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
-							throw;
 						}
-					}
+					);
 
-					if ( success ) {
-						await StallWrite( movedFilename, new FileInfo( tempFilename ).Length, cancellationToken );
-						if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
-						File.Move( tempFilename, movedFilename );
-					}
+					if (cancellationToken.IsCancellationRequested) { return ResultType.Cancelled; }
+					File.Move(downloadFilename, movedFilename);
 				}
 
-				if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
-				await StallWrite( targetFilename, new FileInfo( movedFilename ).Length, cancellationToken );
-				if ( cancellationToken.IsCancellationRequested ) { return ResultType.Cancelled; }
-				File.Move( movedFilename, targetFilename );
+				if (cancellationToken.IsCancellationRequested) { return ResultType.Cancelled; }
+				await StallWrite(targetFilename, new FileInfo(movedFilename).Length, cancellationToken);
+				if (cancellationToken.IsCancellationRequested) { return ResultType.Cancelled; }
+				File.Move(movedFilename, targetFilename);
+				Directory.Delete(tempFoldername, true);
 			}
 
 			Status = "Done!";
