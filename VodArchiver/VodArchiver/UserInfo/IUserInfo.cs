@@ -39,6 +39,8 @@ namespace VodArchiver.UserInfo {
 					return new FFMpegJobUserInfo( node );
 				case ServiceVideoCategoryType.ArchiveOrg:
 					return new ArchiveOrgUserInfo(node);
+				case ServiceVideoCategoryType.YoutubeUrl:
+					return new YoutubeUrlUserInfo(node);
 				default:
 					throw new Exception( "Unknown user info type: " + type );
 			}
