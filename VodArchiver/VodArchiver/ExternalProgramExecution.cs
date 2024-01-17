@@ -30,21 +30,24 @@ namespace VodArchiver {
 		public static async Task<RunProgramReturnValue> RunProgram(
 			string prog,
 			string[] args,
+			string workingDir = null,
 			System.Diagnostics.DataReceivedEventHandler[] stdoutCallbacks = null,
 			System.Diagnostics.DataReceivedEventHandler[] stderrCallbacks = null,
 			bool youtubeSpeedWorkaround = false
 		) {
-			return await Task.Run(() => RunProgramSynchronous(prog, args, stdoutCallbacks, stderrCallbacks, youtubeSpeedWorkaround));
+			return await Task.Run(() => RunProgramSynchronous(prog, args, workingDir, stdoutCallbacks, stderrCallbacks, youtubeSpeedWorkaround));
 		}
 
 		public static RunProgramReturnValue RunProgramSynchronous(
 			string prog,
 			string[] args,
+			string workingDir = null,
 			System.Diagnostics.DataReceivedEventHandler[] stdoutCallbacks = null,
 			System.Diagnostics.DataReceivedEventHandler[] stderrCallbacks = null,
 			bool youtubeSpeedWorkaround = false
 		) {
 			System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
+			startInfo.WorkingDirectory = workingDir == null ? "" : workingDir;
 			startInfo.CreateNoWindow = true;
 			startInfo.UseShellExecute = false;
 			startInfo.FileName = prog;

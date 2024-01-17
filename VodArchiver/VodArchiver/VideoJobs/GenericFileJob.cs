@@ -63,13 +63,19 @@ namespace VodArchiver.VideoJobs {
 			Status = "Downloading...";
 
 			string tempFoldername = Path.Combine(Util.TempFolderPath, GetTempFoldername());
-			string urlFilename = Path.Combine(tempFoldername, "url.txt");
-			string downloadFilename = Path.Combine(tempFoldername, "wip.bin");
-			string movedFilename = Path.Combine(tempFoldername, "done.bin");
-			string targetFilename = Path.Combine(Util.TargetFolderPath, GetTargetFilename());
+			string urlFilename = "url.txt";
+			string urlFilepath = Path.Combine(tempFoldername, urlFilename);
+			string downloadFilename = "wip.bin";
+			string downloadFilepath = Path.Combine(tempFoldername, downloadFilename);
+			string progressFilename = "progress.txt";
+			string progressFilepath = Path.Combine(tempFoldername, progressFilename);
+			string movedFilename = "done.bin";
+			string movedFilepath = Path.Combine(tempFoldername, movedFilename);
+			string targetFilename = GetTargetFilename();
+			string targetFilepath = Path.Combine(Util.TargetFolderPath, targetFilename);
 
-			if (!await Util.FileExists(targetFilename)) {
-				if (!await Util.FileExists(movedFilename)) {
+			if (!await Util.FileExists(targetFilepath)) {
+				if (!await Util.FileExists(movedFilepath)) {
 					if (Directory.Exists(tempFoldername)) {
 						Directory.Delete(tempFoldername, true);
 					}
@@ -77,11 +83,15 @@ namespace VodArchiver.VideoJobs {
 
 					if (cancellationToken.IsCancellationRequested) { return ResultType.Cancelled; }
 
-					File.WriteAllText(urlFilename, VideoInfo.VideoId);
+					File.WriteAllText(urlFilepath, VideoInfo.VideoId);
 
-					var result = await ExternalProgramExecution.RunProgram("wget", new string[] {
-						"-i", urlFilename, "-O", downloadFilename
-					}, stdoutCallbacks: new System.Diagnostics.DataReceivedEventHandler[1] {
+					var result = await ExternalProgramExecution.RunProgram(
+						"wget",
+						new string[] {
+							"-i", urlFilename, "-o", progressFilename, "-O", downloadFilename
+						},
+						workingDir: tempFoldername,
+						stdoutCallbacks: new System.Diagnostics.DataReceivedEventHandler[1] {
 							(sender, received) => {
 								if (!String.IsNullOrEmpty(received.Data)) {
 									Status = received.Data;
@@ -91,13 +101,13 @@ namespace VodArchiver.VideoJobs {
 					);
 
 					if (cancellationToken.IsCancellationRequested) { return ResultType.Cancelled; }
-					File.Move(downloadFilename, movedFilename);
+					File.Move(downloadFilepath, movedFilepath);
 				}
 
 				if (cancellationToken.IsCancellationRequested) { return ResultType.Cancelled; }
-				await StallWrite(targetFilename, new FileInfo(movedFilename).Length, cancellationToken);
+				await StallWrite(targetFilepath, new FileInfo(movedFilepath).Length, cancellationToken);
 				if (cancellationToken.IsCancellationRequested) { return ResultType.Cancelled; }
-				File.Move(movedFilename, targetFilename);
+				File.Move(movedFilepath, targetFilepath);
 				Directory.Delete(tempFoldername, true);
 			}
 
