@@ -38,9 +38,9 @@ namespace VodArchiver.VideoJobs {
 			}
 
 			string combinedTempname = Path.Combine( GetTempFolder(), GetTempFilenameWithoutExtension() + "_combined.ts" );
-			string combinedFilename = Path.Combine( GetTempFolder(), GetFinalFilenameWithoutExtension() + ".ts" );
+			string combinedFilename = Path.Combine( GetTempFolder(), GetTempFilenameWithoutExtension() + "_f.ts" );
 			string remuxedTempname = Path.Combine( GetTempFolder(), GetTempFilenameWithoutExtension() + "_combined.mp4" );
-			string remuxedFilename = Path.Combine( GetTempFolder(), GetFinalFilenameWithoutExtension() + ".mp4" );
+			string remuxedFilename = Path.Combine( GetTempFolder(), GetTempFilenameWithoutExtension() + "_f.mp4" );
 			string targetFilename = Path.Combine( GetTargetFolder(), GetFinalFilenameWithoutExtension() + ".mp4" );
 			string baseurlfilepath = Path.Combine(GetTempFolder(), GetTempFilenameWithoutExtension() + "_baseurl.txt");
 			string tsnamesfilepath = Path.Combine(GetTempFolder(), GetTempFilenameWithoutExtension() + "_tsnames.txt");
