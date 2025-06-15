@@ -1,10 +1,12 @@
 # Visual Studio files/dirs
 .vs
+.vscode
 bin
 obj
 Debug
 Release
 packages
+*.csproj.user
 
 # Windows image file caches
 Thumbs.db
@@ -53,3 +55,8 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+/native/.cache
+/native/.vs
+/native/build
+/native/out

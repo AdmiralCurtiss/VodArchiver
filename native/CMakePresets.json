@@ -1,0 +1,96 @@
+{
+  "version": 5,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 24,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "debug64",
+      "displayName": "Debug (x86-64)",
+      "generator": "Ninja",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/build/debug64",
+      "installDir": "${sourceDir}/out/debug64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreadedDebug",
+        "VODARCHIVER_BUILD_GTESTS": "ON"
+      }
+    },
+    {
+      "name": "release64",
+      "displayName": "Release (x86-64)",
+      "generator": "Ninja",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/build/release64",
+      "installDir": "${sourceDir}/out/release64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded",
+        "VODARCHIVER_BUILD_GTESTS": "ON"
+      }
+    },
+    {
+      "name": "linuxdebug64",
+      "displayName": "Debug (Linux, x86-64)",
+      "generator": "Ninja",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/build/linuxdebug64",
+      "installDir": "${sourceDir}/out/linuxdebug64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "VODARCHIVER_BUILD_GTESTS": "ON"
+      }
+    },
+    {
+      "name": "linuxrelease64",
+      "displayName": "Release (Linux, x86-64)",
+      "generator": "Ninja",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/build/linuxrelease64",
+      "installDir": "${sourceDir}/out/linuxrelease64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "VODARCHIVER_BUILD_GTESTS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug64",
+      "displayName": "Debug (x86-64)",
+      "configurePreset": "debug64"
+    },
+    {
+      "name": "release64",
+      "displayName": "Release (x86-64)",
+      "configurePreset": "release64"
+    },
+    {
+      "name": "linuxdebug64",
+      "displayName": "Debug (Linux, x86-64)",
+      "configurePreset": "linuxdebug64"
+    },
+    {
+      "name": "linuxrelease64",
+      "displayName": "Release (Linux, x86-64)",
+      "configurePreset": "linuxrelease64"
+    }
+  ]
+}

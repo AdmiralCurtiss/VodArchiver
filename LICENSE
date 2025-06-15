@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2016-2018 Admiral H. Curtiss
+Copyright (c) 2016-2025 Admiral H. Curtiss
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,42 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+------------------------------------------------------------------------------
+
+Additionally, this tool has the following dependencies:
+
+== native/sha1.cpp, native/sha256.cpp, native/sha_x86_extension.cpp ==
+The SHA hashing code is extracted and modified from the cryptopp source code.
+cryptopp commit 782057f5f18fbdad2bd2b291fb1ec558a8ab8225, sha.cpp sha_simd.cpp
+Public domain
+
+== native/lzma ==
+The LZMA SDK is public domain
+https://www.7-zip.org/sdk.html
+
+== native/gtest ==
+Licensed under a BSD 3-Clause license
+Copyright 2008, Google Inc. All rights reserved.
+See the native/gtest/LICENSE for details.
+
+== native/zlib ==
+Licensed under the zlib license
+(C) 1995-2022 Jean-loup Gailly and Mark Adler
+See the native/zlib/LICENSE for details.
+
+== native/imgui ==
+Licensed under the MIT License
+Copyright (c) 2014-2024 Omar Cornut
+See the native/imgui/LICENSE.txt for details.
+
+== fonts/Cuprum ==
+The Cuprum font is licensed under the SIL Open Font License, Version 1.1
+Copyright 2020 The Cuprum Project Authors (https://github.com/alexeiva/cuprum)
+Copyright (c) 2006-2012 by Jovanny Lemonad (jovanny.ru)
+See fonts/Cuprum/OFL.txt for details.
+
+== fonts/Noto_Sans_JP ==
+The Noto Sans JP font is licensed under the SIL Open Font License, Version 1.1
+Copyright 2014-2021 Adobe (http://www.adobe.com/)
+See fonts/Noto_Sans_JP/OFL.txt for details.

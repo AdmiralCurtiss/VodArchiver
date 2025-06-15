@@ -1,0 +1,31 @@
+#pragma once
+
+#include <memory>
+#include <vector>
+
+#include "imgui.h"
+
+#include "gui_user_settings.h"
+#include "window_id_management.h"
+
+namespace VodArchiver::GUI {
+struct Window;
+}
+
+namespace VodArchiver {
+struct GuiState {
+    // A Window may add new windows to this vector at any time, but not remove or modify any.
+    std::vector<std::unique_ptr<GUI::Window>> Windows;
+
+    // Window ID management. One instance per window type. This seems kind of convoluted but I'm not
+    // sure if there's a better way to do this with imgui?
+    // VodArchiver::GUI::WindowIdTracker WindowIdsX;
+
+    // User settings, like recently used paths.
+    VodArchiver::GuiUserSettings GuiSettings;
+
+    float CurrentDpi = 0.0f;
+
+    ~GuiState();
+};
+} // namespace VodArchiver
