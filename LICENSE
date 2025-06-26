@@ -48,6 +48,11 @@ Licensed under the MIT License
 Copyright (c) 2014-2024 Omar Cornut
 See the native/imgui/LICENSE.txt for details.
 
+== native/RapidXML ==
+Licensed under the Boost Software License - Version 1.0
+Copyright (c) 2006, 2007 Marcin Kalicinski
+See the native/RapidXML/LICENSE.md for details.
+
 == fonts/Cuprum ==
 The Cuprum font is licensed under the SIL Open Font License, Version 1.1
 Copyright 2020 The Cuprum Project Authors (https://github.com/alexeiva/cuprum)

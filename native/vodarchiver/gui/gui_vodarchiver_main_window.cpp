@@ -23,6 +23,8 @@
 #include "vodarchiver_imgui_utils.h"
 #include "vodarchiver_version.h"
 
+#include "vodarchiver/videojobs/serialization.h"
+
 namespace VodArchiver::GUI {
 VodArchiverMainWindow::VodArchiverMainWindow() = default;
 VodArchiverMainWindow::~VodArchiverMainWindow() = default;

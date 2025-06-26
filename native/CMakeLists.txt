@@ -199,6 +199,12 @@ set(SOURCES_LZMA_COMPRESSION
 	lzma/Threads.c
 	lzma/Threads.h
 )
+set(SOURCES_RAPIDXML
+	rapidxml/rapidxml.hpp
+	rapidxml/rapidxml_iterators.hpp
+	rapidxml/rapidxml_print.hpp
+	rapidxml/rapidxml_utils.hpp
+)
 
 add_executable(vodarchiver)
 target_sources(vodarchiver PRIVATE
@@ -212,14 +218,54 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/task_reporting.h
 	vodarchiver/task_reporting_dummy.h
 	vodarchiver/task_reporting_from_thread.h
+	vodarchiver/time_types.h
+
+	vodarchiver/statusupdate/i-status-update.cpp
+	vodarchiver/statusupdate/i-status-update.h
+
+	vodarchiver/userinfo/i-user-info.cpp
+	vodarchiver/userinfo/i-user-info.h
+
+	vodarchiver/videoinfo/ffmpeg-reencode-job-video-info.cpp
+	vodarchiver/videoinfo/ffmpeg-reencode-job-video-info.h
+	vodarchiver/videoinfo/generic-video-info.cpp
+	vodarchiver/videoinfo/generic-video-info.h
+	vodarchiver/videoinfo/hitbox-video-info.cpp
+	vodarchiver/videoinfo/hitbox-video-info.h
+	vodarchiver/videoinfo/i-video-info.cpp
+	vodarchiver/videoinfo/i-video-info.h
+	vodarchiver/videoinfo/twitch-video-info.cpp
+	vodarchiver/videoinfo/twitch-video-info.h
+	vodarchiver/videoinfo/youtube-video-info.cpp
+	vodarchiver/videoinfo/youtube-video-info.h
+
+	vodarchiver/videojobs/ffmpeg-reencode-job.cpp
+	vodarchiver/videojobs/ffmpeg-reencode-job.h
+	vodarchiver/videojobs/ffmpeg-split-job.cpp
+	vodarchiver/videojobs/ffmpeg-split-job.h
+	vodarchiver/videojobs/generic-file-job.cpp
+	vodarchiver/videojobs/generic-file-job.h
+	vodarchiver/videojobs/hitbox-video-job.cpp
+	vodarchiver/videojobs/hitbox-video-job.h
+	vodarchiver/videojobs/i-video-job.cpp
+	vodarchiver/videojobs/i-video-job.h
+	vodarchiver/videojobs/serialization.cpp
+	vodarchiver/videojobs/serialization.h
+	vodarchiver/videojobs/twitch-chat-replay-job.cpp
+	vodarchiver/videojobs/twitch-chat-replay-job.h
+	vodarchiver/videojobs/twitch-video-job.cpp
+	vodarchiver/videojobs/twitch-video-job.h
+	vodarchiver/videojobs/youtube-video-job.cpp
+	vodarchiver/videojobs/youtube-video-job.h
 
 	${SOURCES_UTIL}
 	${SOURCES_LZMA_BASE}
 	${SOURCES_LZMA_COMPRESSION}
+	${SOURCES_RAPIDXML}
 )
 
 target_compile_definitions(vodarchiver
-	PUBLIC FILE_WRAPPER_WITH_STD_FILESYSTEM
+	PUBLIC FILE_WRAPPER_WITH_STD_FILESYSTEM RAPIDXML_NO_STREAMS
 )
 if (WIN32)
 	target_compile_definitions(vodarchiver PUBLIC BUILD_FOR_WINDOWS UNICODE _UNICODE)
