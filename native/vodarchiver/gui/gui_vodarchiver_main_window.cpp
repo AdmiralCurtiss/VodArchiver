@@ -15,6 +15,7 @@
 
 #include "gui_state.h"
 #include "gui_user_settings.h"
+#include "gui_video_split_window.h"
 #include "util/file.h"
 #include "util/hash/sha1.h"
 #include "util/scope.h"
@@ -47,6 +48,9 @@ bool VodArchiverMainWindow::HasPendingWindowRequest() const {
 bool VodArchiverMainWindow::RenderContents(GuiState& state) {
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("Toolbox")) {
+            if (ImGui::MenuItem("Split videos...")) {
+                state.Windows.emplace_back(std::make_unique<GUI::VideoSplitWindow>(state));
+            }
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Config")) {

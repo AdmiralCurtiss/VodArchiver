@@ -213,6 +213,8 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/common_paths.h
 	vodarchiver/decompress_helper.cpp
 	vodarchiver/decompress_helper.h
+	vodarchiver/exec.cpp
+	vodarchiver/exec.h
 	vodarchiver/main.cpp
 	vodarchiver/task_cancellation.h
 	vodarchiver/task_reporting.h
@@ -223,6 +225,8 @@ target_sources(vodarchiver PRIVATE
 
 	vodarchiver/statusupdate/i-status-update.cpp
 	vodarchiver/statusupdate/i-status-update.h
+	vodarchiver/statusupdate/null-status-update.cpp
+	vodarchiver/statusupdate/null-status-update.h
 
 	vodarchiver/tasks/video-task-group.cpp
 	vodarchiver/tasks/video-task-group.h
@@ -293,6 +297,8 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/gui/gui_state.h
 	vodarchiver/gui/gui_user_settings.cpp
 	vodarchiver/gui/gui_user_settings.h
+	vodarchiver/gui/gui_video_split_window.cpp
+	vodarchiver/gui/gui_video_split_window.h
 	vodarchiver/gui/gui_vodarchiver_main_window.cpp
 	vodarchiver/gui/gui_vodarchiver_main_window.h
 	vodarchiver/gui/gui_window.cpp

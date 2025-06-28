@@ -24,7 +24,7 @@ struct GuiState {
 
     // Window ID management. One instance per window type. This seems kind of convoluted but I'm not
     // sure if there's a better way to do this with imgui?
-    // VodArchiver::GUI::WindowIdTracker WindowIdsX;
+    VodArchiver::GUI::WindowIdTracker WindowIdsVideoSplitWindow;
 
     // User settings, like recently used paths.
     VodArchiver::GuiUserSettings GuiSettings;

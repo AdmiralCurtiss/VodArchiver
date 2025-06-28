@@ -112,6 +112,7 @@ void VideoTaskGroup::ProcessFinishedTasks() {
             // need to remove the task first, as otherwise the Add() still detects it as running
             std::unique_ptr<RunningVideoJob> task = std::move(RunningTasks[i - 1]);
             RunningTasks.erase(RunningTasks.begin() + (i - 1));
+            task->Task.join();
 
             if (task->Done.load() == TaskDoneEnum::FinishedNormally) {
                 ResultType result = task->Result.load();
@@ -213,6 +214,12 @@ IVideoJob* VideoTaskGroup::DequeueVideoJobForTask() {
     }
 
     return nullptr;
+}
+
+void VideoTaskGroup::Add(IVideoJob* job) {
+    auto wj = std::make_unique<WaitingVideoJob>();
+    wj->Job = job;
+    Add(std::move(wj));
 }
 
 void VideoTaskGroup::Add(std::unique_ptr<WaitingVideoJob> wj) {

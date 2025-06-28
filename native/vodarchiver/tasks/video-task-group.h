@@ -55,6 +55,7 @@ struct VideoTaskGroup {
                    TaskCancellation* cancellationToken);
     ~VideoTaskGroup();
 
+    void Add(IVideoJob* job);
     void Add(std::unique_ptr<WaitingVideoJob> wj);
 
     bool IsEmpty();
