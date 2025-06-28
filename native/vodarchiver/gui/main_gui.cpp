@@ -12,6 +12,7 @@
 #include "util/file.h"
 #include "util/text.h"
 #include "vodarchiver/common_paths.h"
+#include "vodarchiver/videojobs/serialization.h"
 #include "vodarchiver_version.h"
 
 #ifdef BUILD_FOR_WINDOWS
@@ -43,6 +44,7 @@ static bool RenderFrame(ImGuiIO& io, GuiState& state) {
 
 int RunGui(int argc, char** argvUtf8) {
     GuiState state;
+    InitGuiUserSettings(state.GuiSettings);
     std::optional<std::string> guiSettingsFolder =
         CommonPaths::GetLocalVodArchiverGuiSettingsFolder();
     std::string userIniPath;
@@ -55,6 +57,21 @@ int RunGui(int argc, char** argvUtf8) {
         imguiIniPath.append("/imgui.ini");
         VodArchiver::LoadUserSettingsFromIni(state.GuiSettings, userIniPath);
     }
+
+    {
+        auto jobs = ParseJobsFromFile(GetVodXmlPath(state.GuiSettings));
+        if (jobs) {
+            state.Jobs = std::move(*jobs);
+        }
+    }
+
+    for (int s = static_cast<int>(StreamService::Unknown);
+         s < static_cast<int>(StreamService::COUNT);
+         ++s) {
+        state.VideoTaskGroups.emplace_back(std::make_unique<VideoTaskGroup>(
+            static_cast<StreamService>(s), []() {}, []() {}, &state.CancellationToken));
+    }
+
     state.Windows.emplace_back(std::make_unique<GUI::VodArchiverMainWindow>());
 
     const auto load_imgui_ini = [&](ImGuiIO& io, GuiState& state) -> void {

@@ -6,7 +6,11 @@
 
 namespace VodArchiver {
 // C# compatible types
+static constexpr uint32_t CSHARP_TICKS_PER_SECOND = 10'000'000;
+
 struct DateTime {
+    static constexpr uint32_t TICKS_PER_SECOND = CSHARP_TICKS_PER_SECOND;
+
     uint64_t Data;
 
     static DateTime FromBinary(int64_t data) {
@@ -16,9 +20,16 @@ struct DateTime {
         }
         return DateTime{.Data = static_cast<uint64_t>(data)};
     }
+
+    static DateTime UtcNow();
+    DateTime AddMinutes(int minutes) const;
+
+    auto operator<=>(const DateTime& other) const {
+        return this->Data <=> other.Data;
+    }
 };
 struct TimeSpan {
-    static constexpr uint32_t TICKS_PER_SECOND = 10'000'000;
+    static constexpr uint32_t TICKS_PER_SECOND = CSHARP_TICKS_PER_SECOND;
 
     int64_t Ticks; // unit is 1e-7 seconds, ie 100 nanoseconds
 

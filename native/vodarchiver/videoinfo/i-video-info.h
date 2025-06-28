@@ -9,13 +9,14 @@
 
 namespace VodArchiver {
 enum class StreamService {
-    Unknown,
+    Unknown = 0,
     Twitch,
     Hitbox,
     TwitchChatReplay,
     Youtube,
     RawUrl,
     FFMpegJob,
+    COUNT
 };
 std::string_view StreamServiceToString(StreamService service);
 std::optional<StreamService> StreamServiceFromString(std::string_view sv);

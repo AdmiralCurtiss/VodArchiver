@@ -1,10 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include "imgui.h"
 
+#include "../task_cancellation.h"
+#include "../tasks/video-task-group.h"
 #include "gui_user_settings.h"
 #include "window_id_management.h"
 
@@ -13,6 +16,8 @@ struct Window;
 }
 
 namespace VodArchiver {
+struct IVideoJob;
+
 struct GuiState {
     // A Window may add new windows to this vector at any time, but not remove or modify any.
     std::vector<std::unique_ptr<GUI::Window>> Windows;
@@ -25,6 +30,12 @@ struct GuiState {
     VodArchiver::GuiUserSettings GuiSettings;
 
     float CurrentDpi = 0.0f;
+
+    std::recursive_mutex JobsLock;
+    std::vector<std::unique_ptr<IVideoJob>> Jobs;
+
+    TaskCancellation CancellationToken;
+    std::vector<std::unique_ptr<VideoTaskGroup>> VideoTaskGroups;
 
     ~GuiState();
 };

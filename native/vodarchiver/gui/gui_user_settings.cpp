@@ -8,6 +8,8 @@
 #include <string_view>
 #include <vector>
 
+#include "../common_paths.h"
+
 #include "util/file.h"
 #include "util/ini.h"
 #include "util/ini_writer.h"
@@ -15,6 +17,29 @@
 #include "util/text.h"
 
 namespace VodArchiver {
+void InitGuiUserSettings(GuiUserSettings& settings) {
+    auto localAppData = CommonPaths::GetLocalVodArchiverGuiSettingsFolder();
+    if (localAppData) {
+        settings.DefaultPersistentDataPath = std::move(*localAppData);
+        HyoutaUtils::IO::AppendPathElement(settings.DefaultPersistentDataPath, "VodArchiver");
+        HyoutaUtils::IO::AppendPathElement(settings.DefaultPersistentDataPath, "1.0.0.0");
+    } else {
+        // TODO: what do we do here? will this ever fail?
+        settings.DefaultPersistentDataPath = "";
+    }
+
+    auto myVideos = CommonPaths::GetMyVideosFolder();
+    if (myVideos) {
+        settings.DefaultTargetFolderPath = std::move(*myVideos);
+        settings.DefaultTempFolderPath = settings.DefaultTargetFolderPath;
+        HyoutaUtils::IO::AppendPathElement(settings.DefaultTempFolderPath, "Temp");
+    } else {
+        // TODO: what do we do here? will this ever fail?
+        settings.DefaultTargetFolderPath = "";
+        settings.DefaultTempFolderPath = "";
+    }
+}
+
 bool LoadUserSettingsFromIni(GuiUserSettings& settings, std::string_view path) {
     HyoutaUtils::IO::File file(path, HyoutaUtils::IO::OpenMode::Read);
     if (!file.IsOpen()) {
@@ -44,6 +69,18 @@ bool LoadUserSettingsFromIni(GuiUserSettings& settings, const HyoutaUtils::Ini::
             settings.UseCustomFileBrowser = GuiUserSettings_UseCustomFileBrowser::Auto;
         }
     }
+    auto* targetFolderPath = ini.FindValue("Paths", "TargetFolderPath");
+    if (targetFolderPath) {
+        settings.CustomTargetFolderPath = std::string(targetFolderPath->Value);
+    }
+    auto* tempFolderPath = ini.FindValue("Paths", "TempFolderPath");
+    if (tempFolderPath) {
+        settings.CustomTempFolderPath = std::string(tempFolderPath->Value);
+    }
+    auto* persistentDataPath = ini.FindValue("Paths", "PersistentDataPath");
+    if (persistentDataPath) {
+        settings.CustomPersistentDataPath = std::string(persistentDataPath->Value);
+    }
     return true;
 }
 
@@ -72,6 +109,9 @@ bool WriteUserSettingsToIni(const GuiUserSettings& settings, HyoutaUtils::Ini::I
         settings.UseCustomFileBrowser == GuiUserSettings_UseCustomFileBrowser::Always  ? "Always"
         : settings.UseCustomFileBrowser == GuiUserSettings_UseCustomFileBrowser::Never ? "Never"
                                                                                        : "Auto");
+    ini.SetString("Paths", "TargetFolderPath", settings.CustomTargetFolderPath);
+    ini.SetString("Paths", "TempFolderPath", settings.CustomTempFolderPath);
+    ini.SetString("Paths", "PersistentDataPath", settings.CustomPersistentDataPath);
     return true;
 }
 
@@ -82,5 +122,36 @@ bool EvalUseCustomFileBrowser(const GuiUserSettings& settings) {
                ? false
                : (HyoutaUtils::Sys::GetEnvironmentVar("SteamTenfoot") == "1"
                   || HyoutaUtils::Sys::GetEnvironmentVar("SteamDeck") == "1");
+}
+
+const std::string& GetTargetFolderPath(const GuiUserSettings& settings) {
+    if (!settings.CustomTargetFolderPath.empty()) {
+        return settings.CustomTargetFolderPath;
+    }
+    return settings.DefaultTargetFolderPath;
+}
+
+const std::string& GetTempFolderPath(const GuiUserSettings& settings) {
+    if (!settings.CustomTempFolderPath.empty()) {
+        return settings.CustomTempFolderPath;
+    }
+    return settings.DefaultTempFolderPath;
+}
+
+const std::string& GetPersistentDataPath(const GuiUserSettings& settings) {
+    if (!settings.CustomPersistentDataPath.empty()) {
+        return settings.CustomPersistentDataPath;
+    }
+    return settings.DefaultPersistentDataPath;
+}
+
+std::string GetPersistentDataPath(const GuiUserSettings& settings, std::string_view file) {
+    std::string path = GetPersistentDataPath(settings);
+    HyoutaUtils::IO::AppendPathElement(path, file);
+    return path;
+}
+
+std::string GetVodXmlPath(const GuiUserSettings& settings) {
+    return GetPersistentDataPath(settings, "downloads.bin");
 }
 } // namespace VodArchiver

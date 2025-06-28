@@ -73,4 +73,26 @@ std::optional<std::string> GetLocalVodArchiverGuiSettingsFolder() {
     result->append("VodArchiver");
     return result;
 }
+
+std::optional<std::string> GetMyVideosFolder() {
+#ifdef BUILD_FOR_WINDOWS
+    PWSTR path;
+    if (FAILED(SHGetKnownFolderPath(FOLDERID_LocalVideos, 0, nullptr, &path))) {
+        return std::nullopt;
+    }
+    auto pathScope = HyoutaUtils::MakeScopeGuard([&path]() { CoTaskMemFree(path); });
+    return HyoutaUtils::TextUtils::WStringToUtf8(path, static_cast<size_t>(lstrlenW(path)));
+#else
+    const char* home = getenv("HOME");
+    if (home && *home != '\0') {
+        std::string result(home);
+        if (!result.ends_with('/')) {
+            result.push_back('/');
+        }
+        result.append("Videos"); // TODO: is this sane?
+        return result;
+    }
+    return std::nullopt;
+#endif
+}
 } // namespace VodArchiver::CommonPaths

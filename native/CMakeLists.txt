@@ -218,10 +218,14 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/task_reporting.h
 	vodarchiver/task_reporting_dummy.h
 	vodarchiver/task_reporting_from_thread.h
+	vodarchiver/time_types.cpp
 	vodarchiver/time_types.h
 
 	vodarchiver/statusupdate/i-status-update.cpp
 	vodarchiver/statusupdate/i-status-update.h
+
+	vodarchiver/tasks/video-task-group.cpp
+	vodarchiver/tasks/video-task-group.h
 
 	vodarchiver/userinfo/i-user-info.cpp
 	vodarchiver/userinfo/i-user-info.h

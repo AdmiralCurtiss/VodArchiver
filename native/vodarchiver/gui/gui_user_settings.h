@@ -20,12 +20,25 @@ struct GuiUserSettings {
     bool GamepadSwapConfirmCancel = false;
     GuiUserSettings_UseCustomFileBrowser UseCustomFileBrowser =
         GuiUserSettings_UseCustomFileBrowser::Auto;
+
+    std::string DefaultTargetFolderPath;
+    std::string CustomTargetFolderPath;
+    std::string DefaultTempFolderPath;
+    std::string CustomTempFolderPath;
+    std::string DefaultPersistentDataPath;
+    std::string CustomPersistentDataPath;
 };
 
+void InitGuiUserSettings(GuiUserSettings& settings);
 bool LoadUserSettingsFromIni(GuiUserSettings& settings, std::string_view path);
 bool LoadUserSettingsFromIni(GuiUserSettings& settings, const HyoutaUtils::Ini::IniFile& ini);
 bool WriteUserSettingsToIni(const GuiUserSettings& settings, std::string_view path);
 bool WriteUserSettingsToIni(const GuiUserSettings& settings, HyoutaUtils::Ini::IniWriter& ini);
 
 bool EvalUseCustomFileBrowser(const GuiUserSettings& settings);
+const std::string& GetTargetFolderPath(const GuiUserSettings& settings);
+const std::string& GetTempFolderPath(const GuiUserSettings& settings);
+const std::string& GetPersistentDataPath(const GuiUserSettings& settings);
+std::string GetPersistentDataPath(const GuiUserSettings& settings, std::string_view file);
+std::string GetVodXmlPath(const GuiUserSettings& settings);
 } // namespace VodArchiver
