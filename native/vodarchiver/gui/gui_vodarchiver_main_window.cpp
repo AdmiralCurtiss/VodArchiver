@@ -120,14 +120,15 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
             ColumnID_RecordingState,
             ColumnID_Notes,
             ColumnID_Status,
+            ColumnID_Actions,
             ColumnIDCount
         };
-        static int items_count = state.Jobs.size();
+        int items_count = static_cast<int>(state.Jobs.size());
 
         // Update item list if we changed the number of items
-        static ImVector<int> items;
-        static ImVector<int> selection;
-        static bool items_need_sort = false;
+        ImVector<int>& items = this->Items;
+        ImVector<int>& selection = this->Selection;
+        bool& items_need_sort = this->ItemsNeedSort;
         if (items.Size != items_count) {
             items.resize(items_count);
             for (int n = 0; n < items_count; ++n) {
@@ -162,6 +163,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                 "Recording State", columns_base_flags, 0.0f, ColumnID_RecordingState);
             ImGui::TableSetupColumn("Notes", columns_base_flags, 0.0f, ColumnID_Notes);
             ImGui::TableSetupColumn("Status", columns_base_flags, 0.0f, ColumnID_Status);
+            ImGui::TableSetupColumn("Actions", columns_base_flags, 0.0f, ColumnID_Actions);
             ImGui::TableSetupScrollFreeze(0, 1);
 
             // Sort our data if sort specs have been changed!
@@ -181,7 +183,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
             while (clipper.Step()) {
                 for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; ++row_n) {
                     const int ID = items[row_n];
-                    const IVideoJob* item = state.Jobs[ID].get();
+                    IVideoJob* item = state.Jobs[ID].get();
                     // if (!filter.PassFilter(item->Name))
                     //     continue;
 
@@ -238,6 +240,23 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                     if (ImGui::TableSetColumnIndex(ColumnID_Status)) {
                         const std::string& s = item->GetStatus();
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
+                    }
+                    if (ImGui::TableSetColumnIndex(ColumnID_Actions)) {
+                        if (ImGui::Button("Actions")) {
+                            ImGui::OpenPopup("JobActionsPopup");
+                        }
+                        if (ImGui::BeginPopup("JobActionsPopup")) {
+                            if (ImGui::Selectable("Enqueue")) {
+                                auto service = item->GetVideoInfo()->GetService();
+                                for (auto& g : state.VideoTaskGroups) {
+                                    if (g->Service == service) {
+                                        g->Add(item);
+                                        break;
+                                    }
+                                }
+                            }
+                            ImGui::EndPopup();
+                        }
                     }
 
                     ImGui::PopID();

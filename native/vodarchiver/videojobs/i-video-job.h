@@ -60,9 +60,9 @@ public:
 public:
     std::shared_ptr<IStatusUpdate> StatusUpdater;
 
-    size_t Index;
+    size_t Index = 0; // FIXME: Is this even used for anything?
 
-    VideoJobStatus JobStatus;
+    VideoJobStatus JobStatus = VideoJobStatus::NotStarted;
 
 public: // should be private
     std::shared_ptr<IVideoInfo> _VideoInfo;
@@ -71,13 +71,13 @@ public:
     virtual std::shared_ptr<IVideoInfo> GetVideoInfo() const;
     virtual void SetVideoInfo(std::shared_ptr<IVideoInfo> videoInfo);
 
-    bool HasBeenValidated;
+    bool HasBeenValidated = false;
 
     std::string Notes;
 
-    DateTime JobStartTimestamp;
+    DateTime JobStartTimestamp{.Data = 0};
 
-    DateTime JobFinishTimestamp;
+    DateTime JobFinishTimestamp{.Data = 0};
 
     virtual ResultType Run(TaskCancellation& cancellationToken) = 0;
 

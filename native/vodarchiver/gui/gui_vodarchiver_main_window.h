@@ -6,6 +6,8 @@
 #include "gui_file_browser.h"
 #include "gui_window.h"
 
+#include "imgui.h"
+
 namespace VodArchiver::GUI {
 struct VodArchiverMainWindow : public VodArchiver::GUI::Window {
     VodArchiverMainWindow();
@@ -21,5 +23,9 @@ struct VodArchiverMainWindow : public VodArchiver::GUI::Window {
 private:
     bool RenderContents(GuiState& state);
     bool HasPendingWindowRequest() const;
+
+    ImVector<int> Items;
+    ImVector<int> Selection;
+    bool ItemsNeedSort = false;
 };
 } // namespace VodArchiver::GUI

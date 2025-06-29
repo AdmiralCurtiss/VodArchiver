@@ -103,14 +103,8 @@ bool VideoSplitWindow::RenderFrame(GuiState& state) {
                     std::string(path), std::string(times), nullptr);
                 FFMpegSplitJob* ptr = job.get();
                 state.Jobs.emplace_back(std::move(job));
-                for (auto& g : state.VideoTaskGroups) {
-                    if (g->Service == StreamService::FFMpegJob) {
-                        g->Add(ptr);
-                        InputPath[0] = '\0';
-                        SplitTimes[0] = '\0';
-                        break;
-                    }
-                }
+                InputPath[0] = '\0';
+                SplitTimes[0] = '\0';
             }
         }
     }
