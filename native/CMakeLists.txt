@@ -319,7 +319,7 @@ target_sources(vodarchiver PRIVATE
 target_include_directories(vodarchiver
 	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/imgui" "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends"
 )
-target_compile_definitions(vodarchiver PUBLIC)
+target_compile_definitions(vodarchiver PUBLIC IMGUI_USE_WCHAR32)
 
 if (WIN32)
 	# on Windows we just use DX11 for this
