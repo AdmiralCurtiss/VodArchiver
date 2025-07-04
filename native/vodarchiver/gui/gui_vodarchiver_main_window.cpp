@@ -242,7 +242,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Actions)) {
-                        if (ImGui::Button("Actions")) {
+                        if (ImGui::Button("...##JobActionsPopupButton")) {
                             ImGui::OpenPopup("JobActionsPopup");
                         }
                         if (ImGui::BeginPopup("JobActionsPopup")) {

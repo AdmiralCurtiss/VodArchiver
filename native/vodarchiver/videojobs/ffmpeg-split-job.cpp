@@ -131,7 +131,8 @@ ResultType FFMpegSplitJob::Run(TaskCancellation& cancellationToken) {
     // try {
     SetStatus("Splitting...");
     // await StallWrite(exampleOutname, new FileInfo(inname).Length, cancellationToken);
-    int retval = RunProgram("ffmpeg_split.exe", args);
+    int retval = RunProgram(
+        "ffmpeg_split.exe", args, [](std::string_view sv) {}, [](std::string_view sv) {});
     if (retval != 0) {
         SetStatus(std::format("ffmpeg_split failed with return value {}", retval));
         return ResultType::Failure;

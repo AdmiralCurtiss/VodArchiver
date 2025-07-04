@@ -205,6 +205,46 @@ set(SOURCES_RAPIDXML
 	rapidxml/rapidxml_print.hpp
 	rapidxml/rapidxml_utils.hpp
 )
+set(SOURCES_RAPIDJSON
+	rapidjson/allocators.h
+	rapidjson/cursorstreamwrapper.h
+	rapidjson/document.h
+	rapidjson/encodedstream.h
+	rapidjson/encodings.h
+	rapidjson/filereadstream.h
+	rapidjson/filewritestream.h
+	rapidjson/fwd.h
+	rapidjson/istreamwrapper.h
+	rapidjson/memorybuffer.h
+	rapidjson/memorystream.h
+	rapidjson/ostreamwrapper.h
+	rapidjson/pointer.h
+	rapidjson/prettywriter.h
+	rapidjson/rapidjson.h
+	rapidjson/reader.h
+	rapidjson/schema.h
+	rapidjson/stream.h
+	rapidjson/stringbuffer.h
+	rapidjson/uri.h
+	rapidjson/writer.h
+	rapidjson/error/en.h
+	rapidjson/error/error.h
+	rapidjson/internal/biginteger.h
+	rapidjson/internal/clzll.h
+	rapidjson/internal/diyfp.h
+	rapidjson/internal/dtoa.h
+	rapidjson/internal/ieee754.h
+	rapidjson/internal/itoa.h
+	rapidjson/internal/meta.h
+	rapidjson/internal/pow10.h
+	rapidjson/internal/regex.h
+	rapidjson/internal/stack.h
+	rapidjson/internal/strfunc.h
+	rapidjson/internal/strtod.h
+	rapidjson/internal/swap.h
+	rapidjson/msinttypes/inttypes.h
+	rapidjson/msinttypes/stdint.h
+)
 
 add_executable(vodarchiver)
 target_sources(vodarchiver PRIVATE
@@ -215,6 +255,8 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/decompress_helper.h
 	vodarchiver/exec.cpp
 	vodarchiver/exec.h
+	vodarchiver/ffmpeg_util.cpp
+	vodarchiver/ffmpeg_util.h
 	vodarchiver/main.cpp
 	vodarchiver/task_cancellation.h
 	vodarchiver/task_reporting.h
@@ -270,6 +312,7 @@ target_sources(vodarchiver PRIVATE
 	${SOURCES_LZMA_BASE}
 	${SOURCES_LZMA_COMPRESSION}
 	${SOURCES_RAPIDXML}
+	${SOURCES_RAPIDJSON}
 )
 
 target_compile_definitions(vodarchiver

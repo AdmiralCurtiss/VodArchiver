@@ -7,7 +7,36 @@
 #include <string_view>
 #include <utility>
 
+#include "util/file.h"
+
 namespace VodArchiver {
+FFMpegReencodeJobVideoInfo::FFMpegReencodeJobVideoInfo() {}
+
+FFMpegReencodeJobVideoInfo::FFMpegReencodeJobVideoInfo(std::string_view filename,
+                                                       const FFProbeResult& probe,
+                                                       std::vector<std::string> ffmpegOptions,
+                                                       std::string postfixOld,
+                                                       std::string postfixNew,
+                                                       std::string outputformat) {
+    VideoTitle = HyoutaUtils::IO::GetFileNameWithoutExtension(filename);
+    VideoId = HyoutaUtils::IO::GetAbsolutePath(filename);
+    Filesize = probe.Filesize;
+    Bitrate = probe.Bitrate;
+    Framerate = 0.0f;
+    for (auto& s : probe.Streams) {
+        if (s.Framerate > 0.0f) {
+            Framerate = s.Framerate;
+            break;
+        }
+    }
+    VideoTimestamp = probe.Timestamp;
+    VideoLength = probe.Duration;
+    FFMpegOptions = std::move(ffmpegOptions);
+    PostfixOld = std::move(postfixOld);
+    PostfixNew = std::move(postfixNew);
+    OutputFormat = std::move(outputformat);
+}
+
 FFMpegReencodeJobVideoInfo::~FFMpegReencodeJobVideoInfo() = default;
 
 StreamService FFMpegReencodeJobVideoInfo::GetService() const {

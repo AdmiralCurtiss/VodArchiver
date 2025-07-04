@@ -743,7 +743,13 @@ bool DirectoryExists(const std::filesystem::path& p) noexcept {
 
 #ifdef BUILD_FOR_WINDOWS
 static bool CreateDirectoryWindows(const wchar_t* path) {
-    return CreateDirectoryW(path, nullptr);
+    if (CreateDirectoryW(path, nullptr)) {
+        return true;
+    }
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        return true;
+    }
+    return false;
 }
 #else
 static bool CreateDirectoryLinux(const char* path) {

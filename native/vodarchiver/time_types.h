@@ -11,7 +11,7 @@ static constexpr uint32_t CSHARP_TICKS_PER_SECOND = 10'000'000;
 struct DateTime {
     static constexpr uint32_t TICKS_PER_SECOND = CSHARP_TICKS_PER_SECOND;
 
-    uint64_t Data;
+    uint64_t Data = 0;
 
     static DateTime FromBinary(int64_t data) {
         if (data < 0) {
@@ -31,7 +31,7 @@ struct DateTime {
 struct TimeSpan {
     static constexpr uint32_t TICKS_PER_SECOND = CSHARP_TICKS_PER_SECOND;
 
-    int64_t Ticks; // unit is 1e-7 seconds, ie 100 nanoseconds
+    int64_t Ticks = 0; // unit is 1e-7 seconds, ie 100 nanoseconds
 
     static TimeSpan FromSeconds(double seconds) {
         int64_t integer_seconds = static_cast<int64_t>(seconds);
