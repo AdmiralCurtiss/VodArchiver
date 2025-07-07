@@ -28,6 +28,8 @@ struct YoutubeVideoInfo : public IVideoInfo {
     VideoFileType GetVideoType() const override;
     void SetVideoType(VideoFileType videoType) override;
 
+    std::unique_ptr<IVideoInfo> Clone() const override;
+
     std::string Username;
     std::string VideoId;
     std::string VideoTitle;

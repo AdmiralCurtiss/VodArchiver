@@ -50,6 +50,8 @@ struct TwitchVideoInfo : public IVideoInfo {
     VideoFileType GetVideoType() const override;
     void SetVideoType(VideoFileType videoType) override;
 
+    std::unique_ptr<IVideoInfo> Clone() const override;
+
     TwitchVideo _Video;
     StreamService _Service;
 };

@@ -110,4 +110,8 @@ TimeSpan FFMpegReencodeJobVideoInfo::GetVideoLength() const {
 void FFMpegReencodeJobVideoInfo::SetVideoLength(TimeSpan length) {
     this->VideoLength = length;
 }
+
+std::unique_ptr<IVideoInfo> FFMpegReencodeJobVideoInfo::Clone() const {
+    return std::make_unique<FFMpegReencodeJobVideoInfo>(*this);
+}
 } // namespace VodArchiver

@@ -154,4 +154,8 @@ std::string GetPersistentDataPath(const GuiUserSettings& settings, std::string_v
 std::string GetVodXmlPath(const GuiUserSettings& settings) {
     return GetPersistentDataPath(settings, "downloads.bin");
 }
+
+std::string GetUserInfoXmlPath(const GuiUserSettings& settings) {
+    return GetPersistentDataPath(settings, "users.xml");
+}
 } // namespace VodArchiver

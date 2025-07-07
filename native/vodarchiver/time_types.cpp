@@ -11,6 +11,11 @@ DateTime DateTime::UtcNow() {
     return DateTime{.Data = static_cast<uint64_t>(ticks + EPOCH_DIFFERENCE_IN_TICKS)};
 }
 
+DateTime DateTime::AddSeconds(int64_t seconds) const {
+    int64_t ticks = static_cast<int64_t>(seconds) * static_cast<int64_t>(TICKS_PER_SECOND);
+    return DateTime{.Data = this->Data + static_cast<uint64_t>(ticks)};
+}
+
 DateTime DateTime::AddMinutes(int minutes) const {
     int64_t ticks = static_cast<int64_t>(minutes) * static_cast<int64_t>(60u * TICKS_PER_SECOND);
     return DateTime{.Data = this->Data + static_cast<uint64_t>(ticks)};

@@ -107,4 +107,8 @@ VideoFileType TwitchVideoInfo::GetVideoType() const {
 void TwitchVideoInfo::SetVideoType(VideoFileType videoType) {
     throw std::runtime_error("cannot set video type for TwitchVideoInfo");
 }
+
+std::unique_ptr<IVideoInfo> TwitchVideoInfo::Clone() const {
+    return std::make_unique<TwitchVideoInfo>(*this);
+}
 } // namespace VodArchiver

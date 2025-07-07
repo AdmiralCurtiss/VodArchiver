@@ -13,6 +13,7 @@
 
 #include "imgui.h"
 
+#include "gui_fetch_window.h"
 #include "gui_state.h"
 #include "gui_user_settings.h"
 #include "gui_video_split_window.h"
@@ -48,6 +49,9 @@ bool VodArchiverMainWindow::HasPendingWindowRequest() const {
 bool VodArchiverMainWindow::RenderContents(GuiState& state) {
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("Toolbox")) {
+            if (ImGui::MenuItem("Fetch videos...")) {
+                state.Windows.emplace_back(std::make_unique<GUI::FetchWindow>(state));
+            }
             if (ImGui::MenuItem("Split videos...")) {
                 state.Windows.emplace_back(std::make_unique<GUI::VideoSplitWindow>(state));
             }

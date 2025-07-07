@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -53,5 +54,7 @@ struct IVideoInfo {
     virtual void SetVideoRecordingState(RecordingState videoRecordingState) = 0;
     virtual VideoFileType GetVideoType() const = 0;
     virtual void SetVideoType(VideoFileType videoType) = 0;
+
+    virtual std::unique_ptr<IVideoInfo> Clone() const = 0;
 };
 } // namespace VodArchiver

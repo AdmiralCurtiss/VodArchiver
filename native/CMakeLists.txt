@@ -257,6 +257,8 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/exec.h
 	vodarchiver/ffmpeg_util.cpp
 	vodarchiver/ffmpeg_util.h
+	vodarchiver/job_handling.cpp
+	vodarchiver/job_handling.h
 	vodarchiver/main.cpp
 	vodarchiver/task_cancellation.h
 	vodarchiver/task_reporting.h
@@ -273,8 +275,30 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/tasks/video-task-group.cpp
 	vodarchiver/tasks/video-task-group.h
 
+	vodarchiver/userinfo/archive-org-user-info.cpp
+	vodarchiver/userinfo/archive-org-user-info.h
+	vodarchiver/userinfo/ffmpeg-job-user-info.cpp
+	vodarchiver/userinfo/ffmpeg-job-user-info.h
+	vodarchiver/userinfo/generic-user-info.cpp
+	vodarchiver/userinfo/generic-user-info.h
+	vodarchiver/userinfo/hitbox-user-info.cpp
+	vodarchiver/userinfo/hitbox-user-info.h
 	vodarchiver/userinfo/i-user-info.cpp
 	vodarchiver/userinfo/i-user-info.h
+	vodarchiver/userinfo/rss-feed-user-info.cpp
+	vodarchiver/userinfo/rss-feed-user-info.h
+	vodarchiver/userinfo/serialization.cpp
+	vodarchiver/userinfo/serialization.h
+	vodarchiver/userinfo/twitch-user-info.cpp
+	vodarchiver/userinfo/twitch-user-info.h
+	vodarchiver/userinfo/youtube-channel-user-info.cpp
+	vodarchiver/userinfo/youtube-channel-user-info.h
+	vodarchiver/userinfo/youtube-playlist-user-info.cpp
+	vodarchiver/userinfo/youtube-playlist-user-info.h
+	vodarchiver/userinfo/youtube-url-user-info.cpp
+	vodarchiver/userinfo/youtube-url-user-info.h
+	vodarchiver/userinfo/youtube-user-user-info.cpp
+	vodarchiver/userinfo/youtube-user-user-info.h
 
 	vodarchiver/videoinfo/ffmpeg-reencode-job-video-info.cpp
 	vodarchiver/videoinfo/ffmpeg-reencode-job-video-info.h
@@ -332,6 +356,8 @@ target_link_libraries(vodarchiver PUBLIC zlibstatic)
 
 target_sources(vodarchiver PRIVATE
 	vodarchiver/gui/gui_background_task.h
+	vodarchiver/gui/gui_fetch_window.cpp
+	vodarchiver/gui/gui_fetch_window.h
 	vodarchiver/gui/gui_file_browser.cpp
 	vodarchiver/gui/gui_file_browser.h
 	vodarchiver/gui/gui_fonts.cpp

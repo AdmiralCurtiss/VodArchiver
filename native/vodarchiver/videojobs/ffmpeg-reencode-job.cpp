@@ -13,18 +13,6 @@
 namespace VodArchiver {
 FFMpegReencodeJob::FFMpegReencodeJob() {}
 
-FFMpegReencodeJob::FFMpegReencodeJob(std::string path,
-                                     std::shared_ptr<IStatusUpdate> statusUpdater) {
-    JobStatus = VideoJobStatus::NotStarted;
-    StatusUpdater =
-        statusUpdater == nullptr ? std::make_shared<NullStatusUpdate>() : std::move(statusUpdater);
-    auto vi = std::make_unique<GenericVideoInfo>();
-    vi->Service = StreamService::FFMpegJob;
-    vi->VideoId = std::move(path);
-    _VideoInfo = std::move(vi);
-    _Status = "...";
-}
-
 bool FFMpegReencodeJob::IsWaitingForUserInput() const {
     return false;
 }

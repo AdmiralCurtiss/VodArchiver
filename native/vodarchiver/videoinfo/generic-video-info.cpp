@@ -79,4 +79,8 @@ VideoFileType GenericVideoInfo::GetVideoType() const {
 void GenericVideoInfo::SetVideoType(VideoFileType videoType) {
     this->VideoType = videoType;
 }
+
+std::unique_ptr<IVideoInfo> GenericVideoInfo::Clone() const {
+    return std::make_unique<GenericVideoInfo>(*this);
+}
 } // namespace VodArchiver

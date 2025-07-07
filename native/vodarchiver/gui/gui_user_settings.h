@@ -41,4 +41,5 @@ const std::string& GetTempFolderPath(const GuiUserSettings& settings);
 const std::string& GetPersistentDataPath(const GuiUserSettings& settings);
 std::string GetPersistentDataPath(const GuiUserSettings& settings, std::string_view file);
 std::string GetVodXmlPath(const GuiUserSettings& settings);
+std::string GetUserInfoXmlPath(const GuiUserSettings& settings);
 } // namespace VodArchiver

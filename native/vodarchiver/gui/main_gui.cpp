@@ -12,6 +12,7 @@
 #include "util/file.h"
 #include "util/text.h"
 #include "vodarchiver/common_paths.h"
+#include "vodarchiver/userinfo/serialization.h"
 #include "vodarchiver/videojobs/serialization.h"
 #include "vodarchiver_version.h"
 
@@ -62,6 +63,12 @@ int RunGui(int argc, char** argvUtf8) {
         auto jobs = ParseJobsFromFile(GetVodXmlPath(state.GuiSettings));
         if (jobs) {
             state.Jobs = std::move(*jobs);
+        }
+    }
+    {
+        auto userinfos = ParseUserInfosFromFile(GetUserInfoXmlPath(state.GuiSettings));
+        if (userinfos) {
+            state.UserInfos = std::move(*userinfos);
         }
     }
 

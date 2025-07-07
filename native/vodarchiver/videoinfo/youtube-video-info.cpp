@@ -80,4 +80,8 @@ VideoFileType YoutubeVideoInfo::GetVideoType() const {
 void YoutubeVideoInfo::SetVideoType(VideoFileType videoType) {
     this->VideoType = videoType;
 }
+
+std::unique_ptr<IVideoInfo> YoutubeVideoInfo::Clone() const {
+    return std::make_unique<YoutubeVideoInfo>(*this);
+}
 } // namespace VodArchiver

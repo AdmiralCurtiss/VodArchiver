@@ -11,7 +11,6 @@ struct FFMpegReencodeJob : public IVideoJob {
     std::string GenerateOutputFilename() override;
 
     FFMpegReencodeJob();
-    FFMpegReencodeJob(std::string path, std::shared_ptr<IStatusUpdate> statusUpdater = nullptr);
 
 private:
     bool Reencode(const std::string& targetName,

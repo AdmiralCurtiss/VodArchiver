@@ -21,7 +21,12 @@ struct DateTime {
         return DateTime{.Data = static_cast<uint64_t>(data)};
     }
 
+    static DateTime FromUnixTime(int64_t timestamp) {
+        return FromBinary(621355968000000000).AddSeconds(timestamp);
+    }
+
     static DateTime UtcNow();
+    DateTime AddSeconds(int64_t seconds) const;
     DateTime AddMinutes(int minutes) const;
 
     auto operator<=>(const DateTime& other) const {

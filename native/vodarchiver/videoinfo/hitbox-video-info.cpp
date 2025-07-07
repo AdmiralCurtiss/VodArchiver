@@ -90,4 +90,8 @@ VideoFileType HitboxVideoInfo::GetVideoType() const {
 void HitboxVideoInfo::SetVideoType(VideoFileType videoType) {
     throw std::runtime_error("cannot set video type for HitboxVideoInfo");
 }
+
+std::unique_ptr<IVideoInfo> HitboxVideoInfo::Clone() const {
+    return std::make_unique<HitboxVideoInfo>(*this);
+}
 } // namespace VodArchiver
