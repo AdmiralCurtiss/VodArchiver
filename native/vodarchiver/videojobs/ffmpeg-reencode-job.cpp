@@ -43,20 +43,22 @@ bool FFMpegReencodeJob::Reencode(const std::string& targetName,
     return HyoutaUtils::IO::Move(tempName, targetName, false);
 }
 
-std::string PathCombine(std::string_view lhs, std::string_view rhs) {
+static std::string PathCombine(std::string_view lhs, std::string_view rhs) {
     std::string result(lhs);
     HyoutaUtils::IO::AppendPathElement(result, rhs);
     return result;
 }
 
-std::string PathCombine(std::string_view lhs, std::string_view mhs, std::string_view rhs) {
+static std::string PathCombine(std::string_view lhs, std::string_view mhs, std::string_view rhs) {
     std::string result(lhs);
     HyoutaUtils::IO::AppendPathElement(result, mhs);
     HyoutaUtils::IO::AppendPathElement(result, rhs);
     return result;
 }
 
-ResultType FFMpegReencodeJob::Run(TaskCancellation& cancellationToken) {
+ResultType FFMpegReencodeJob::Run(const std::string& targetFolderPath,
+                                  const std::string& tempFolderPath,
+                                  TaskCancellation& cancellationToken) {
     JobStatus = VideoJobStatus::Running;
     SetStatus("Checking files...");
 

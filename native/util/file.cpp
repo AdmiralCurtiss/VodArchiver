@@ -883,13 +883,10 @@ bool Move(std::string_view source, std::string_view target, bool overwrite) noex
 #if defined(BUILD_FOR_WINDOWS) && defined(DeleteFile)
 #undef DeleteFile
 #endif
-bool DeleteFile(std::string_view path) noexcept {
-#ifdef BUILD_FOR_WINDOWS
-    auto wstr = HyoutaUtils::TextUtils::Utf8ToWString(path.data(), path.size());
-    if (!wstr) {
-        return false;
-    }
-    if (DeleteFileW(wstr->c_str()) != 0) {
+
+#if defined(BUILD_FOR_WINDOWS)
+bool DeleteFileWindows(const wchar_t* path) noexcept {
+    if (DeleteFileW(path) != 0) {
         return true;
     }
     if (GetLastError() != ERROR_ACCESS_DENIED) {
@@ -899,7 +896,7 @@ bool DeleteFile(std::string_view path) noexcept {
     // DeleteFileW() fails on read-only files.
     // Check if this is the case, remove the attribute, and retry.
     WIN32_FILE_ATTRIBUTE_DATA data{};
-    const auto rv = GetFileAttributesExW(wstr->c_str(), GetFileExInfoStandard, &data);
+    const auto rv = GetFileAttributesExW(path, GetFileExInfoStandard, &data);
     if (rv == 0) {
         return false;
     }
@@ -911,16 +908,40 @@ bool DeleteFile(std::string_view path) noexcept {
         // not read-only
         return false;
     }
-    if (SetFileAttributesW(wstr->c_str(), data.dwFileAttributes & ~FILE_ATTRIBUTE_READONLY) == 0) {
+    if (SetFileAttributesW(path, data.dwFileAttributes & ~FILE_ATTRIBUTE_READONLY) == 0) {
         return false;
     }
-    return DeleteFileW(wstr->c_str()) != 0;
+    return DeleteFileW(path) != 0;
+}
+#else
+bool DeleteFileLinux(const char* path) noexcept {
+    int result = unlink(path);
+    return result == 0;
+}
+#endif
+
+bool DeleteFile(std::string_view path) noexcept {
+#ifdef BUILD_FOR_WINDOWS
+    auto wstr = HyoutaUtils::TextUtils::Utf8ToWString(path.data(), path.size());
+    if (!wstr) {
+        return false;
+    }
+    return DeleteFileWindows(wstr->c_str());
 #else
     std::string p(path);
-    int result = unlink(p.c_str());
-    return result == 0;
+    return DeleteFileLinux(p.c_str());
 #endif
 }
+
+#ifdef FILE_WRAPPER_WITH_STD_FILESYSTEM
+bool DeleteFile(const std::filesystem::path& p) noexcept {
+#ifdef BUILD_FOR_WINDOWS
+    return DeleteFileWindows(p.c_str());
+#else
+    return DeleteFileLinux(p.c_str());
+#endif
+}
+#endif
 
 bool DeleteDirectory(std::string_view path) noexcept {
 #ifdef BUILD_FOR_WINDOWS

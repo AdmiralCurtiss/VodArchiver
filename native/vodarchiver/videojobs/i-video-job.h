@@ -79,7 +79,9 @@ public:
 
     DateTime JobFinishTimestamp{.Data = 0};
 
-    virtual ResultType Run(TaskCancellation& cancellationToken) = 0;
+    virtual ResultType Run(const std::string& targetFolderPath,
+                           const std::string& tempFolderPath,
+                           TaskCancellation& cancellationToken) = 0;
 
 protected:
     virtual bool ShouldStallWrite(const std::string& path, uint64_t filesize) const;

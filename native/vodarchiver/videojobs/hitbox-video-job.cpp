@@ -4,7 +4,9 @@ namespace VodArchiver {
 bool HitboxVideoJob::IsWaitingForUserInput() const {
     throw "not implemented";
 }
-ResultType HitboxVideoJob::Run(TaskCancellation& cancellationToken) {
+ResultType HitboxVideoJob::Run(const std::string& targetFolderPath,
+                               const std::string& tempFolderPath,
+                               TaskCancellation& cancellationToken) {
     throw "not implemented";
 }
 std::string HitboxVideoJob::GenerateOutputFilename() {

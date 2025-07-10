@@ -136,6 +136,18 @@ set(SKIP_INSTALL_ALL ON)
 set(ZLIB_BUILD_EXAMPLES OFF)
 add_subdirectory(zlib)
 
+set(BUILD_CURL_EXE OFF)
+set(BUILD_SHARED_LIBS OFF)
+set(BUILD_STATIC_LIBS ON)
+set(CURL_DISABLE_INSTALL ON)
+set(ENABLE_UNICODE ON)
+set(CURL_ENABLE_SSL ON)
+if (WIN32)
+	set(CURL_USE_SCHANNEL ON)
+endif()
+set(CURL_USE_LIBPSL OFF) # TODO: check if we can add this easily
+add_subdirectory(curl)
+
 set(SOURCES_UTIL
 	util/hash/crc32.h
 	util/hash/crc32.c
@@ -251,6 +263,8 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/cli_tool.h
 	vodarchiver/common_paths.cpp
 	vodarchiver/common_paths.h
+	vodarchiver/curl_util.cpp
+	vodarchiver/curl_util.h
 	vodarchiver/decompress_helper.cpp
 	vodarchiver/decompress_helper.h
 	vodarchiver/exec.cpp
@@ -352,7 +366,7 @@ target_compile_options(vodarchiver PRIVATE $<$<CONFIG:Release,RelWithDebInfo,Min
 target_include_directories(vodarchiver
 	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/vodarchiver_embeds"
 )
-target_link_libraries(vodarchiver PUBLIC zlibstatic)
+target_link_libraries(vodarchiver PUBLIC zlibstatic libcurl)
 
 target_sources(vodarchiver PRIVATE
 	vodarchiver/gui/gui_background_task.h

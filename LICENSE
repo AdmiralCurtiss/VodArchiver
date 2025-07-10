@@ -59,6 +59,12 @@ Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
 All rights reserved.
 See the native/rapidjson/license.txt file for details.
 
+== native/curl ==
+Licensed under the curl license
+Copyright (c) 1996 - 2025, Daniel Stenberg, <daniel@haxx.se>, and many
+contributors, see the THANKS file.
+See the native/curl/COPYING file for details.
+
 == fonts/Cuprum ==
 The Cuprum font is licensed under the SIL Open Font License, Version 1.1
 Copyright 2020 The Cuprum Project Authors (https://github.com/alexeiva/cuprum)

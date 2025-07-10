@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdint>
 #include <stdexcept>
+#include <string>
 
 namespace VodArchiver {
 // C# compatible types
@@ -50,4 +51,7 @@ struct TimeSpan {
         return static_cast<double>(Ticks) * 1e-7;
     }
 };
+
+std::string DateTimeToStringForFilesystem(DateTime dt);
+std::string DateTimeToStringForGui(DateTime dt);
 } // namespace VodArchiver

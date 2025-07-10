@@ -4,3 +4,6 @@
 [submodule "native/imgui"]
 	path = native/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "native/curl"]
+	path = native/curl
+	url = https://github.com/curl/curl.git

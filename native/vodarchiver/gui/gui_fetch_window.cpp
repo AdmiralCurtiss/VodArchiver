@@ -302,7 +302,7 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Timestamp)) {
-                        std::string s = std::format("{}", item->GetVideoTimestamp().Data);
+                        std::string s = DateTimeToStringForGui(item->GetVideoTimestamp());
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Duration)) {

@@ -10,8 +10,10 @@
 #include "gui_vodarchiver_main_window.h"
 #include "gui_window.h"
 #include "util/file.h"
+#include "util/scope.h"
 #include "util/text.h"
 #include "vodarchiver/common_paths.h"
+#include "vodarchiver/curl_util.h"
 #include "vodarchiver/userinfo/serialization.h"
 #include "vodarchiver/videojobs/serialization.h"
 #include "vodarchiver_version.h"
@@ -44,6 +46,9 @@ static bool RenderFrame(ImGuiIO& io, GuiState& state) {
 }
 
 int RunGui(int argc, char** argvUtf8) {
+    VodArchiver::InitCurl();
+    auto curlCleanup = HyoutaUtils::MakeScopeGuard([]() { VodArchiver::DeinitCurl(); });
+
     GuiState state;
     InitGuiUserSettings(state.GuiSettings);
     std::optional<std::string> guiSettingsFolder =
@@ -76,7 +81,12 @@ int RunGui(int argc, char** argvUtf8) {
          s < static_cast<int>(StreamService::COUNT);
          ++s) {
         state.VideoTaskGroups.emplace_back(std::make_unique<VideoTaskGroup>(
-            static_cast<StreamService>(s), []() {}, []() {}, &state.CancellationToken));
+            static_cast<StreamService>(s),
+            []() {},
+            []() {},
+            &state.CancellationToken,
+            GetTargetFolderPath(state.GuiSettings),
+            GetTempFolderPath(state.GuiSettings)));
     }
 
     state.Windows.emplace_back(std::make_unique<GUI::VodArchiverMainWindow>());

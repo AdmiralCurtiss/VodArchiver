@@ -224,7 +224,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Timestamp)) {
                         std::string s =
-                            std::format("{}", item->GetVideoInfo()->GetVideoTimestamp().Data);
+                            DateTimeToStringForGui(item->GetVideoInfo()->GetVideoTimestamp());
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Duration)) {

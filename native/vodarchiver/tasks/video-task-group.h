@@ -28,6 +28,8 @@ enum class TaskDoneEnum {
 struct RunningVideoJob {
     IVideoJob* Job = nullptr;
     TaskCancellation CancellationToken;
+    std::string TargetFolderPath;
+    std::string TempFolderPath;
     std::thread Task;
     std::atomic<TaskDoneEnum> Done = TaskDoneEnum::NotDone;
     std::atomic<ResultType> Result = ResultType::Failure;
@@ -40,6 +42,8 @@ struct VideoTaskGroup {
     std::recursive_mutex JobQueueLock;
     size_t MaxJobsRunningPerType = 0;
     TaskCancellation* CancellationToken = nullptr;
+    std::string TargetFolderPath;
+    std::string TempFolderPath;
 
     std::thread JobRunnerThread;
     std::vector<std::unique_ptr<RunningVideoJob>> RunningTasks;
@@ -52,7 +56,9 @@ struct VideoTaskGroup {
     VideoTaskGroup(StreamService service,
                    std::function<void()> saveJobsDelegate,
                    std::function<void()> powerEventDelegate,
-                   TaskCancellation* cancellationToken);
+                   TaskCancellation* cancellationToken,
+                   std::string targetFolderPath,
+                   std::string tempFolderPath);
     ~VideoTaskGroup();
 
     void Add(IVideoJob* job);
