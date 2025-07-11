@@ -9,5 +9,9 @@ struct HitboxVideoJob : public IVideoJob {
                    const std::string& tempFolderPath,
                    TaskCancellation& cancellationToken) override;
     std::string GenerateOutputFilename() override;
+
+private:
+    std::string GetTempFilenameWithoutExtension() const;
+    std::string GetFinalFilenameWithoutExtension() const;
 };
 } // namespace VodArchiver

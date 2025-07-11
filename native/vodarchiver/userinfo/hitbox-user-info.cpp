@@ -19,6 +19,6 @@ std::string HitboxUserInfo::GetUserIdentifier() {
 }
 
 FetchReturnValue HitboxUserInfo::Fetch(size_t offset, bool flat) {
-    throw "not implemented";
+    return FetchReturnValue{.Success = false, .HasMore = false};
 }
 } // namespace VodArchiver
