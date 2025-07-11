@@ -1,7 +1,13 @@
 #include "youtube-url-user-info.h"
 
+#include <cstdint>
+#include <memory>
+#include <optional>
 #include <string>
 #include <utility>
+#include <vector>
+
+#include "vodarchiver/youtube_util.h"
 
 namespace VodArchiver {
 YoutubeUrlUserInfo::YoutubeUrlUserInfo() = default;
@@ -19,6 +25,33 @@ std::string YoutubeUrlUserInfo::GetUserIdentifier() {
 }
 
 FetchReturnValue YoutubeUrlUserInfo::Fetch(size_t offset, bool flat) {
-    throw "not implemented";
+    std::vector<std::unique_ptr<IVideoInfo>> videosToAdd;
+    bool hasMore = true;
+    int64_t maxVideos = -1;
+    int64_t currentVideos = -1;
+
+    auto videos = Youtube::RetrieveVideosFromUrl(Url, flat);
+    if (!videos.has_value()) {
+        return FetchReturnValue{.Success = false, .HasMore = false};
+    }
+    hasMore = false;
+    currentVideos = videos->size();
+    for (auto& m : *videos) {
+        videosToAdd.push_back(std::move(m));
+    }
+
+    if (videosToAdd.size() <= 0) {
+        return FetchReturnValue{.Success = true,
+                                .HasMore = false,
+                                .TotalVideos = maxVideos,
+                                .VideoCountThisFetch = 0,
+                                .Videos = std::move(videosToAdd)};
+    }
+
+    return FetchReturnValue{.Success = true,
+                            .HasMore = hasMore,
+                            .TotalVideos = maxVideos,
+                            .VideoCountThisFetch = currentVideos,
+                            .Videos = std::move(videosToAdd)};
 }
 } // namespace VodArchiver

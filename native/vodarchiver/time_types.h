@@ -26,6 +26,13 @@ struct DateTime {
         return FromBinary(621355968000000000).AddSeconds(timestamp);
     }
 
+    static DateTime FromDate(uint64_t year,
+                             uint64_t month,
+                             uint64_t day,
+                             uint64_t hours,
+                             uint64_t minutes,
+                             uint64_t seconds);
+
     static DateTime UtcNow();
     DateTime AddSeconds(int64_t seconds) const;
     DateTime AddMinutes(int minutes) const;
@@ -50,8 +57,19 @@ struct TimeSpan {
     double GetTotalSeconds() const {
         return static_cast<double>(Ticks) * 1e-7;
     }
+
+    constexpr TimeSpan operator+(const TimeSpan& other) const {
+        return TimeSpan{.Ticks = this->Ticks + other.Ticks};
+    }
+    constexpr TimeSpan operator-(const TimeSpan& other) const {
+        return TimeSpan{.Ticks = this->Ticks - other.Ticks};
+    }
+    auto operator<=>(const TimeSpan& other) const {
+        return this->Ticks <=> other.Ticks;
+    }
 };
 
 std::string DateTimeToStringForFilesystem(DateTime dt);
 std::string DateTimeToStringForGui(DateTime dt);
+std::string DateToString(DateTime dt);
 } // namespace VodArchiver

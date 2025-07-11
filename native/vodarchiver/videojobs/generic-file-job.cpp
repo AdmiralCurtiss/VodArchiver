@@ -11,31 +11,13 @@
 #include "util/text.h"
 
 #include "vodarchiver/curl_util.h"
+#include "vodarchiver/filename_util.h"
 
 namespace VodArchiver {
 static std::atomic<size_t> s_Counter = 0;
 
 bool GenericFileJob::IsWaitingForUserInput() const {
     return false;
-}
-
-static std::string MakeStringFileSystemSafeBaseName(std::string_view s) {
-    std::string fn;
-    fn.reserve(s.size());
-    for (char c : s) {
-        if ((c >= '\0' && c <= '\x1f') // control chars
-            || c == '<' || c == '>' || c == ':' || c == '"' || c == '|' || c == '*'
-            || c == '?'              // illegal on windows
-            || c == '\\' || c == '/' // path separators
-            || c == ' '              // although spaces are technically valid we don't want them
-            || c == '.'              // no dots either, just in case
-        ) {
-            fn.push_back('_');
-        } else {
-            fn.push_back(c);
-        }
-    }
-    return fn;
 }
 
 static std::string StringToFilename(std::string_view basename, std::string_view extension) {

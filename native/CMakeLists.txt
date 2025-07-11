@@ -271,6 +271,8 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/exec.h
 	vodarchiver/ffmpeg_util.cpp
 	vodarchiver/ffmpeg_util.h
+	vodarchiver/filename_util.cpp
+	vodarchiver/filename_util.h
 	vodarchiver/job_handling.cpp
 	vodarchiver/job_handling.h
 	vodarchiver/main.cpp
@@ -280,6 +282,8 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/task_reporting_from_thread.h
 	vodarchiver/time_types.cpp
 	vodarchiver/time_types.h
+	vodarchiver/youtube_util.cpp
+	vodarchiver/youtube_util.h
 
 	vodarchiver/statusupdate/i-status-update.cpp
 	vodarchiver/statusupdate/i-status-update.h
