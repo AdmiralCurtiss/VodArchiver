@@ -15,6 +15,7 @@ std::string_view TwitchVideoTypeToString(TwitchVideoType type) {
         case TwitchVideoType::Upload: return "Upload";
         case TwitchVideoType::Archive: return "Archive";
         case TwitchVideoType::Highlight: return "Highlight";
+        case TwitchVideoType::Unknown:
         default: return "Unknown";
     }
 }
@@ -26,6 +27,8 @@ std::optional<TwitchVideoType> TwitchVideoTypeFromString(std::string_view sv) {
         return TwitchVideoType::Archive;
     } else if (sv == "Highlight") {
         return TwitchVideoType::Highlight;
+    } else if (sv == "Unknown") {
+        return TwitchVideoType::Unknown;
     }
     return std::nullopt;
 }

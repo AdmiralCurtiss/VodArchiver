@@ -282,6 +282,8 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/task_reporting_from_thread.h
 	vodarchiver/time_types.cpp
 	vodarchiver/time_types.h
+	vodarchiver/twitch_util.cpp
+	vodarchiver/twitch_util.h
 	vodarchiver/youtube_util.cpp
 	vodarchiver/youtube_util.h
 

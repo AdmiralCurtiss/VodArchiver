@@ -152,7 +152,7 @@ ResultType GenericFileJob::Run(const std::string& targetFolderPath,
                 return ResultType::Failure;
             }
 
-            auto result = GetFromUrlToMemory(videoId);
+            auto result = VodArchiver::curl::GetFromUrlToMemory(videoId);
             if (!result) {
                 return ResultType::Failure;
             }

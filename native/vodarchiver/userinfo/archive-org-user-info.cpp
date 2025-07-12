@@ -34,7 +34,7 @@ static std::optional<std::vector<std::unique_ptr<IVideoInfo>>>
     ArchiveOrgGetFilesFromUrl(const std::string& identifier) {
     std::string url = std::format("https://archive.org/download/{0}/{0}_files.xml", identifier);
 
-    auto xmlBuffer = GetFromUrlToMemory(url);
+    auto xmlBuffer = VodArchiver::curl::GetFromUrlToMemory(url);
     if (!xmlBuffer) {
         return std::nullopt;
     }

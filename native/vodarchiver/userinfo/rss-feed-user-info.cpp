@@ -32,7 +32,7 @@ std::string RssFeedUserInfo::GetUserIdentifier() {
 
 static std::optional<std::vector<std::unique_ptr<IVideoInfo>>>
     GetMediaFromFeed(const std::string& url) {
-    auto xmlBuffer = GetFromUrlToMemory(url);
+    auto xmlBuffer = VodArchiver::curl::GetFromUrlToMemory(url);
     if (!xmlBuffer) {
         return std::nullopt;
     }

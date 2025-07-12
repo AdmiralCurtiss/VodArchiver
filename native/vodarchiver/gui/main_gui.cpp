@@ -46,8 +46,8 @@ static bool RenderFrame(ImGuiIO& io, GuiState& state) {
 }
 
 int RunGui(int argc, char** argvUtf8) {
-    VodArchiver::InitCurl();
-    auto curlCleanup = HyoutaUtils::MakeScopeGuard([]() { VodArchiver::DeinitCurl(); });
+    VodArchiver::curl::InitCurl();
+    auto curlCleanup = HyoutaUtils::MakeScopeGuard([]() { VodArchiver::curl::DeinitCurl(); });
 
     GuiState state;
     InitGuiUserSettings(state.GuiSettings);

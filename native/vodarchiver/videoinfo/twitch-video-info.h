@@ -10,7 +10,7 @@
 #include "i-video-info.h"
 
 namespace VodArchiver {
-enum class TwitchVideoType { Upload, Archive, Highlight };
+enum class TwitchVideoType { Upload, Archive, Highlight, Unknown };
 std::string_view TwitchVideoTypeToString(TwitchVideoType type);
 std::optional<TwitchVideoType> TwitchVideoTypeFromString(std::string_view sv);
 
