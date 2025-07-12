@@ -155,15 +155,68 @@ std::optional<int64_t> GetUserIdFromUsername(const std::string& username,
 }
 
 static std::optional<DateTime> ParseTwitchDateTime(std::string_view str) {
-    std::string datestring(str);
+    // this is returned in the form of
+    // 2025-07-11T12:16:02Z
+    // except sometimes the seconds have subsecond precision, so it's like
+    // 2025-07-11T12:16:02.1234567Z
+    // i can't get the chrono parser to parse this at all, there's no specifiers for subsecond
+    // precision. so we'll clamp this off and then manually add it afterwards...
+    std::string_view tmp = str;
+    if (tmp.ends_with('Z')) {
+        tmp = tmp.substr(0, tmp.size() - 1);
+    }
+
+    // split into subseconds and rest
+    const size_t subsecondDotPosition = [&]() -> size_t {
+        for (size_t i = tmp.size(); i > 0; --i) {
+            const char c = tmp[i - 1];
+            if (c >= '0' && c <= '9') {
+                continue;
+            }
+            if (c == '.') {
+                return (i - 1);
+            }
+        }
+        return std::string_view::npos;
+    }();
+
+
+    std::string datestring(tmp.substr(0, subsecondDotPosition));
     std::istringstream stream(datestring);
     stream.imbue(std::locale::classic());
     std::chrono::sys_time<std::chrono::seconds> time;
-    stream >> std::chrono::parse("%Y-%m-%dT%H:%M:%SZ", time);
-    if (!stream.fail()) {
-        return DateTime::FromUnixTime(time.time_since_epoch().count());
+    stream >> std::chrono::parse("%Y-%m-%dT%H:%M:%S", time);
+    if (stream.fail()) {
+        return std::nullopt;
     }
-    return std::nullopt;
+    DateTime dt = DateTime::FromUnixTime(time.time_since_epoch().count());
+
+    if (subsecondDotPosition != std::string_view::npos) {
+        std::string_view subsecStr = tmp.substr(subsecondDotPosition + 1);
+        size_t numDigits = subsecStr.size();
+        if (numDigits > 0) {
+            // clamp to nanoseconds
+            if (numDigits > 9) {
+                subsecStr = subsecStr.substr(0, 9);
+                numDigits = 9;
+            }
+            auto subsec = HyoutaUtils::NumberUtils::ParseInt64(subsecStr);
+            if (subsec) {
+                // expand if below nanoseconds
+                int64_t ns = *subsec;
+                for (size_t i = numDigits; i < 9; ++i) {
+                    ns *= 10;
+                }
+                int64_t extraTicks =
+                    (static_cast<int64_t>(ns) % static_cast<int64_t>(1'000'000'000))
+                    / (static_cast<int64_t>(1'000'000'000)
+                       / static_cast<int64_t>(DateTime::TICKS_PER_SECOND));
+                dt.Data += extraTicks;
+            }
+        }
+    }
+
+    return dt;
 }
 
 static std::optional<int64_t> ParseTwitchDuration(std::string_view v) {
@@ -349,8 +402,13 @@ static bool GetVideosInternal(TwitchVodFetchResult& r,
     }
 
     if (!cursor.empty()) {
-        GetVideosInternal(r, channelId, highlights, offset, limit, clientId, clientSecret, cursor);
+        if (!GetVideosInternal(
+                r, channelId, highlights, offset, limit, clientId, clientSecret, cursor)) {
+            return false;
+        }
     }
+
+    return true;
 }
 
 std::optional<TwitchVodFetchResult> GetVideos(int64_t channelId,
