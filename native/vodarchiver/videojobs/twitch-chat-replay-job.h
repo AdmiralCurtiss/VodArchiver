@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "i-video-job.h"
 
 namespace VodArchiver {
@@ -9,5 +11,14 @@ struct TwitchChatReplayJob : public IVideoJob {
                    const std::string& tempFolderPath,
                    TaskCancellation& cancellationToken) override;
     std::string GenerateOutputFilename() override;
+
+    std::string GetTempFilenameWithoutExtension() const;
+    std::string GetTargetFilenameWithoutExtension() const;
+
+    std::shared_ptr<IUserInputRequest> GetUserInputRequest() const override;
+    std::shared_ptr<IUserInputRequest> _UserInputRequest = nullptr;
+    bool AssumeFinished = false;
+
+    bool ShouldStallWrite(const std::string& path, uint64_t filesize) const override;
 };
 } // namespace VodArchiver

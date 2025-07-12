@@ -23,3 +23,8 @@ std::optional<TwitchVodFetchResult> GetVideos(int64_t channelId,
                                               const std::string& clientId,
                                               const std::string& clientSecret);
 } // namespace VodArchiver::Twitch
+
+namespace VodArchiver::TwitchYTDL {
+std::optional<std::string> GetVideoJson(int64_t id);
+std::optional<TwitchVideo> VideoFromJson(const std::string& json);
+} // namespace VodArchiver::TwitchYTDL

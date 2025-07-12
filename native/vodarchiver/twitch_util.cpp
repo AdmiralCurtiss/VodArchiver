@@ -19,10 +19,6 @@
 #include "vodarchiver/videoinfo/i-video-info.h"
 #include "vodarchiver/videoinfo/youtube-video-info.h"
 
-namespace VodArchiver::Twitch {
-static constexpr char Helix[] = "https://api.twitch.tv/helix/";
-static constexpr char OAuthUrl[] = "https://id.twitch.tv/oauth2/token";
-
 static std::optional<std::string>
     ReadString(const rapidjson::GenericObject<true, rapidjson::Value>& json, const char* key) {
     auto it = json.FindMember(key);
@@ -38,6 +34,36 @@ static std::optional<std::string>
     return std::nullopt;
 }
 
+static std::optional<int64_t>
+    ReadInt64(const rapidjson::GenericObject<true, rapidjson::Value>& json, const char* key) {
+    auto it = json.FindMember(key);
+    if (it == json.MemberEnd()) {
+        return std::nullopt;
+    }
+    auto& j = it->value;
+    if (j.IsInt64()) {
+        const auto i = j.GetInt64();
+        return static_cast<int64_t>(i);
+    }
+    return std::nullopt;
+}
+
+static std::optional<bool> ReadBool(const rapidjson::GenericObject<true, rapidjson::Value>& json,
+                                    const char* key) {
+    auto it = json.FindMember(key);
+    if (it == json.MemberEnd()) {
+        return std::nullopt;
+    }
+    auto& j = it->value;
+    if (j.IsBool()) {
+        return j.GetBool();
+    }
+    return std::nullopt;
+}
+
+namespace VodArchiver::Twitch {
+static constexpr char Helix[] = "https://api.twitch.tv/helix/";
+static constexpr char OAuthUrl[] = "https://id.twitch.tv/oauth2/token";
 static std::optional<std::string>
     Get(const std::string& url, const std::string& clientId, const std::string& clientSecret) {
     auto clientIdEscaped = VodArchiver::curl::UrlEscape(clientId);
@@ -423,3 +449,99 @@ std::optional<TwitchVodFetchResult> GetVideos(int64_t channelId,
     return r;
 }
 } // namespace VodArchiver::Twitch
+
+namespace VodArchiver::TwitchYTDL {
+std::optional<std::string> GetVideoJson(int64_t id) {
+    std::vector<std::string> args;
+    args.push_back("-J");
+    args.push_back(std::format("https://www.twitch.tv/videos/{}", id));
+    std::string output;
+    if (RunProgram(
+            "yt-dlp.exe",
+            args,
+            [&](std::string_view sv) { output.append(sv); },
+            [](std::string_view sv) {})
+        != 0) {
+        return std::nullopt;
+    }
+    return output;
+}
+
+std::optional<TwitchVideo> VideoFromJson(const std::string& str) {
+    rapidjson::Document json;
+    json.Parse<rapidjson::kParseFullPrecisionFlag | rapidjson::kParseNanAndInfFlag
+                   | rapidjson::kParseCommentsFlag,
+               rapidjson::UTF8<char>>(str.data(), str.size());
+    if (json.HasParseError() || !json.IsObject()) {
+        return std::nullopt;
+    }
+    const auto jo = static_cast<const rapidjson::Document&>(json).GetObject();
+
+    TwitchVideo v;
+    {
+        auto idString = ReadString(jo, "id");
+        if (!idString) {
+            return std::nullopt;
+        }
+        std::string_view sv = *idString;
+        if (sv.starts_with("v")) {
+            sv = sv.substr(1);
+        }
+        auto id = HyoutaUtils::NumberUtils::ParseInt64(sv);
+        if (!id) {
+            return std::nullopt;
+        }
+        v.ID = *id;
+    }
+    v.UserID = 0;
+    {
+        auto str = ReadString(jo, "uploader");
+        if (!str) {
+            return std::nullopt;
+        }
+        v.Username = std::move(*str);
+    }
+    {
+        auto str = ReadString(jo, "title");
+        if (str) {
+            v.Title = std::move(*str);
+        }
+    }
+    v.Game = "?";
+    v.Description = "?";
+    {
+        auto n = ReadInt64(jo, "timestamp");
+        if (n) {
+            v.CreatedAt = DateTime::FromUnixTime(*n);
+        }
+    }
+    v.PublishedAt = v.CreatedAt;
+    {
+        auto n = ReadInt64(jo, "duration");
+        if (n) {
+            v.Duration = *n;
+        }
+    }
+    {
+        auto n = ReadInt64(jo, "view_count");
+        if (n) {
+            v.ViewCount = *n;
+        }
+    }
+
+    auto is_live = ReadBool(jo, "is_live");
+    auto was_live = ReadBool(jo, "was_live");
+    if (!is_live.has_value() || !was_live.has_value()) {
+        return std::nullopt;
+    }
+
+    if (*is_live || *was_live) {
+        v.Type = TwitchVideoType::Archive;
+    } else {
+        v.Type = TwitchVideoType::Upload;
+    }
+    v.State = *is_live ? RecordingState::Live : RecordingState::Recorded;
+
+    return v;
+}
+} // namespace VodArchiver::TwitchYTDL
