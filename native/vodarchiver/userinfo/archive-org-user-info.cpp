@@ -34,15 +34,15 @@ static std::optional<std::vector<std::unique_ptr<IVideoInfo>>>
     ArchiveOrgGetFilesFromUrl(const std::string& identifier) {
     std::string url = std::format("https://archive.org/download/{0}/{0}_files.xml", identifier);
 
-    auto xmlBuffer = VodArchiver::curl::GetFromUrlToMemory(url);
-    if (!xmlBuffer) {
+    auto response = VodArchiver::curl::GetFromUrlToMemory(url);
+    if (!response || response->ResponseCode >= 400) {
         return std::nullopt;
     }
-    xmlBuffer->push_back('\0'); // make sure it's nullterminated
+    response->Data.push_back('\0'); // make sure it's nullterminated
 
     std::vector<std::unique_ptr<IVideoInfo>> vi;
     rapidxml::xml_document<char> xml;
-    xml.parse<rapidxml::parse_default>(xmlBuffer->data());
+    xml.parse<rapidxml::parse_default>(response->Data.data());
     auto files = xml.first_node("files");
     if (!files) {
         return std::nullopt;

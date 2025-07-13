@@ -122,7 +122,7 @@ ResultType YoutubeVideoJob::Run(const std::string& targetFolderPath,
         }
         TimeSpan actualVideoLength = probe->Duration;
         TimeSpan expectedVideoLength = vi->GetVideoLength();
-        if ((actualVideoLength - expectedVideoLength) > TimeSpan::FromSeconds(5)) {
+        if (std::abs((actualVideoLength - expectedVideoLength).GetTotalSeconds()) > 5.0) {
             // if difference is bigger than 5 seconds something is off, report
             SetStatus(std::format(
                 "Large time difference between expected ({}s) and actual ({}s), stopping.",

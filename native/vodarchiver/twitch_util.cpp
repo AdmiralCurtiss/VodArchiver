@@ -81,7 +81,7 @@ static std::optional<std::string>
                                                     "client_credentials");
     auto tokenResponse =
         VodArchiver::curl::PostFormFromUrlToMemory(OAuthUrl, formUrlEncodedContent);
-    if (!tokenResponse) {
+    if (!tokenResponse || tokenResponse->ResponseCode >= 400) {
         return std::nullopt;
     }
 
@@ -90,7 +90,7 @@ static std::optional<std::string>
         rapidjson::Document json;
         json.Parse<rapidjson::kParseFullPrecisionFlag | rapidjson::kParseNanAndInfFlag
                        | rapidjson::kParseCommentsFlag,
-                   rapidjson::UTF8<char>>(tokenResponse->data(), tokenResponse->size());
+                   rapidjson::UTF8<char>>(tokenResponse->Data.data(), tokenResponse->Data.size());
         if (json.HasParseError() || !json.IsObject()) {
             return std::nullopt;
         }
@@ -106,11 +106,11 @@ static std::optional<std::string>
     std::vector<std::string> headers;
     headers.push_back(std::format("Authorization: Bearer {}", token));
     headers.push_back(std::format("Client-ID: {}", clientId));
-    auto result = VodArchiver::curl::GetFromUrlToMemory(url, headers);
-    if (!result) {
+    auto response = VodArchiver::curl::GetFromUrlToMemory(url, headers);
+    if (!response || response->ResponseCode >= 400) {
         return std::nullopt;
     }
-    return std::string(result->data(), result->size());
+    return std::string(response->Data.data(), response->Data.size());
 }
 
 std::optional<int64_t> GetUserIdFromUsername(const std::string& username,

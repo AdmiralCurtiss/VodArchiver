@@ -1,6 +1,7 @@
 #include "curl_util.h"
 
 #include <cstddef>
+#include <format>
 #include <limits>
 #include <optional>
 #include <string>
@@ -76,8 +77,9 @@ static size_t WriteToVectorCallback(char* ptr, size_t size, size_t nmemb, void* 
     return size * nmemb;
 }
 
-std::optional<std::vector<char>> GetFromUrlToMemory(const std::string& url,
-                                                    const std::vector<std::string>& headers) {
+std::optional<HttpResult> GetFromUrlToMemory(const std::string& url,
+                                             const std::vector<std::string>& headers,
+                                             const std::vector<Range>& ranges) {
     CURL* handle = curl_easy_init();
     if (handle == nullptr) {
         return std::nullopt;
@@ -85,7 +87,6 @@ std::optional<std::vector<char>> GetFromUrlToMemory(const std::string& url,
     auto handleScope = HyoutaUtils::MakeScopeGuard([&]() { curl_easy_cleanup(handle); });
 
     std::vector<char> buffer;
-    curl_easy_setopt(handle, CURLOPT_FAILONERROR, 1);
     curl_easy_setopt(handle, CURLOPT_HTTPGET, 1);
     curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, WriteToVectorCallback);
@@ -107,17 +108,31 @@ std::optional<std::vector<char>> GetFromUrlToMemory(const std::string& url,
         curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headerList);
         curl_easy_setopt(handle, CURLOPT_HEADEROPT, (long)CURLHEADER_SEPARATE);
     }
+    std::string rangesString;
+    if (!ranges.empty()) {
+        for (auto& range : ranges) {
+            rangesString.append(std::format("{}-{},", range.Start, range.End));
+        }
+        rangesString.pop_back();
+
+        curl_easy_setopt(handle, CURLOPT_RANGE, rangesString.c_str());
+    }
 
     CURLcode ec = curl_easy_perform(handle);
     if (ec != CURLE_OK) {
         return std::nullopt;
     }
 
-    return buffer;
+    long responseCode = 0;
+    ec = curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &responseCode);
+    if (ec != CURLE_OK) {
+        return std::nullopt;
+    }
+
+    return HttpResult{.ResponseCode = responseCode, .Data = std::move(buffer)};
 }
 
-std::optional<std::vector<char>> PostFormFromUrlToMemory(const std::string& url,
-                                                         std::string_view data) {
+std::optional<HttpResult> PostFormFromUrlToMemory(const std::string& url, std::string_view data) {
     CURL* handle = curl_easy_init();
     if (handle == nullptr) {
         return std::nullopt;
@@ -125,7 +140,6 @@ std::optional<std::vector<char>> PostFormFromUrlToMemory(const std::string& url,
     auto handleScope = HyoutaUtils::MakeScopeGuard([&]() { curl_easy_cleanup(handle); });
 
     std::vector<char> buffer;
-    curl_easy_setopt(handle, CURLOPT_FAILONERROR, 1);
     curl_easy_setopt(handle, CURLOPT_HTTPPOST, 1);
     curl_easy_setopt(handle, CURLOPT_URL, url.c_str());
     curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, data.size());
@@ -138,6 +152,12 @@ std::optional<std::vector<char>> PostFormFromUrlToMemory(const std::string& url,
         return std::nullopt;
     }
 
-    return buffer;
+    long responseCode = 0;
+    ec = curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &responseCode);
+    if (ec != CURLE_OK) {
+        return std::nullopt;
+    }
+
+    return HttpResult{.ResponseCode = responseCode, .Data = std::move(buffer)};
 }
 } // namespace VodArchiver::curl

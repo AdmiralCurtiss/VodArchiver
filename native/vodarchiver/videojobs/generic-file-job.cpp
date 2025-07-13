@@ -152,12 +152,12 @@ ResultType GenericFileJob::Run(const std::string& targetFolderPath,
                 return ResultType::Failure;
             }
 
-            auto result = VodArchiver::curl::GetFromUrlToMemory(videoId);
-            if (!result) {
+            auto response = VodArchiver::curl::GetFromUrlToMemory(videoId);
+            if (!response || response->ResponseCode >= 400) {
                 return ResultType::Failure;
             }
             if (!HyoutaUtils::IO::WriteFileAtomic(
-                    downloadFilepath, result->data(), result->size())) {
+                    downloadFilepath, response->Data.data(), response->Data.size())) {
                 return ResultType::Failure;
             }
 
