@@ -136,7 +136,8 @@ std::string TwitchVideoJob::GetFinalFilenameWithoutExtension() const {
                        VideoQuality);
 }
 
-ResultType TwitchVideoJob::Download(std::vector<std::string>& files,
+ResultType TwitchVideoJob::Download(JobConfig& jobConfig,
+                                    std::vector<std::string>& files,
                                     TaskCancellation& cancellationToken,
                                     const std::string& targetFolder,
                                     const std::vector<DownloadInfo>& downloadInfos,
@@ -210,7 +211,7 @@ ResultType TwitchVideoJob::Download(std::vector<std::string>& files,
                     continue;
                 }
 
-                // await job.StallWrite(outpath_temp, data.LongLength, cancellationToken);
+                StallWrite(jobConfig, outpath_temp, data->Data.size(), cancellationToken);
                 if (!HyoutaUtils::IO::WriteFileAtomic(
                         std::string_view(outpath_temp), data->Data.data(), data->Data.size())) {
                     return ResultType::Failure;
@@ -222,8 +223,10 @@ ResultType TwitchVideoJob::Download(std::vector<std::string>& files,
             }
 
             if (success) {
-                // await job.StallWrite(outpath, new FileInfo(outpath_temp).Length,
-                // cancellationToken);
+                StallWrite(jobConfig,
+                           outpath,
+                           HyoutaUtils::IO::GetFilesize(std::string_view(outpath_temp)).value_or(0),
+                           cancellationToken);
                 if (cancellationToken.IsCancellationRequested()) {
                     return ResultType::Cancelled;
                 }
@@ -639,8 +642,8 @@ ResultType TwitchVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
 
                 std::chrono::steady_clock timer;
                 auto timerBegin = timer.now();
-                ResultType downloadResult =
-                    Download(files, cancellationToken, tempFolderForParts, downloadInfos);
+                ResultType downloadResult = Download(
+                    jobConfig, files, cancellationToken, tempFolderForParts, downloadInfos);
                 if (downloadResult != ResultType::Success) {
                     return downloadResult;
                 }
@@ -696,7 +699,7 @@ ResultType TwitchVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
             if (HyoutaUtils::IO::FileExists(std::string_view(combinedTempname))) {
                 HyoutaUtils::IO::DeleteFile(std::string_view(combinedTempname));
             }
-            // await StallWrite(combinedFilename, expectedTargetFilesize, cancellationToken);
+            StallWrite(jobConfig, combinedFilename, expectedTargetFilesize, cancellationToken);
             if (cancellationToken.IsCancellationRequested()) {
                 return ResultType::Cancelled;
             }
@@ -746,8 +749,10 @@ ResultType TwitchVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
         if (HyoutaUtils::IO::FileExists(std::string_view(remuxedTempname))) {
             HyoutaUtils::IO::DeleteFile(std::string_view(remuxedTempname));
         }
-        // await StallWrite(remuxedFilename, new FileInfo(combinedFilename).Length,
-        // cancellationToken);
+        StallWrite(jobConfig,
+                   remuxedFilename,
+                   HyoutaUtils::IO::GetFilesize(std::string_view(combinedFilename)).value_or(0),
+                   cancellationToken);
         if (cancellationToken.IsCancellationRequested()) {
             return ResultType::Cancelled;
         }

@@ -1,5 +1,6 @@
 #include "twitch-chat-replay-job.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <format>
@@ -9,6 +10,7 @@
 #include "util/number.h"
 
 #include "vodarchiver/exec.h"
+#include "vodarchiver/system_util.h"
 #include "vodarchiver/twitch_util.h"
 
 static bool DeleteDirectoryRecursive(const std::filesystem::path& rootDir) {
@@ -94,12 +96,18 @@ std::string TwitchChatReplayJob::GenerateOutputFilename() {
     return GetTargetFilenameWithoutExtension() + ".json";
 }
 
-bool TwitchChatReplayJob::ShouldStallWrite(const std::string& path, uint64_t filesize) const {
-    return false;
-    // long freeSpace = new System.IO.DriveInfo(path).AvailableFreeSpace;
-    // return freeSpace
-    //        <= (Math.Min(Util.AbsoluteMinimumFreeSpaceBytes, Util.MinimumFreeSpaceBytes) +
-    //        filesize);
+bool TwitchChatReplayJob::ShouldStallWrite(JobConfig& jobConfig,
+                                           std::string_view path,
+                                           uint64_t filesize) const {
+    auto freeSpace = GetFreeDiskSpaceAtPath(path);
+    if (!freeSpace.has_value()) {
+        return false;
+    }
+
+    std::lock_guard lock(jobConfig.Mutex);
+    return *freeSpace
+           <= (std::min(jobConfig.AbsoluteMinimumFreeSpaceBytes, jobConfig.MinimumFreeSpaceBytes)
+               + filesize);
 }
 
 static std::string PathCombine(std::string_view lhs, std::string_view rhs) {

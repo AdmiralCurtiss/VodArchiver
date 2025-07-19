@@ -179,7 +179,10 @@ ResultType GenericFileJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
         if (cancellationToken.IsCancellationRequested()) {
             return ResultType::Cancelled;
         }
-        // await StallWrite(targetFilepath, new FileInfo(movedFilepath).Length, cancellationToken);
+        StallWrite(jobConfig,
+                   targetFilepath,
+                   HyoutaUtils::IO::GetFilesize(std::string_view(movedFilepath)).value_or(0),
+                   cancellationToken);
         if (cancellationToken.IsCancellationRequested()) {
             return ResultType::Cancelled;
         }

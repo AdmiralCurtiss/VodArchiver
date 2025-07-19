@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <mutex>
 #include <string>
 
@@ -12,5 +13,7 @@ struct JobConfig {
     std::string TempFolderPath;
     std::string TwitchClientId;
     std::string TwitchClientSecret;
+    uint64_t MinimumFreeSpaceBytes = 0;
+    uint64_t AbsoluteMinimumFreeSpaceBytes = 0;
 };
 } // namespace VodArchiver

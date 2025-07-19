@@ -150,7 +150,10 @@ ResultType FFMpegReencodeJob::Run(JobConfig& jobConfig, TaskCancellation& cancel
         }
 
         SetStatus("Encoding " + newfile + "...");
-        // await StallWrite(newfile, new FileInfo(encodeinput).Length, cancellationToken);
+        StallWrite(jobConfig,
+                   newfile,
+                   HyoutaUtils::IO::GetFilesize(std::string_view(*encodeinput)).value_or(0),
+                   cancellationToken);
         if (cancellationToken.IsCancellationRequested()) {
             return ResultType::Cancelled;
         }

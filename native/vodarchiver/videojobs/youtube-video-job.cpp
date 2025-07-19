@@ -72,8 +72,8 @@ ResultType YoutubeVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancella
                 return ResultType::Failure;
             }
             SetStatus("Running youtube-dl...");
-            // await StallWrite( tempFilepath, 0, cancellationToken ); // don't know expected
-            // filesize, so hope we have a sensible value in minimum free space
+            // don't know expected filesize, so hope we have a sensible value in minimum free space
+            StallWrite(jobConfig, tempFilepath, 0, cancellationToken);
             if (cancellationToken.IsCancellationRequested()) {
                 return ResultType::Cancelled;
             }

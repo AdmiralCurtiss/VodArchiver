@@ -17,6 +17,8 @@ struct TwitchChatReplayJob : public IVideoJob {
     std::shared_ptr<IUserInputRequest> _UserInputRequest = nullptr;
     bool AssumeFinished = false;
 
-    bool ShouldStallWrite(const std::string& path, uint64_t filesize) const override;
+    bool ShouldStallWrite(JobConfig& jobConfig,
+                          std::string_view path,
+                          uint64_t filesize) const override;
 };
 } // namespace VodArchiver

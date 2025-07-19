@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "../statusupdate/i-status-update.h"
@@ -83,11 +84,14 @@ public:
     virtual ResultType Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) = 0;
 
 protected:
-    virtual bool ShouldStallWrite(const std::string& path, uint64_t filesize) const;
+    virtual bool
+        ShouldStallWrite(JobConfig& jobConfig, std::string_view path, uint64_t filesize) const;
 
 public:
-    void
-        StallWrite(const std::string& path, uint64_t filesize, TaskCancellation& cancellationToken);
+    void StallWrite(JobConfig& jobConfig,
+                    std::string_view path,
+                    uint64_t filesize,
+                    TaskCancellation& cancellationToken);
 
     virtual std::string GenerateOutputFilename() = 0;
 };

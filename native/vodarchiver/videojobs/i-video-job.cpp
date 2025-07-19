@@ -2,6 +2,8 @@
 
 #include "util/text.h"
 
+#include "vodarchiver/system_util.h"
+
 namespace VodArchiver {
 std::string_view VideoJobStatusToString(VideoJobStatus status) {
     switch (status) {
@@ -98,20 +100,25 @@ void IVideoJob::SetVideoInfo(std::shared_ptr<IVideoInfo> videoInfo) {
     _VideoInfo = videoInfo;
 }
 
-bool IVideoJob::ShouldStallWrite(const std::string& path, uint64_t filesize) const {
-    // TODO
-    // long freeSpace = new System.IO.DriveInfo(path).AvailableFreeSpace;
-    // return freeSpace <= (Util.MinimumFreeSpaceBytes + filesize);
-    return false;
+bool IVideoJob::ShouldStallWrite(JobConfig& jobConfig,
+                                 std::string_view path,
+                                 uint64_t filesize) const {
+    auto freeSpace = GetFreeDiskSpaceAtPath(path);
+    if (!freeSpace.has_value()) {
+        return false;
+    }
+
+    std::lock_guard lock(jobConfig.Mutex);
+    return *freeSpace <= (jobConfig.MinimumFreeSpaceBytes + filesize);
 }
 
-void IVideoJob::StallWrite(const std::string& path,
+void IVideoJob::StallWrite(JobConfig& jobConfig,
+                           std::string_view path,
                            uint64_t filesize,
                            TaskCancellation& cancellationToken) {
-    if (ShouldStallWrite(path, filesize)) {
+    if (ShouldStallWrite(jobConfig, path, filesize)) {
         SetStatus("Not enough free space, stalling...");
-
-        while (ShouldStallWrite(path, filesize)) {
+        do {
             if (cancellationToken.IsCancellationRequested()) {
                 return;
             }
@@ -120,7 +127,7 @@ void IVideoJob::StallWrite(const std::string& path,
             //     await Task.Delay(10000, cancellationToken);
             // } catch (TaskCanceledException) {
             // }
-        }
+        } while (ShouldStallWrite(jobConfig, path, filesize));
     }
 }
 

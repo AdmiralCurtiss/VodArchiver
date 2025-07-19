@@ -42,7 +42,8 @@ private:
     void GetFilenamesFromM3U8(std::vector<DownloadInfo>& downloadInfos,
                               const std::string& baseurl,
                               const std::string& m3u8);
-    ResultType Download(std::vector<std::string>& files,
+    ResultType Download(JobConfig& jobConfig,
+                        std::vector<std::string>& files,
                         TaskCancellation& cancellationToken,
                         const std::string& targetFolder,
                         const std::vector<DownloadInfo>& downloadInfos,
