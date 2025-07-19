@@ -76,6 +76,11 @@ int RunGui(int argc, char** argvUtf8) {
             state.UserInfos = std::move(*userinfos);
         }
     }
+    {
+        std::lock_guard lock(state.JobConf.Mutex);
+        state.JobConf.TargetFolderPath = GetTargetFolderPath(state.GuiSettings);
+        state.JobConf.TempFolderPath = GetTempFolderPath(state.GuiSettings);
+    }
 
     for (int s = static_cast<int>(StreamService::Unknown);
          s < static_cast<int>(StreamService::COUNT);
@@ -84,9 +89,8 @@ int RunGui(int argc, char** argvUtf8) {
             static_cast<StreamService>(s),
             []() {},
             []() {},
-            &state.CancellationToken,
-            GetTargetFolderPath(state.GuiSettings),
-            GetTempFolderPath(state.GuiSettings)));
+            &state.JobConf,
+            &state.CancellationToken));
     }
 
     state.Windows.emplace_back(std::make_unique<GUI::VodArchiverMainWindow>());

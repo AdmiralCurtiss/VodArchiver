@@ -10,6 +10,7 @@
 #include "../statusupdate/i-status-update.h"
 #include "../videoinfo/i-video-info.h"
 
+#include "../job_config.h"
 #include "../task_cancellation.h"
 #include "../time_types.h"
 
@@ -79,9 +80,7 @@ public:
 
     DateTime JobFinishTimestamp{.Data = 0};
 
-    virtual ResultType Run(const std::string& targetFolderPath,
-                           const std::string& tempFolderPath,
-                           TaskCancellation& cancellationToken) = 0;
+    virtual ResultType Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) = 0;
 
 protected:
     virtual bool ShouldStallWrite(const std::string& path, uint64_t filesize) const;

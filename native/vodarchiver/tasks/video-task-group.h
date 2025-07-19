@@ -8,6 +8,7 @@
 #include <thread>
 #include <vector>
 
+#include "../job_config.h"
 #include "../task_cancellation.h"
 #include "../time_types.h"
 #include "../videojobs/i-video-job.h"
@@ -27,9 +28,8 @@ enum class TaskDoneEnum {
 
 struct RunningVideoJob {
     IVideoJob* Job = nullptr;
+    JobConfig* JobConf = nullptr;
     TaskCancellation CancellationToken;
-    std::string TargetFolderPath;
-    std::string TempFolderPath;
     std::thread Task;
     std::atomic<TaskDoneEnum> Done = TaskDoneEnum::NotDone;
     std::atomic<ResultType> Result = ResultType::Failure;
@@ -41,9 +41,8 @@ struct VideoTaskGroup {
     std::vector<std::unique_ptr<WaitingVideoJob>> WaitingJobs;
     std::recursive_mutex JobQueueLock;
     size_t MaxJobsRunningPerType = 0;
+    JobConfig* JobConf = nullptr;
     TaskCancellation* CancellationToken = nullptr;
-    std::string TargetFolderPath;
-    std::string TempFolderPath;
 
     std::thread JobRunnerThread;
     std::vector<std::unique_ptr<RunningVideoJob>> RunningTasks;
@@ -56,9 +55,8 @@ struct VideoTaskGroup {
     VideoTaskGroup(StreamService service,
                    std::function<void()> saveJobsDelegate,
                    std::function<void()> powerEventDelegate,
-                   TaskCancellation* cancellationToken,
-                   std::string targetFolderPath,
-                   std::string tempFolderPath);
+                   JobConfig* jobConfig,
+                   TaskCancellation* cancellationToken);
     ~VideoTaskGroup();
 
     void Add(IVideoJob* job);

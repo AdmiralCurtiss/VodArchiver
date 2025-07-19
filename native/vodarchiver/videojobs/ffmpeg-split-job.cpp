@@ -71,9 +71,7 @@ std::string FFMpegSplitJob::GenerateOutputFilename() {
     return rejoined;
 }
 
-ResultType FFMpegSplitJob::Run(const std::string& targetFolderPath,
-                               const std::string& tempFolderPath,
-                               TaskCancellation& cancellationToken) {
+ResultType FFMpegSplitJob::Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) {
     JobStatus = VideoJobStatus::Running;
     SetStatus("Checking files...");
 

@@ -579,15 +579,22 @@ ResultType TwitchVideoJob::GetFileUrlsOfVod(std::vector<DownloadInfo>& downloadI
     return ResultType::Success;
 }
 
-ResultType TwitchVideoJob::Run(const std::string& targetFolderPath,
-                               const std::string& tempFolderPath,
-                               TaskCancellation& cancellationToken) {
+ResultType TwitchVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) {
     if (cancellationToken.IsCancellationRequested()) {
         return ResultType::Cancelled;
     }
 
     JobStatus = VideoJobStatus::Running;
     SetStatus("Retrieving video info...");
+
+    std::string tempFolderPath;
+    std::string targetFolderPath;
+    {
+        std::lock_guard lock(jobConfig.Mutex);
+        tempFolderPath = jobConfig.TempFolderPath;
+        targetFolderPath = jobConfig.TargetFolderPath;
+    }
+
     std::vector<DownloadInfo> downloadInfos;
     ResultType getFileUrlsResult =
         GetFileUrlsOfVod(downloadInfos, targetFolderPath, tempFolderPath, cancellationToken);

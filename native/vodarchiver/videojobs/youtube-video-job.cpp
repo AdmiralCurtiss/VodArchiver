@@ -22,11 +22,17 @@ static std::string PathCombine(std::string_view lhs, std::string_view rhs) {
     return result;
 }
 
-ResultType YoutubeVideoJob::Run(const std::string& targetFolderPath,
-                                const std::string& tempFolderPath,
-                                TaskCancellation& cancellationToken) {
+ResultType YoutubeVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) {
     if (cancellationToken.IsCancellationRequested()) {
         return ResultType::Cancelled;
+    }
+
+    std::string tempFolderPath;
+    std::string targetFolderPath;
+    {
+        std::lock_guard lock(jobConfig.Mutex);
+        tempFolderPath = jobConfig.TempFolderPath;
+        targetFolderPath = jobConfig.TargetFolderPath;
     }
 
     std::shared_ptr<IVideoInfo> vi = GetVideoInfo();

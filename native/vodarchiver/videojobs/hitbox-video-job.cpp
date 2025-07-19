@@ -7,9 +7,7 @@ bool HitboxVideoJob::IsWaitingForUserInput() const {
     return false;
 }
 
-ResultType HitboxVideoJob::Run(const std::string& targetFolderPath,
-                               const std::string& tempFolderPath,
-                               TaskCancellation& cancellationToken) {
+ResultType HitboxVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) {
     // hitbox is dead
     return ResultType::Failure;
 }

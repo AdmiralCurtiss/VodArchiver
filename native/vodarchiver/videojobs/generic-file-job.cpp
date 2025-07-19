@@ -114,11 +114,17 @@ static bool DeleteDirectoryRecursive(std::string_view path) {
     return DeleteDirectoryRecursive(HyoutaUtils::IO::FilesystemPathFromUtf8(path));
 }
 
-ResultType GenericFileJob::Run(const std::string& targetFolderPath,
-                               const std::string& tempFolderPath,
-                               TaskCancellation& cancellationToken) {
+ResultType GenericFileJob::Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) {
     this->JobStatus = VideoJobStatus::Running;
     this->SetStatus("Downloading...");
+
+    std::string tempFolderPath;
+    std::string targetFolderPath;
+    {
+        std::lock_guard lock(jobConfig.Mutex);
+        tempFolderPath = jobConfig.TempFolderPath;
+        targetFolderPath = jobConfig.TargetFolderPath;
+    }
 
     std::string tempFoldername = PathCombine(tempFolderPath, GetTempFoldername());
     std::string urlFilename = "url.txt";

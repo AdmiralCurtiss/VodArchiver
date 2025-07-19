@@ -32,14 +32,12 @@ static size_t GetDefaultMaxJobs(StreamService service) {
 VideoTaskGroup::VideoTaskGroup(StreamService service,
                                std::function<void()> saveJobsDelegate,
                                std::function<void()> powerEventDelegate,
-                               TaskCancellation* cancellationToken,
-                               std::string targetFolderPath,
-                               std::string tempFolderPath)
+                               JobConfig* jobConfig,
+                               TaskCancellation* cancellationToken)
   : Service(service)
   , MaxJobsRunningPerType(GetDefaultMaxJobs(service))
+  , JobConf(jobConfig)
   , CancellationToken(cancellationToken)
-  , TargetFolderPath(std::move(targetFolderPath))
-  , TempFolderPath(std::move(tempFolderPath))
   , RequestSaveJobs(std::move(saveJobsDelegate))
   , RequestPowerEvent(std::move(powerEventDelegate)) {
     JobRunnerThread = std::thread(std::bind(&VideoTaskGroup::RunJobRunnerThreadFunc, this));
@@ -84,8 +82,7 @@ void VideoTaskGroup::RunJobRunnerThreadFunc() {
                     // and run them
                     auto rvj = std::make_unique<RunningVideoJob>();
                     rvj->Job = job;
-                    rvj->TargetFolderPath = this->TargetFolderPath;
-                    rvj->TempFolderPath = this->TempFolderPath;
+                    rvj->JobConf = this->JobConf;
                     rvj->Task =
                         std::thread(std::bind(&VideoTaskGroup::RunJobThreadFunc, this, rvj.get()));
                     RunningTasks.emplace_back(std::move(rvj));
@@ -156,8 +153,7 @@ void VideoTaskGroup::RunJobThreadFunc(RunningVideoJob* rvj) {
         try {
             if (job.JobStatus != VideoJobStatus::Finished) {
                 job.JobStartTimestamp = DateTime::UtcNow();
-                ResultType result =
-                    job.Run(rvj->TargetFolderPath, rvj->TempFolderPath, rvj->CancellationToken);
+                ResultType result = job.Run(*rvj->JobConf, rvj->CancellationToken);
                 if (result == ResultType::Success) {
                     job.JobFinishTimestamp = DateTime::UtcNow();
                     job.JobStatus = VideoJobStatus::Finished;

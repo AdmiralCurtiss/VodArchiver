@@ -56,9 +56,7 @@ static std::string PathCombine(std::string_view lhs, std::string_view mhs, std::
     return result;
 }
 
-ResultType FFMpegReencodeJob::Run(const std::string& targetFolderPath,
-                                  const std::string& tempFolderPath,
-                                  TaskCancellation& cancellationToken) {
+ResultType FFMpegReencodeJob::Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) {
     JobStatus = VideoJobStatus::Running;
     SetStatus("Checking files...");
 

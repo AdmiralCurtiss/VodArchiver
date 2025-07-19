@@ -6,6 +6,7 @@
 
 #include "imgui.h"
 
+#include "../job_config.h"
 #include "../task_cancellation.h"
 #include "../tasks/video-task-group.h"
 #include "gui_user_settings.h"
@@ -41,6 +42,8 @@ struct GuiState {
 
     TaskCancellation CancellationToken;
     std::vector<std::unique_ptr<VideoTaskGroup>> VideoTaskGroups;
+
+    VodArchiver::JobConfig JobConf;
 
     ~GuiState();
 };

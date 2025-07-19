@@ -273,6 +273,7 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/ffmpeg_util.h
 	vodarchiver/filename_util.cpp
 	vodarchiver/filename_util.h
+	vodarchiver/job_config.h
 	vodarchiver/job_handling.cpp
 	vodarchiver/job_handling.h
 	vodarchiver/main.cpp
