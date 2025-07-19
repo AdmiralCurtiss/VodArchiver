@@ -1,29 +1,29 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
 
 namespace VodArchiver {
 struct TaskCancellation {
-    TaskCancellation() = default;
+    TaskCancellation();
     TaskCancellation(const TaskCancellation& other) = delete;
     TaskCancellation(TaskCancellation&& other) = delete;
     TaskCancellation& operator=(const TaskCancellation& other) = delete;
     TaskCancellation& operator=(TaskCancellation&& other) = delete;
-    ~TaskCancellation() = default;
+    ~TaskCancellation();
 
-    bool IsCancellationRequested() const {
-        return CancellationRequested.load(std::memory_order_relaxed);
-    }
+    bool IsCancellationRequested();
+    void CancelTask();
+    void Reset();
 
-    void CancelTask() {
-        CancellationRequested.store(true, std::memory_order_relaxed);
-    }
-
-    void Reset() {
-        CancellationRequested.store(false, std::memory_order_relaxed);
-    }
+    // returns true if wait finished normally, false if interrupted by cancellation
+    bool DelayFor(std::chrono::nanoseconds ns);
 
 private:
+    std::mutex Mutex;
+    std::condition_variable CancellationCondVar;
     std::atomic<bool> CancellationRequested = false;
 };
 } // namespace VodArchiver

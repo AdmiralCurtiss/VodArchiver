@@ -279,6 +279,7 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/main.cpp
 	vodarchiver/system_util.cpp
 	vodarchiver/system_util.h
+	vodarchiver/task_cancellation.cpp
 	vodarchiver/task_cancellation.h
 	vodarchiver/task_reporting.h
 	vodarchiver/task_reporting_dummy.h

@@ -235,20 +235,16 @@ ResultType TwitchVideoJob::Download(JobConfig& jobConfig,
             }
 
             if (delayPerDownload > 0) {
-                // try {
-                std::this_thread::sleep_for(std::chrono::milliseconds(delayPerDownload));
-                // } catch (TaskCanceledException) {
-                //     return (ResultType.Cancelled, null);
-                // }
+                if (!cancellationToken.DelayFor(std::chrono::milliseconds(delayPerDownload))) {
+                    return ResultType::Cancelled;
+                }
             }
         }
 
         if (files.size() < downloadInfos.size()) {
-            // try {
-            std::this_thread::sleep_for(std::chrono::seconds(60));
-            // } catch (TaskCanceledException) {
-            //     return (ResultType.Cancelled, null);
-            // }
+            if (!cancellationToken.DelayFor(std::chrono::seconds(60))) {
+                return ResultType::Cancelled;
+            }
             --triesLeft;
         }
     }
@@ -554,11 +550,9 @@ ResultType TwitchVideoJob::GetFileUrlsOfVod(std::vector<DownloadInfo>& downloadI
                 && videoInfo->GetVideoRecordingState() == RecordingState::Live) {
                 // this can happen on streams that have just started, in this just wait a bit
                 // and retry
-                // try {
-                std::this_thread::sleep_for(std::chrono::seconds(20));
-                //} catch (TaskCanceledException) {
-                //    return (ResultType::Cancelled, null);
-                //}
+                if (!cancellationToken.DelayFor(std::chrono::seconds(20))) {
+                    return ResultType::Cancelled;
+                }
                 video_json = VodArchiver::TwitchYTDL::GetVideoJson(*videoId);
                 if (!video_json) {
                     return ResultType::Failure;
@@ -663,11 +657,9 @@ ResultType TwitchVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
                                               tsDouble.count()));
                         _UserInputRequest =
                             std::make_unique<UserInputRequestStreamLiveTwitch>(this);
-                        // try {
-                        std::this_thread::sleep_for(ts);
-                        // } catch (TaskCanceledException) {
-                        //     return ResultType::Cancelled;
-                        // }
+                        if (!cancellationToken.DelayFor(ts)) {
+                            return ResultType::Cancelled;
+                        }
                     }
                     if (HyoutaUtils::IO::FileExists(std::string_view(tsnamesfilepath))) {
                         HyoutaUtils::IO::DeleteFile(std::string_view(tsnamesfilepath));

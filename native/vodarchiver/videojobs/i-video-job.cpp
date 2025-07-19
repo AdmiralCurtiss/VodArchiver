@@ -122,11 +122,7 @@ void IVideoJob::StallWrite(JobConfig& jobConfig,
             if (cancellationToken.IsCancellationRequested()) {
                 return;
             }
-            // TODO
-            // try {
-            //     await Task.Delay(10000, cancellationToken);
-            // } catch (TaskCanceledException) {
-            // }
+            cancellationToken.DelayFor(std::chrono::seconds(10));
         } while (ShouldStallWrite(jobConfig, path, filesize));
     }
 }
