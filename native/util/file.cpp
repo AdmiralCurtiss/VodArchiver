@@ -6,14 +6,17 @@
 
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 
 #ifdef FILE_WRAPPER_WITH_STD_FILESYSTEM
 #include <filesystem>
+#include <stdexcept>
 #endif
 
 #include "util/scope.h"
@@ -32,7 +35,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define INVALID_HANDLE_VALUE nullptr
+#define INVALID_HANDLE_VALUE (-1)
 #define DWORD unsigned int
 #endif
 
@@ -61,10 +64,16 @@ File File::FromHandle(void* handle) noexcept {
 File::File(File&& other) noexcept
   : Filehandle(other.Filehandle)
 #ifndef BUILD_FOR_WINDOWS
+  , IsWritable(other.IsWritable)
+  , IsUnlinked(other.IsUnlinked)
   , Path(std::move(other.Path))
 #endif
 {
     other.Filehandle = INVALID_HANDLE_VALUE;
+#ifndef BUILD_FOR_WINDOWS
+    other.IsWritable = false;
+    other.IsUnlinked = false;
+#endif
 }
 
 File& File::operator=(File&& other) noexcept {
@@ -72,6 +81,10 @@ File& File::operator=(File&& other) noexcept {
     this->Filehandle = other.Filehandle;
     other.Filehandle = INVALID_HANDLE_VALUE;
 #ifndef BUILD_FOR_WINDOWS
+    this->IsWritable = other.IsWritable;
+    other.IsWritable = false;
+    this->IsUnlinked = other.IsUnlinked;
+    other.IsUnlinked = false;
     this->Path = std::move(other.Path);
 #endif
     return *this;
@@ -80,6 +93,19 @@ File& File::operator=(File&& other) noexcept {
 File::~File() noexcept {
     Close();
 }
+
+#ifndef BUILD_FOR_WINDOWS
+static bool IsFdRegularFile(int fd) noexcept {
+    struct stat buf{};
+    if (fstat(fd, &buf) != 0) {
+        return false;
+    }
+    if (S_ISREG(buf.st_mode)) {
+        return true;
+    }
+    return false;
+}
+#endif
 
 bool File::Open(std::string_view p, OpenMode mode) noexcept {
     Close();
@@ -98,8 +124,17 @@ bool File::Open(std::string_view p, OpenMode mode) noexcept {
                                      FILE_ATTRIBUTE_NORMAL,
                                      nullptr);
 #else
-            std::string s(p);
-            Filehandle = fopen(s.c_str(), "rb");
+            std::string s;
+            try {
+                s.assign(p);
+            } catch (...) {
+                return false;
+            }
+            Filehandle = open(s.c_str(), O_RDONLY | O_CLOEXEC);
+            if (Filehandle != INVALID_HANDLE_VALUE && !IsFdRegularFile(Filehandle)) {
+                close(Filehandle);
+                Filehandle = INVALID_HANDLE_VALUE;
+            }
             if (Filehandle != INVALID_HANDLE_VALUE) {
                 Path = std::move(s);
             }
@@ -120,9 +155,17 @@ bool File::Open(std::string_view p, OpenMode mode) noexcept {
                                      FILE_ATTRIBUTE_NORMAL,
                                      nullptr);
 #else
-            std::string s(p);
-            Filehandle = fopen(s.c_str(), "wb");
+            std::string s;
+            try {
+                s.assign(p);
+            } catch (...) {
+                return false;
+            }
+            Filehandle = open(s.c_str(),
+                              O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC,
+                              S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
             if (Filehandle != INVALID_HANDLE_VALUE) {
+                IsWritable = true;
                 Path = std::move(s);
             }
 #endif
@@ -146,7 +189,11 @@ bool File::OpenWithTempFilename(std::string_view p, OpenMode mode) noexcept {
             if (!s) {
                 return false;
             }
-            s->append(L".tmp");
+            try {
+                s->append(L".tmp");
+            } catch (...) {
+                return false;
+            }
             size_t extraCharsAppended = 0;
             size_t loopIndex = 0;
             do {
@@ -166,38 +213,69 @@ bool File::OpenWithTempFilename(std::string_view p, OpenMode mode) noexcept {
 
                 // file exists, try next
                 // TODO: might be better to RNG something here, or use a timestamp or something?
-                for (size_t i = 0; i < extraCharsAppended; ++i) {
-                    s->pop_back();
+                try {
+                    for (size_t i = 0; i < extraCharsAppended; ++i) {
+                        s->pop_back();
+                    }
+                    extraCharsAppended = 0;
+                    size_t x = loopIndex;
+                    do {
+                        // this counts from the wrong side but whatever...
+                        s->push_back(L'0' + (x % 10));
+                        x = (x / 10);
+                        ++extraCharsAppended;
+                    } while (x > 0);
+                    ++loopIndex;
+                } catch (...) {
+                    return false;
                 }
-                extraCharsAppended = 0;
-                size_t x = loopIndex;
-                do {
-                    // this counts from the wrong side but whatever...
-                    s->push_back(L'0' + (x % 10));
-                    x = (x / 10);
-                    ++extraCharsAppended;
-                } while (x > 0);
-                ++loopIndex;
             } while (true);
             return true;
 #else
-            // TODO: Apparently on modern Linux you can do this much neater with
-            // open(O_TMPFILE) + linkat(), but we'd need to use fd instead of a FILE*
-            std::string s(p);
-            s.append(".tmp");
+            // try O_TMPFILE first
+            std::string s;
+            try {
+                s.assign(p);
+                while (s.size() > 0 && s.back() != '/') {
+                    s.pop_back();
+                }
+                if (s.ends_with('/')) {
+                    s.pop_back();
+                }
+                if (s.empty()) {
+                    s.push_back('.');
+                }
+            } catch (...) {
+                return false;
+            }
+            {
+                int fd = open(s.c_str(),
+                              O_TMPFILE | O_WRONLY,
+                              S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+                if (fd != -1) {
+                    Filehandle = fd;
+                    IsWritable = true;
+                    IsUnlinked = true;
+                    return true;
+                }
+            }
+
+
+            try {
+                s.assign(p);
+                s.append(".tmp");
+            } catch (...) {
+                return false;
+            }
             size_t extraCharsAppended = 0;
             size_t loopIndex = 0;
             do {
                 errno = 0;
                 int fd = open(s.c_str(),
-                              O_CREAT | O_EXCL | O_WRONLY,
+                              O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC,
                               S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-                if (fd != -1) {
-                    Filehandle = fdopen(fd, "w");
-                    if (Filehandle == INVALID_HANDLE_VALUE) {
-                        close(fd);
-                        return false;
-                    }
+                if (fd != INVALID_HANDLE_VALUE) {
+                    Filehandle = fd;
                     break;
                 }
                 if (errno != EEXIST) {
@@ -206,21 +284,26 @@ bool File::OpenWithTempFilename(std::string_view p, OpenMode mode) noexcept {
 
                 // file exists, try next
                 // TODO: might be better to RNG something here, or use a timestamp or something?
-                for (size_t i = 0; i < extraCharsAppended; ++i) {
-                    s.pop_back();
+                try {
+                    for (size_t i = 0; i < extraCharsAppended; ++i) {
+                        s.pop_back();
+                    }
+                    extraCharsAppended = 0;
+                    size_t x = loopIndex;
+                    do {
+                        // this counts from the wrong side but whatever...
+                        s.push_back('0' + (x % 10));
+                        x = (x / 10);
+                        ++extraCharsAppended;
+                    } while (x > 0);
+                    ++loopIndex;
+                } catch (...) {
+                    return false;
                 }
-                extraCharsAppended = 0;
-                size_t x = loopIndex;
-                do {
-                    // this counts from the wrong side but whatever...
-                    s.push_back('0' + (x % 10));
-                    x = (x / 10);
-                    ++extraCharsAppended;
-                } while (x > 0);
-                ++loopIndex;
             } while (true);
 
             Path = std::move(s);
+            IsWritable = true;
             return true;
 #endif
         }
@@ -242,8 +325,17 @@ bool File::Open(const std::filesystem::path& p, OpenMode mode) noexcept {
                                      FILE_ATTRIBUTE_NORMAL,
                                      nullptr);
 #else
-            std::string s(p);
-            Filehandle = fopen(s.c_str(), "rb");
+            std::string s;
+            try {
+                s.assign(p);
+            } catch (...) {
+                return false;
+            }
+            Filehandle = open(s.c_str(), O_RDONLY | O_CLOEXEC);
+            if (Filehandle != INVALID_HANDLE_VALUE && !IsFdRegularFile(Filehandle)) {
+                close(Filehandle);
+                Filehandle = INVALID_HANDLE_VALUE;
+            }
             if (Filehandle != INVALID_HANDLE_VALUE) {
                 Path = std::move(s);
             }
@@ -260,9 +352,17 @@ bool File::Open(const std::filesystem::path& p, OpenMode mode) noexcept {
                                      FILE_ATTRIBUTE_NORMAL,
                                      nullptr);
 #else
-            std::string s(p);
-            Filehandle = fopen(s.c_str(), "wb");
+            std::string s;
+            try {
+                s.assign(p);
+            } catch (...) {
+                return false;
+            }
+            Filehandle = open(s.c_str(),
+                              O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC,
+                              S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
             if (Filehandle != INVALID_HANDLE_VALUE) {
+                IsWritable = true;
                 Path = std::move(s);
             }
 #endif
@@ -282,10 +382,12 @@ void File::Close() noexcept {
 #ifdef BUILD_FOR_WINDOWS
         CloseHandle(Filehandle);
 #else
-        fclose((FILE*)Filehandle);
+        close(Filehandle);
 #endif
         Filehandle = INVALID_HANDLE_VALUE;
 #ifndef BUILD_FOR_WINDOWS
+        IsWritable = false;
+        IsUnlinked = false;
         Path.clear();
 #endif
     }
@@ -301,7 +403,7 @@ std::optional<uint64_t> File::GetPosition() noexcept {
         return static_cast<uint64_t>(position.QuadPart);
     }
 #else
-    off_t offset = ftello((FILE*)Filehandle);
+    off64_t offset = lseek64(Filehandle, 0, SEEK_CUR);
     if (offset >= 0) {
         return static_cast<uint64_t>(offset);
     }
@@ -332,15 +434,15 @@ bool File::SetPosition(int64_t position, SetPositionMode mode) noexcept {
         return true;
     }
 #else
-    int origin;
+    int whence;
     switch (mode) {
-        case SetPositionMode::Begin: origin = SEEK_SET; break;
-        case SetPositionMode::Current: origin = SEEK_CUR; break;
-        case SetPositionMode::End: origin = SEEK_END; break;
+        case SetPositionMode::Begin: whence = SEEK_SET; break;
+        case SetPositionMode::Current: whence = SEEK_CUR; break;
+        case SetPositionMode::End: whence = SEEK_END; break;
         default: return false;
     }
-    int result = fseeko((FILE*)Filehandle, (off_t)position, origin);
-    if (result == 0) {
+    off64_t result = lseek64(Filehandle, static_cast<off64_t>(position), whence);
+    if (result != static_cast<off64_t>(-1)) {
         return true;
     }
 #endif
@@ -355,12 +457,8 @@ std::optional<uint64_t> File::GetLength() noexcept {
         return static_cast<uint64_t>(size.QuadPart);
     }
 #else
-    int fd = fileno((FILE*)Filehandle);
-    if (fd == -1) {
-        return std::nullopt;
-    }
     struct stat buf{};
-    if (fstat(fd, &buf) != 0) {
+    if (fstat(Filehandle, &buf) != 0) {
         return std::nullopt;
     }
     if (S_ISREG(buf.st_mode)) {
@@ -377,14 +475,19 @@ size_t File::Read(void* data, size_t length) noexcept {
     size_t totalRead = 0;
     size_t rest = length;
     while (rest > 0) {
-        DWORD blockSize = rest > 0xffff'0000 ? 0xffff'0000 : static_cast<DWORD>(rest);
         DWORD blockRead = 0;
 #ifdef BUILD_FOR_WINDOWS
+        DWORD blockSize = rest > 0xffff'0000 ? 0xffff'0000 : static_cast<DWORD>(rest);
         if (ReadFile(Filehandle, buffer, blockSize, &blockRead, nullptr) == 0) {
             return totalRead;
         }
 #else
-        blockRead = (DWORD)fread(buffer, 1, blockSize, (FILE*)Filehandle);
+        size_t blockSize = rest > 0x7fff'f000 ? 0x7fff'f000 : rest;
+        ssize_t readResult = read(Filehandle, buffer, blockSize);
+        if (readResult < 0) {
+            return totalRead;
+        }
+        blockRead = static_cast<DWORD>(readResult);
 #endif
         if (blockRead == 0) {
             return totalRead;
@@ -404,14 +507,19 @@ size_t File::Write(const void* data, size_t length) noexcept {
     size_t totalWritten = 0;
     size_t rest = length;
     while (rest > 0) {
-        DWORD blockSize = rest > 0xffff'0000 ? 0xffff'0000 : static_cast<DWORD>(rest);
         DWORD blockWritten = 0;
 #ifdef BUILD_FOR_WINDOWS
+        DWORD blockSize = rest > 0xffff'0000 ? 0xffff'0000 : static_cast<DWORD>(rest);
         if (WriteFile(Filehandle, buffer, blockSize, &blockWritten, nullptr) == 0) {
             return totalWritten;
         }
 #else
-        blockWritten = (DWORD)fwrite(buffer, 1, blockSize, (FILE*)Filehandle);
+        size_t blockSize = rest > 0x7fff'f000 ? 0x7fff'f000 : rest;
+        ssize_t writeResult = write(Filehandle, buffer, blockSize);
+        if (writeResult < 0) {
+            return totalWritten;
+        }
+        blockWritten = static_cast<DWORD>(writeResult);
 #endif
         if (blockWritten == 0) {
             return totalWritten;
@@ -441,7 +549,11 @@ uint64_t File::Write(File& source, uint64_t length) noexcept {
             return totalWritten;
         }
 #else
-        blockRead = (DWORD)fread(buffer.data(), 1, blockSize, (FILE*)source.Filehandle);
+        ssize_t readResult = read(source.Filehandle, buffer.data(), blockSize);
+        if (readResult < 0) {
+            return totalWritten;
+        }
+        blockRead = static_cast<DWORD>(readResult);
 #endif
         if (blockRead == 0) {
             return totalWritten;
@@ -453,7 +565,11 @@ uint64_t File::Write(File& source, uint64_t length) noexcept {
             return totalWritten;
         }
 #else
-        blockWritten = (DWORD)fwrite(buffer.data(), 1, blockRead, (FILE*)Filehandle);
+        ssize_t writeResult = write(Filehandle, buffer.data(), blockRead);
+        if (writeResult < 0) {
+            return totalWritten;
+        }
+        blockWritten = static_cast<DWORD>(writeResult);
 #endif
         if (blockWritten != blockRead) {
             return (totalWritten + blockWritten);
@@ -475,8 +591,15 @@ bool File::Delete() noexcept {
         return true;
     }
 #else
+    if (IsUnlinked) {
+        return true;
+    }
+    if (!IsWritable) {
+        return false;
+    }
     int result = unlink(Path.c_str());
     if (result == 0) {
+        Path.clear();
         return true;
     }
 #endif
@@ -485,7 +608,7 @@ bool File::Delete() noexcept {
 }
 
 #ifdef BUILD_FOR_WINDOWS
-bool RenameInternalWindows(void* filehandle, const wchar_t* wstr_data, size_t wstr_len) {
+bool RenameInternalWindows(void* filehandle, const wchar_t* wstr_data, size_t wstr_len) noexcept {
     // This struct has a very odd definition, because its size is dynamic, so we must do something
     // like this...
     if (wstr_len > 32771) {
@@ -533,9 +656,31 @@ bool File::Rename(const std::string_view p) noexcept {
     }
     return RenameInternalWindows(Filehandle, wstr->data(), wstr->size());
 #else
-    std::string newName(p);
-    int result = rename(Path.c_str(), newName.c_str());
-    return result == 0;
+    if (!IsWritable) {
+        return false;
+    }
+    std::string newName;
+    try {
+        newName.assign(p);
+    } catch (...) {
+        return false;
+    }
+    bool success;
+    if (IsUnlinked) {
+        int result = linkat(Filehandle, "", AT_FDCWD, newName.c_str(), AT_EMPTY_PATH);
+        success = (result == 0);
+        if (success) {
+            IsUnlinked = false;
+        }
+    } else {
+        int result = rename(Path.c_str(), newName.c_str());
+        success = (result == 0);
+    }
+    if (success) {
+        Path = std::move(newName);
+        return true;
+    }
+    return false;
 #endif
 }
 
@@ -547,23 +692,28 @@ bool File::Rename(const std::filesystem::path& p) noexcept {
     const auto& wstr = p.native();
     return RenameInternalWindows(Filehandle, wstr.data(), wstr.size());
 #else
-    int result = rename(Path.c_str(), p.c_str());
-    return result == 0;
+    return Rename(std::string_view(p.native()));
 #endif
 }
 #endif
 
+#ifdef BUILD_FOR_WINDOWS
 void* File::ReleaseHandle() noexcept {
     void* h = Filehandle;
     Filehandle = INVALID_HANDLE_VALUE;
-#ifndef BUILD_FOR_WINDOWS
-    Path.clear();
-#endif
     return h;
 }
+#else
+int File::ReleaseHandle() noexcept {
+    int h = Filehandle;
+    Filehandle = INVALID_HANDLE_VALUE;
+    Path.clear();
+    return h;
+}
+#endif
 
 #ifdef BUILD_FOR_WINDOWS
-static bool AnyExistsWindows(const wchar_t* path) {
+static bool AnyExistsWindows(const wchar_t* path) noexcept {
     const auto attributes = GetFileAttributesW(path);
     if (attributes == INVALID_FILE_ATTRIBUTES) {
         return false;
@@ -571,7 +721,7 @@ static bool AnyExistsWindows(const wchar_t* path) {
     return true;
 }
 #else
-static bool AnyExistsLinux(const char* path) {
+static bool AnyExistsLinux(const char* path) noexcept {
     struct stat buf{};
     if (stat(path, &buf) != 0) {
         return false;
@@ -588,7 +738,12 @@ bool Exists(std::string_view p) noexcept {
     }
     return AnyExistsWindows(wstr->data());
 #else
-    std::string s(p);
+    std::string s;
+    try {
+        s.assign(p);
+    } catch (...) {
+        return false;
+    }
     return AnyExistsLinux(s.c_str());
 #endif
 }
@@ -604,7 +759,7 @@ bool Exists(const std::filesystem::path& p) noexcept {
 #endif
 
 #ifdef BUILD_FOR_WINDOWS
-static bool FileExistsWindows(const wchar_t* path) {
+static bool FileExistsWindows(const wchar_t* path) noexcept {
     const auto attributes = GetFileAttributesW(path);
     if (attributes == INVALID_FILE_ATTRIBUTES) {
         return false;
@@ -612,7 +767,7 @@ static bool FileExistsWindows(const wchar_t* path) {
     return (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
 }
 #else
-static bool FileExistsLinux(const char* path) {
+static bool FileExistsLinux(const char* path) noexcept {
     struct stat buf{};
     if (stat(path, &buf) != 0) {
         return false;
@@ -632,7 +787,12 @@ bool FileExists(std::string_view p) noexcept {
     }
     return FileExistsWindows(wstr->data());
 #else
-    std::string s(p);
+    std::string s;
+    try {
+        s.assign(p);
+    } catch (...) {
+        return false;
+    }
     return FileExistsLinux(s.c_str());
 #endif
 }
@@ -648,7 +808,7 @@ bool FileExists(const std::filesystem::path& p) noexcept {
 #endif
 
 #ifdef BUILD_FOR_WINDOWS
-static std::optional<uint64_t> GetFilesizeWindows(const wchar_t* path) {
+static std::optional<uint64_t> GetFilesizeWindows(const wchar_t* path) noexcept {
     WIN32_FILE_ATTRIBUTE_DATA data{};
     const auto rv = GetFileAttributesExW(path, GetFileExInfoStandard, &data);
     if (rv == 0) {
@@ -662,7 +822,7 @@ static std::optional<uint64_t> GetFilesizeWindows(const wchar_t* path) {
     return std::nullopt;
 }
 #else
-static std::optional<uint64_t> GetFilesizeLinux(const char* path) {
+static std::optional<uint64_t> GetFilesizeLinux(const char* path) noexcept {
     struct stat buf{};
     if (stat(path, &buf) != 0) {
         return std::nullopt;
@@ -682,7 +842,12 @@ std::optional<uint64_t> GetFilesize(std::string_view p) noexcept {
     }
     return GetFilesizeWindows(wstr->data());
 #else
-    std::string s(p);
+    std::string s;
+    try {
+        s.assign(p);
+    } catch (...) {
+        return std::nullopt;
+    }
     return GetFilesizeLinux(s.c_str());
 #endif
 }
@@ -698,7 +863,7 @@ std::optional<uint64_t> GetFilesize(const std::filesystem::path& p) noexcept {
 #endif
 
 #ifdef BUILD_FOR_WINDOWS
-static bool DirectoryExistsWindows(const wchar_t* path) {
+static bool DirectoryExistsWindows(const wchar_t* path) noexcept {
     const auto attributes = GetFileAttributesW(path);
     if (attributes == INVALID_FILE_ATTRIBUTES) {
         return false;
@@ -706,7 +871,7 @@ static bool DirectoryExistsWindows(const wchar_t* path) {
     return (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 #else
-static bool DirectoryExistsLinux(const char* path) {
+static bool DirectoryExistsLinux(const char* path) noexcept {
     struct stat buf{};
     if (stat(path, &buf) != 0) {
         return false;
@@ -726,7 +891,12 @@ bool DirectoryExists(std::string_view p) noexcept {
     }
     return DirectoryExistsWindows(wstr->data());
 #else
-    std::string s(p);
+    std::string s;
+    try {
+        s.assign(p);
+    } catch (...) {
+        return false;
+    }
     return DirectoryExistsLinux(s.c_str());
 #endif
 }
@@ -742,17 +912,20 @@ bool DirectoryExists(const std::filesystem::path& p) noexcept {
 #endif
 
 #ifdef BUILD_FOR_WINDOWS
-static bool CreateDirectoryWindows(const wchar_t* path) {
+static bool CreateDirectoryWindows(const wchar_t* path) noexcept {
     if (CreateDirectoryW(path, nullptr)) {
         return true;
     }
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        return true;
+        // this is returned even if the thing at path is a file,
+        // so we need to check if it's really a directory
+        // FIXME: is there a way to do this atomically?
+        return DirectoryExistsWindows(path);
     }
     return false;
 }
 #else
-static bool CreateDirectoryLinux(const char* path) {
+static bool CreateDirectoryLinux(const char* path) noexcept {
     if (DirectoryExistsLinux(path)) {
         return true;
     }
@@ -772,7 +945,12 @@ bool CreateDirectory(std::string_view p) noexcept {
     }
     return CreateDirectoryWindows(wstr->data());
 #else
-    std::string s(p);
+    std::string s;
+    try {
+        s.assign(p);
+    } catch (...) {
+        return false;
+    }
     return CreateDirectoryLinux(s.c_str());
 #endif
 }
@@ -808,19 +986,46 @@ bool CopyFile(std::string_view source, std::string_view target, bool overwrite) 
                        static_cast<DWORD>(overwrite ? 0 : COPY_FILE_FAIL_IF_EXISTS))
            != 0;
 #else
-    std::string sourcePath(source);
-    std::string targetPath(target);
+    std::string sourcePath;
+    std::string targetPath;
+    try {
+        sourcePath.assign(source);
+        targetPath.assign(target);
+    } catch (...) {
+        return false;
+    }
 
     // try to link() first, that will succeed in many cases
     errno = 0;
     if (link(sourcePath.c_str(), targetPath.c_str()) == 0) {
         return true;
     }
-    if (errno == EEXIST) {
+    if (errno == EEXIST && !overwrite) {
+        return false;
+    }
+
+    // link() failed, now it gets complicated.
+    // to prevent file loss we first need to check whether the two paths refer to the same file,
+    // because if yes everything we'll try will have catastrophic results
+    struct stat sourceBuf{};
+    if (stat(sourcePath.c_str(), &sourceBuf) != 0) {
+        // source doesn't exist or is inaccessible
+        return false;
+    }
+    struct stat targetBuf{};
+    if (stat(targetPath.c_str(), &targetBuf) == 0) {
+        // target exists
         if (!overwrite) {
             return false;
         }
-        // we do want to overwrite, so delete the file and try again
+
+        // is this the same file as source?
+        if (sourceBuf.st_dev == targetBuf.st_dev && sourceBuf.st_ino == targetBuf.st_ino) {
+            // yes, bail
+            return false;
+        }
+
+        // delete the old file and retry the link
         if (unlink(targetPath.c_str()) != 0) {
             return false;
         }
@@ -869,8 +1074,14 @@ bool Move(std::string_view source, std::string_view target, bool overwrite) noex
                                           | (overwrite ? MOVEFILE_REPLACE_EXISTING : 0)))
            != 0;
 #else
-    std::string sourcePath(source);
-    std::string targetPath(target);
+    std::string sourcePath;
+    std::string targetPath;
+    try {
+        sourcePath.assign(source);
+        targetPath.assign(target);
+    } catch (...) {
+        return false;
+    }
     int result = renameat2(AT_FDCWD,
                            sourcePath.c_str(),
                            AT_FDCWD,
@@ -928,8 +1139,13 @@ bool DeleteFile(std::string_view path) noexcept {
     }
     return DeleteFileWindows(wstr->c_str());
 #else
-    std::string p(path);
-    return DeleteFileLinux(p.c_str());
+    std::string s;
+    try {
+        s.assign(path);
+    } catch (...) {
+        return false;
+    }
+    return DeleteFileLinux(s.c_str());
 #endif
 }
 
@@ -951,8 +1167,13 @@ bool DeleteDirectory(std::string_view path) noexcept {
     }
     return RemoveDirectoryW(wstr->c_str()) != 0;
 #else
-    std::string p(path);
-    int result = rmdir(p.c_str());
+    std::string s;
+    try {
+        s.assign(path);
+    } catch (...) {
+        return false;
+    }
+    int result = rmdir(s.c_str());
     return result == 0;
 #endif
 }
@@ -1002,15 +1223,15 @@ std::string FilesystemPathToUtf8(const std::filesystem::path& p) {
     if (utf8) {
         return *utf8;
     }
-    assert(0); // this should never happen
-    return std::string();
+    // this can happen if the memory allocation failed, I guess we just throw?
+    throw std::runtime_error("failed to convert path to UTF8");
 #else
     return p.native();
 #endif
 }
 #endif
 
-SplitPathData SplitPath(std::string_view path) {
+SplitPathData SplitPath(std::string_view path) noexcept {
     size_t lastPathSep = path.find_last_of(
 #ifdef BUILD_FOR_WINDOWS
         "\\/"
@@ -1021,7 +1242,15 @@ SplitPathData SplitPath(std::string_view path) {
 
     SplitPathData result;
     if (lastPathSep != std::string_view::npos) {
-        result.Directory = path.substr(0, lastPathSep);
+#ifdef BUILD_FOR_WINDOWS
+        const bool isRootDir =
+            (lastPathSep == 2
+             && ((path[0] >= 'A' && path[0] <= 'Z') || (path[0] >= 'a' && path[0] <= 'z'))
+             && path[1] == ':');
+#else
+        const bool isRootDir = (lastPathSep == 0);
+#endif
+        result.Directory = path.substr(0, lastPathSep + (isRootDir ? 1 : 0));
         result.Filename = path.substr(lastPathSep + 1);
     } else {
         result.Filename = path;
@@ -1046,15 +1275,15 @@ void AppendPathElement(std::string& path, std::string_view filename) {
     path.append(filename);
 }
 
-std::string_view GetDirectoryName(std::string_view path) {
+std::string_view GetDirectoryName(std::string_view path) noexcept {
     return SplitPath(path).Directory;
 }
 
-std::string_view GetFileName(std::string_view path) {
+std::string_view GetFileName(std::string_view path) noexcept {
     return SplitPath(path).Filename;
 }
 
-std::string_view GetFileNameWithoutExtension(std::string_view path) {
+std::string_view GetFileNameWithoutExtension(std::string_view path) noexcept {
     std::string_view name = GetFileName(path);
     size_t pos = name.rfind('.');
     if (pos == std::string_view::npos) {
@@ -1063,7 +1292,7 @@ std::string_view GetFileNameWithoutExtension(std::string_view path) {
     return name.substr(0, pos);
 }
 
-std::string_view GetExtension(std::string_view path) {
+std::string_view GetExtension(std::string_view path) noexcept {
     std::string_view name = GetFileName(path);
     size_t pos = name.rfind('.');
     if (pos == std::string_view::npos) {
@@ -1095,6 +1324,56 @@ std::string GetAbsolutePath(std::string_view path) {
         return result;
     }
     result = std::move(*utf8);
+#else
+    if (path.starts_with('/')) {
+        // already absolute
+        result.assign(path);
+        return result;
+    }
+
+    // unfortunately there are no abstract pathname handling facilities on Linux.
+    // only realpath() exists, but that requires the target object to exist on disk.
+    // so we'll just do the same thing that std::filesystem::absolute() does, which
+    // is just concatenating the cwd with the relative path...
+    char* cwd = nullptr;
+    const auto build_result = [&]() {
+        size_t cwdlen = strlen(cwd);
+        bool needsExtraPathSep = (cwdlen == 0 || cwd[cwdlen - 1] != '/');
+        size_t length = cwdlen + path.size() + (needsExtraPathSep ? size_t(1) : size_t(0));
+        result.resize(length);
+        if (cwdlen > 0) {
+            std::memcpy(result.data(), cwd, cwdlen);
+        }
+        if (needsExtraPathSep) {
+            result[cwdlen] = '/';
+            std::memcpy(result.data() + cwdlen + size_t(1), path.data(), path.size());
+        } else {
+            std::memcpy(result.data() + cwdlen, path.data(), path.size());
+        }
+    };
+
+    std::array<char, 1024> stackBuffer;
+    cwd = getcwd(stackBuffer.data(), stackBuffer.size());
+    if (cwd != nullptr) {
+        build_result();
+    } else {
+        // POSIX doesn't deign to tell us how large the buffer it actually wants is,
+        // so just retry until it succeeds...
+        std::vector<char> heapBuffer;
+        heapBuffer.resize(stackBuffer.size() * 2);
+        while (true) {
+            cwd = getcwd(heapBuffer.data(), heapBuffer.size());
+            if (cwd != nullptr) {
+                build_result();
+                break;
+            }
+            if (heapBuffer.size() >= 0x1000'0000u) {
+                // sanity break in case something goes really wrong...
+                break;
+            }
+            heapBuffer.resize(heapBuffer.size() * 2);
+        }
+    }
 #endif
     return result;
 }
@@ -1116,7 +1395,7 @@ bool WriteFileAtomic(std::string_view path, const void* data, size_t length) noe
 }
 
 #ifdef BUILD_FOR_WINDOWS
-std::vector<std::string> GetLogicalDrives() noexcept {
+std::vector<std::string> GetLogicalDrives() {
     std::vector<std::string> result;
     DWORD bufferSize = GetLogicalDriveStringsW(0, nullptr);
     if (bufferSize == 0) {

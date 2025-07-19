@@ -49,7 +49,11 @@ public:
     // given filename after writes are done. This makes the target file replacement atomic.
     bool OpenWithTempFilename(std::string_view p, OpenMode mode) noexcept;
 
+#ifdef BUILD_FOR_WINDOWS
     void* ReleaseHandle() noexcept;
+#else
+    int ReleaseHandle() noexcept;
+#endif
 
 #ifdef FILE_WRAPPER_WITH_STD_FILESYSTEM
     File(const std::filesystem::path& p, OpenMode mode) noexcept;
@@ -68,9 +72,13 @@ private:
     explicit File(void* handle) noexcept;
 #endif
 
+#ifdef BUILD_FOR_WINDOWS
     void* Filehandle;
-
-#ifndef BUILD_FOR_WINDOWS
+#else
+    int Filehandle;
+    bool IsWritable = false;
+    // true if the file was created with O_TMPFILE and does not have a path on disk yet
+    bool IsUnlinked = false;
     std::string Path;
 #endif
 };
@@ -105,7 +113,7 @@ struct SplitPathData {
     std::string_view Directory;
     std::string_view Filename;
 };
-SplitPathData SplitPath(std::string_view path);
+SplitPathData SplitPath(std::string_view path) noexcept;
 
 // Inverse of the above: Given a path and a filename, appends the filename to the path.
 // This does *not* resolve absolute paths. 'filename' should be a single element, not a full path.
@@ -114,16 +122,16 @@ SplitPathData SplitPath(std::string_view path);
 void AppendPathElement(std::string& path, std::string_view filename);
 
 // Returns everything but the filename of the given path. Effectively SplitPath(path).Directory
-std::string_view GetDirectoryName(std::string_view path);
+std::string_view GetDirectoryName(std::string_view path) noexcept;
 
 // Returns filename of the given path. Effectively SplitPath(path).Filename
-std::string_view GetFileName(std::string_view path);
+std::string_view GetFileName(std::string_view path) noexcept;
 
 // Returns filename of the given path without extension.
-std::string_view GetFileNameWithoutExtension(std::string_view path);
+std::string_view GetFileNameWithoutExtension(std::string_view path) noexcept;
 
 // Returns the extension of the given path. This will include the dot.
-std::string_view GetExtension(std::string_view path);
+std::string_view GetExtension(std::string_view path) noexcept;
 
 // Makes the given path absolute.
 std::string GetAbsolutePath(std::string_view path);
@@ -138,6 +146,6 @@ bool WriteFileAtomic(std::string_view path, const void* data, size_t length) noe
 #ifdef BUILD_FOR_WINDOWS
 // Gets the logical drives on this computer; that is, stuff like "C:\" and "D:\".
 // This concept only exists on Windows, so no Linux implementation is provided.
-std::vector<std::string> GetLogicalDrives() noexcept;
+std::vector<std::string> GetLogicalDrives();
 #endif
 } // namespace HyoutaUtils::IO
