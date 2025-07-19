@@ -10,5 +10,7 @@ struct JobConfig {
 
     std::string TargetFolderPath;
     std::string TempFolderPath;
+    std::string TwitchClientId;
+    std::string TwitchClientSecret;
 };
 } // namespace VodArchiver

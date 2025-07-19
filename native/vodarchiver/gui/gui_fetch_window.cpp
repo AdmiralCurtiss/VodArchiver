@@ -24,12 +24,13 @@
 #include "vodarchiver_imgui_utils.h"
 
 namespace VodArchiver::GUI {
-static FetchReturnValue RunFetchTask(IUserInfo* userInfo, size_t offset, bool flat) {
+static FetchReturnValue
+    RunFetchTask(JobConfig* jobConfig, IUserInfo* userInfo, size_t offset, bool flat) {
     if (userInfo == nullptr) {
         return FetchReturnValue{.Success = false, .HasMore = false};
     }
     try {
-        return userInfo->Fetch(offset, flat);
+        return userInfo->Fetch(*jobConfig, offset, flat);
     } catch (...) {
         return FetchReturnValue{.Success = false, .HasMore = false};
     }
@@ -180,7 +181,7 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                 FetchTaskActiveUserInfo = std::move(tmp);
             }
 
-            FetchTask.Engage(userInfoToFetch, FetchTaskOffset, FlatCheckbox);
+            FetchTask.Engage(&state.JobConf, userInfoToFetch, FetchTaskOffset, FlatCheckbox);
         }
     }
 

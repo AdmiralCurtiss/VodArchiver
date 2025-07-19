@@ -11,7 +11,7 @@ std::string GenericUserInfo::GetUserIdentifier() {
     return Username;
 }
 
-FetchReturnValue GenericUserInfo::Fetch(size_t offset, bool flat) {
-    throw "not implemented";
+FetchReturnValue GenericUserInfo::Fetch(JobConfig& jobConfig, size_t offset, bool flat) {
+    return FetchReturnValue{.Success = false, .HasMore = false};
 }
 } // namespace VodArchiver

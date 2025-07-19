@@ -8,6 +8,7 @@
 #include <string_view>
 #include <vector>
 
+#include "vodarchiver/job_config.h"
 #include "vodarchiver/time_types.h"
 #include "vodarchiver/videoinfo/i-video-info.h"
 
@@ -43,7 +44,7 @@ struct IUserInfo {
     virtual std::string GetUserIdentifier() = 0;
     virtual std::string ToString();
 
-    virtual FetchReturnValue Fetch(size_t offset, bool flat) = 0;
+    virtual FetchReturnValue Fetch(JobConfig& jobConfig, size_t offset, bool flat) = 0;
 
     bool Persistable = false;
     bool AutoDownload = false;

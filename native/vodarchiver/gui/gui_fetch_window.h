@@ -12,6 +12,7 @@
 
 #include "gui_background_task.h"
 #include "gui_window.h"
+#include "vodarchiver/job_config.h"
 #include "vodarchiver/task_cancellation.h"
 #include "vodarchiver/task_reporting_from_thread.h"
 #include "vodarchiver/userinfo/i-user-info.h"
@@ -39,7 +40,7 @@ private:
     std::unique_ptr<IUserInfo> FetchTaskActiveUserInfo;
     size_t FetchTaskOffset = 0;
     bool FetchHasMore = false;
-    BackgroundTask<FetchReturnValue, IUserInfo*, size_t, bool> FetchTask;
+    BackgroundTask<FetchReturnValue, JobConfig*, IUserInfo*, size_t, bool> FetchTask;
     TaskCancellation FetchTaskCancellation;
     TaskReportingFromThread FetchTaskReporting;
 

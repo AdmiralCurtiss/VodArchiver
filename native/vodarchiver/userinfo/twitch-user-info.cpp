@@ -27,14 +27,19 @@ std::string TwitchUserInfo::GetUserIdentifier() {
     return Username;
 }
 
-FetchReturnValue TwitchUserInfo::Fetch(size_t offset, bool flat) {
+FetchReturnValue TwitchUserInfo::Fetch(JobConfig& jobConfig, size_t offset, bool flat) {
     std::vector<std::unique_ptr<IVideoInfo>> videosToAdd;
     bool hasMore = true;
     int64_t maxVideos = -1;
     int64_t currentVideos = -1;
 
-    std::string twitchClientId = "";
-    std::string twitchClientSecret = "";
+    std::string twitchClientId;
+    std::string twitchClientSecret;
+    {
+        std::lock_guard lock(jobConfig.Mutex);
+        twitchClientId = jobConfig.TwitchClientId;
+        twitchClientSecret = jobConfig.TwitchClientSecret;
+    }
 
     if (!UserID.has_value()) {
         auto uid = Twitch::GetUserIdFromUsername(Username, twitchClientId, twitchClientSecret);

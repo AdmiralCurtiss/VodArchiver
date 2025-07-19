@@ -26,7 +26,7 @@ std::string YoutubePlaylistUserInfo::GetUserIdentifier() {
     return Playlist;
 }
 
-FetchReturnValue YoutubePlaylistUserInfo::Fetch(size_t offset, bool flat) {
+FetchReturnValue YoutubePlaylistUserInfo::Fetch(JobConfig& jobConfig, size_t offset, bool flat) {
     std::vector<std::unique_ptr<IVideoInfo>> videosToAdd;
     bool hasMore = true;
     int64_t maxVideos = -1;

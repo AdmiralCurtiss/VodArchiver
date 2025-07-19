@@ -80,6 +80,8 @@ int RunGui(int argc, char** argvUtf8) {
         std::lock_guard lock(state.JobConf.Mutex);
         state.JobConf.TargetFolderPath = GetTargetFolderPath(state.GuiSettings);
         state.JobConf.TempFolderPath = GetTempFolderPath(state.GuiSettings);
+        state.JobConf.TwitchClientId = state.GuiSettings.TwitchClientId;
+        state.JobConf.TwitchClientSecret = state.GuiSettings.TwitchClientSecret;
     }
 
     for (int s = static_cast<int>(StreamService::Unknown);

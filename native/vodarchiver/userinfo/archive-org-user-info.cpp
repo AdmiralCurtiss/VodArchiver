@@ -99,7 +99,7 @@ static std::optional<std::vector<std::unique_ptr<IVideoInfo>>>
     return vi;
 }
 
-FetchReturnValue ArchiveOrgUserInfo::Fetch(size_t offset, bool flat) {
+FetchReturnValue ArchiveOrgUserInfo::Fetch(JobConfig& jobConfig, size_t offset, bool flat) {
     std::vector<std::unique_ptr<IVideoInfo>> videosToAdd;
     bool hasMore = true;
     long maxVideos = -1;

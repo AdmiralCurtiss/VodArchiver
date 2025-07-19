@@ -24,7 +24,7 @@ std::string YoutubeUrlUserInfo::GetUserIdentifier() {
     return Url;
 }
 
-FetchReturnValue YoutubeUrlUserInfo::Fetch(size_t offset, bool flat) {
+FetchReturnValue YoutubeUrlUserInfo::Fetch(JobConfig& jobConfig, size_t offset, bool flat) {
     std::vector<std::unique_ptr<IVideoInfo>> videosToAdd;
     bool hasMore = true;
     int64_t maxVideos = -1;

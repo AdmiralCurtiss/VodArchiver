@@ -81,6 +81,14 @@ bool LoadUserSettingsFromIni(GuiUserSettings& settings, const HyoutaUtils::Ini::
     if (persistentDataPath) {
         settings.CustomPersistentDataPath = std::string(persistentDataPath->Value);
     }
+    auto* twitchClientId = ini.FindValue("Paths", "TwitchClientId");
+    if (twitchClientId) {
+        settings.TwitchClientId = std::string(twitchClientId->Value);
+    }
+    auto* twitchClientSecret = ini.FindValue("Paths", "TwitchClientSecret");
+    if (twitchClientSecret) {
+        settings.TwitchClientSecret = std::string(twitchClientSecret->Value);
+    }
     return true;
 }
 
@@ -112,6 +120,8 @@ bool WriteUserSettingsToIni(const GuiUserSettings& settings, HyoutaUtils::Ini::I
     ini.SetString("Paths", "TargetFolderPath", settings.CustomTargetFolderPath);
     ini.SetString("Paths", "TempFolderPath", settings.CustomTempFolderPath);
     ini.SetString("Paths", "PersistentDataPath", settings.CustomPersistentDataPath);
+    ini.SetString("Paths", "TwitchClientId", settings.TwitchClientId);
+    ini.SetString("Paths", "TwitchClientSecret", settings.TwitchClientSecret);
     return true;
 }
 

@@ -18,7 +18,7 @@ std::string HitboxUserInfo::GetUserIdentifier() {
     return Username;
 }
 
-FetchReturnValue HitboxUserInfo::Fetch(size_t offset, bool flat) {
+FetchReturnValue HitboxUserInfo::Fetch(JobConfig& jobConfig, size_t offset, bool flat) {
     return FetchReturnValue{.Success = false, .HasMore = false};
 }
 } // namespace VodArchiver

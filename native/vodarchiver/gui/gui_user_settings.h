@@ -27,6 +27,8 @@ struct GuiUserSettings {
     std::string CustomTempFolderPath;
     std::string DefaultPersistentDataPath;
     std::string CustomPersistentDataPath;
+    std::string TwitchClientId;
+    std::string TwitchClientSecret;
 };
 
 void InitGuiUserSettings(GuiUserSettings& settings);
