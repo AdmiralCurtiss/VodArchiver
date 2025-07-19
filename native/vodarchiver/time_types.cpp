@@ -21,9 +21,9 @@ DateTime DateTime::FromDate(uint64_t year,
     const std::chrono::year_month_day ymd(std::chrono::year(static_cast<int>(year)),
                                           std::chrono::month(static_cast<unsigned int>(month)),
                                           std::chrono::day(static_cast<unsigned int>(day)));
-    static constexpr std::chrono::year_month_day unix(
+    static constexpr std::chrono::year_month_day unixstamp(
         std::chrono::year(1970), std::chrono::month(1), std::chrono::day(1));
-    const auto days = (std::chrono::sys_days(ymd) - std::chrono::sys_days(unix)).count();
+    const auto days = (std::chrono::sys_days(ymd) - std::chrono::sys_days(unixstamp)).count();
     static constexpr int SECONDS_PER_MINUTE = 60;
     static constexpr int SECONDS_PER_HOUR = 60 * 60;
     static constexpr int SECONDS_PER_DAY = 24 * 60 * 60;

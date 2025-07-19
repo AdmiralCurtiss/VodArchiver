@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <format>
 #include <iterator>
 #include <memory>
 #include <optional>

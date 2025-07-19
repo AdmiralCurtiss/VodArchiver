@@ -231,7 +231,10 @@ int RunProgram(const std::string& programName,
     return static_cast<int>(rv);
 }
 #else
-int RunProgram(const std::string& programName, const std::vector<std::string>& args) {
+int RunProgram(const std::string& programName,
+               const std::vector<std::string>& args,
+               const std::function<void(std::string_view)>& stdOutRedirect,
+               const std::function<void(std::string_view)>& stdErrRedirect) {
     return -1;
 }
 #endif
