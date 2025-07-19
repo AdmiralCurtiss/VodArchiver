@@ -267,6 +267,8 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/curl_util.h
 	vodarchiver/decompress_helper.cpp
 	vodarchiver/decompress_helper.h
+	vodarchiver/disk_lock.cpp
+	vodarchiver/disk_lock.h
 	vodarchiver/exec.cpp
 	vodarchiver/exec.h
 	vodarchiver/ffmpeg_util.cpp

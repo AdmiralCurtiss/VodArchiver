@@ -117,37 +117,39 @@ ResultType YoutubeVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancella
         }
 
         SetStatus("Waiting for free disk IO slot to move...");
-        // await Util.ExpensiveDiskIOSemaphore.WaitAsync( cancellationToken );
-        // try {
-        // sanity check
-        SetStatus("Sanity check on downloaded video...");
-        auto probe = FFMpegProbe(tempFilepath);
-        if (!probe) {
-            SetStatus("Probe failed!");
-            return ResultType::Failure;
-        }
-        TimeSpan actualVideoLength = probe->Duration;
-        TimeSpan expectedVideoLength = vi->GetVideoLength();
-        if (std::abs((actualVideoLength - expectedVideoLength).GetTotalSeconds()) > 5.0) {
-            // if difference is bigger than 5 seconds something is off, report
-            SetStatus(std::format(
-                "Large time difference between expected ({}s) and actual ({}s), stopping.",
-                expectedVideoLength.GetTotalSeconds(),
-                actualVideoLength.GetTotalSeconds()));
-            return ResultType::Failure;
-        }
+        {
+            auto diskLock = jobConfig.ExpensiveDiskIO.WaitForFreeSlot(cancellationToken);
+            if (cancellationToken.IsCancellationRequested()) {
+                return ResultType::Cancelled;
+            }
 
-        SetStatus("Moving...");
-        if (!HyoutaUtils::IO::Move(
-                std::string_view(tempFilepath), std::string_view(finalFilepath), true)) {
-            return ResultType::Failure;
+            // sanity check
+            SetStatus("Sanity check on downloaded video...");
+            auto probe = FFMpegProbe(tempFilepath);
+            if (!probe) {
+                SetStatus("Probe failed!");
+                return ResultType::Failure;
+            }
+            TimeSpan actualVideoLength = probe->Duration;
+            TimeSpan expectedVideoLength = vi->GetVideoLength();
+            if (std::abs((actualVideoLength - expectedVideoLength).GetTotalSeconds()) > 5.0) {
+                // if difference is bigger than 5 seconds something is off, report
+                SetStatus(std::format(
+                    "Large time difference between expected ({}s) and actual ({}s), stopping.",
+                    expectedVideoLength.GetTotalSeconds(),
+                    actualVideoLength.GetTotalSeconds()));
+                return ResultType::Failure;
+            }
+
+            SetStatus("Moving...");
+            if (!HyoutaUtils::IO::Move(
+                    std::string_view(tempFilepath), std::string_view(finalFilepath), true)) {
+                return ResultType::Failure;
+            }
+            if (!HyoutaUtils::IO::DeleteDirectory(std::string_view(tempFolder))) {
+                return ResultType::Failure;
+            }
         }
-        if (!HyoutaUtils::IO::DeleteDirectory(std::string_view(tempFolder))) {
-            return ResultType::Failure;
-        }
-        // } finally {
-        // 	Util.ExpensiveDiskIOSemaphore.Release();
-        // }
     }
 
     SetStatus("Done!");

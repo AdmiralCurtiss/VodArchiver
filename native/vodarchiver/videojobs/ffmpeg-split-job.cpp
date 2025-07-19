@@ -6,6 +6,7 @@
 #include <string_view>
 #include <utility>
 
+#include "i-video-job.h"
 #include "util/file.h"
 #include "util/number.h"
 #include "util/text.h"
@@ -121,28 +122,24 @@ ResultType FFMpegSplitJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
     std::string exampleOutname = HyoutaUtils::TextUtils::Replace(outname, "%d", "0");
     bool existedBefore = HyoutaUtils::IO::Exists(std::string_view(exampleOutname));
 
-    // try {
-    //     await Util.ExpensiveDiskIOSemaphore.WaitAsync();
-    // } catch (OperationCanceledException) {
-    //     Status = "Cancelled";
-    //     return ResultType.Cancelled;
-    // }
+    {
+        auto diskLock = jobConfig.ExpensiveDiskIO.WaitForFreeSlot(cancellationToken);
+        if (cancellationToken.IsCancellationRequested()) {
+            return ResultType::Cancelled;
+        }
 
-    // try {
-    SetStatus("Splitting...");
-    StallWrite(jobConfig,
-               exampleOutname,
-               HyoutaUtils::IO::GetFilesize(std::string_view(inname)).value_or(0),
-               cancellationToken);
-    int retval = RunProgram(
-        "ffmpeg_split.exe", args, [](std::string_view sv) {}, [](std::string_view sv) {});
-    if (retval != 0) {
-        SetStatus(std::format("ffmpeg_split failed with return value {}", retval));
-        return ResultType::Failure;
+        SetStatus("Splitting...");
+        StallWrite(jobConfig,
+                   exampleOutname,
+                   HyoutaUtils::IO::GetFilesize(std::string_view(inname)).value_or(0),
+                   cancellationToken);
+        int retval = RunProgram(
+            "ffmpeg_split.exe", args, [](std::string_view sv) {}, [](std::string_view sv) {});
+        if (retval != 0) {
+            SetStatus(std::format("ffmpeg_split failed with return value {}", retval));
+            return ResultType::Failure;
+        }
     }
-    // } finally {
-    //     Util.ExpensiveDiskIOSemaphore.Release();
-    // }
 
 
     if (!existedBefore && HyoutaUtils::IO::FileExists(std::string_view(exampleOutname))) {

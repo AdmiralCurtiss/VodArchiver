@@ -675,108 +675,105 @@ ResultType TwitchVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
             _UserInputRequest = nullptr;
 
             SetStatus("Waiting for free disk IO slot to combine...");
-            // try {
-            //     await Util.ExpensiveDiskIOSemaphore.WaitAsync(cancellationToken);
-            // } catch (OperationCanceledException) {
-            //     return ResultType::Cancelled;
-            // }
-            // try {
-            uint64_t expectedTargetFilesize = 0;
-            for (const auto& file : files) {
-                expectedTargetFilesize +=
-                    HyoutaUtils::IO::GetFilesize(std::string_view(file)).value_or(0);
-            }
+            {
+                auto diskLock = jobConfig.ExpensiveDiskIO.WaitForFreeSlot(cancellationToken);
+                if (cancellationToken.IsCancellationRequested()) {
+                    return ResultType::Cancelled;
+                }
+                uint64_t expectedTargetFilesize = 0;
+                for (const auto& file : files) {
+                    expectedTargetFilesize +=
+                        HyoutaUtils::IO::GetFilesize(std::string_view(file)).value_or(0);
+                }
 
-            SetStatus("Combining downloaded video parts...");
-            if (HyoutaUtils::IO::FileExists(std::string_view(combinedTempname))) {
-                HyoutaUtils::IO::DeleteFile(std::string_view(combinedTempname));
+                SetStatus("Combining downloaded video parts...");
+                if (HyoutaUtils::IO::FileExists(std::string_view(combinedTempname))) {
+                    HyoutaUtils::IO::DeleteFile(std::string_view(combinedTempname));
+                }
+                StallWrite(jobConfig, combinedFilename, expectedTargetFilesize, cancellationToken);
+                if (cancellationToken.IsCancellationRequested()) {
+                    return ResultType::Cancelled;
+                }
+                ResultType combineResult = Combine(cancellationToken, combinedTempname, files);
+                if (combineResult != ResultType::Success) {
+                    return combineResult;
+                }
+
+                // sanity check
+                SetStatus("Sanity check on combined video...");
+                auto probe = FFMpegProbe(combinedTempname);
+                if (!probe) {
+                    return ResultType::Failure;
+                }
+                TimeSpan actualVideoLength = probe->Duration;
+                TimeSpan expectedVideoLength = GetVideoInfo()->GetVideoLength();
+                if (!IgnoreTimeDifferenceCombined
+                    && std::abs((actualVideoLength - expectedVideoLength).GetTotalSeconds())
+                           > 5.0) {
+                    // if difference is bigger than 5 seconds something is off, report
+                    SetStatus(
+                        std::format("Large time difference between expected ({}s) and combined "
+                                    "({}s), stopping.",
+                                    expectedVideoLength.GetTotalSeconds(),
+                                    actualVideoLength.GetTotalSeconds()));
+                    _UserInputRequest =
+                        std::make_unique<UserInputRequestTimeMismatchCombined>(this);
+                    _IsWaitingForUserInput = true;
+                    return ResultType::UserInputRequired;
+                }
+
+                HyoutaUtils::IO::Move(combinedTempname, combinedFilename, true);
+                for (const auto& file : files) {
+                    HyoutaUtils::IO::DeleteFile(std::string_view(file));
+                }
+                HyoutaUtils::IO::DeleteDirectory(std::string_view(tempFolderForParts));
             }
-            StallWrite(jobConfig, combinedFilename, expectedTargetFilesize, cancellationToken);
+        }
+
+        SetStatus("Waiting for free disk IO slot to remux...");
+        {
+            auto diskLock = jobConfig.ExpensiveDiskIO.WaitForFreeSlot(cancellationToken);
             if (cancellationToken.IsCancellationRequested()) {
                 return ResultType::Cancelled;
             }
-            ResultType combineResult = Combine(cancellationToken, combinedTempname, files);
-            if (combineResult != ResultType::Success) {
-                return combineResult;
+            SetStatus("Remuxing to MP4...");
+            if (HyoutaUtils::IO::FileExists(std::string_view(remuxedTempname))) {
+                HyoutaUtils::IO::DeleteFile(std::string_view(remuxedTempname));
+            }
+            StallWrite(jobConfig,
+                       remuxedFilename,
+                       HyoutaUtils::IO::GetFilesize(std::string_view(combinedFilename)).value_or(0),
+                       cancellationToken);
+            if (cancellationToken.IsCancellationRequested()) {
+                return ResultType::Cancelled;
+            }
+            if (!Remux(remuxedFilename, combinedFilename, remuxedTempname)) {
+                return ResultType::Failure;
             }
 
             // sanity check
-            SetStatus("Sanity check on combined video...");
-            auto probe = FFMpegProbe(combinedTempname);
+            SetStatus("Sanity check on remuxed video...");
+            auto probe = FFMpegProbe(remuxedFilename);
             if (!probe) {
                 return ResultType::Failure;
             }
             TimeSpan actualVideoLength = probe->Duration;
             TimeSpan expectedVideoLength = GetVideoInfo()->GetVideoLength();
-            if (!IgnoreTimeDifferenceCombined
+            if (!IgnoreTimeDifferenceRemuxed
                 && std::abs((actualVideoLength - expectedVideoLength).GetTotalSeconds()) > 5.0) {
                 // if difference is bigger than 5 seconds something is off, report
                 SetStatus(std::format(
-                    "Large time difference between expected ({}s) and combined ({}s), stopping.",
+                    "Large time difference between expected ({}s) and remuxed ({}s), stopping.",
                     expectedVideoLength.GetTotalSeconds(),
                     actualVideoLength.GetTotalSeconds()));
-                _UserInputRequest = std::make_unique<UserInputRequestTimeMismatchCombined>(this);
+                _UserInputRequest = std::make_unique<UserInputRequestTimeMismatchRemuxed>(this);
                 _IsWaitingForUserInput = true;
                 return ResultType::UserInputRequired;
             }
 
-            HyoutaUtils::IO::Move(combinedTempname, combinedFilename, true);
-            for (const auto& file : files) {
-                HyoutaUtils::IO::DeleteFile(std::string_view(file));
-            }
-            HyoutaUtils::IO::DeleteDirectory(std::string_view(tempFolderForParts));
-            // } finally {
-            //     Util.ExpensiveDiskIOSemaphore.Release();
-            // }
+            HyoutaUtils::IO::Move(remuxedFilename, targetFilename, true);
+            HyoutaUtils::IO::DeleteFile(std::string_view(combinedFilename));
         }
-
-        SetStatus("Waiting for free disk IO slot to remux...");
-        // try {
-        //     await Util.ExpensiveDiskIOSemaphore.WaitAsync(cancellationToken);
-        // } catch (OperationCanceledException) {
-        //     return ResultType::Cancelled;
-        // }
-        // try {
-        SetStatus("Remuxing to MP4...");
-        if (HyoutaUtils::IO::FileExists(std::string_view(remuxedTempname))) {
-            HyoutaUtils::IO::DeleteFile(std::string_view(remuxedTempname));
-        }
-        StallWrite(jobConfig,
-                   remuxedFilename,
-                   HyoutaUtils::IO::GetFilesize(std::string_view(combinedFilename)).value_or(0),
-                   cancellationToken);
-        if (cancellationToken.IsCancellationRequested()) {
-            return ResultType::Cancelled;
-        }
-        if (!Remux(remuxedFilename, combinedFilename, remuxedTempname)) {
-            return ResultType::Failure;
-        }
-
-        // sanity check
-        SetStatus("Sanity check on remuxed video...");
-        auto probe = FFMpegProbe(remuxedFilename);
-        if (!probe) {
-            return ResultType::Failure;
-        }
-        TimeSpan actualVideoLength = probe->Duration;
-        TimeSpan expectedVideoLength = GetVideoInfo()->GetVideoLength();
-        if (!IgnoreTimeDifferenceRemuxed
-            && std::abs((actualVideoLength - expectedVideoLength).GetTotalSeconds()) > 5.0) {
-            // if difference is bigger than 5 seconds something is off, report
-            SetStatus(std::format(
-                "Large time difference between expected ({}s) and remuxed ({}s), stopping.",
-                expectedVideoLength.GetTotalSeconds(),
-                actualVideoLength.GetTotalSeconds()));
-            _UserInputRequest = std::make_unique<UserInputRequestTimeMismatchRemuxed>(this);
-            _IsWaitingForUserInput = true;
-            return ResultType::UserInputRequired;
-        }
-
-        HyoutaUtils::IO::Move(remuxedFilename, targetFilename, true);
-        HyoutaUtils::IO::DeleteFile(std::string_view(combinedFilename));
-        // } finally {
-        //     Util.ExpensiveDiskIOSemaphore.Release();
-        // }
     }
 
     SetStatus("Done!");
