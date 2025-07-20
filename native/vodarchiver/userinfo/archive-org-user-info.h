@@ -15,6 +15,8 @@ struct ArchiveOrgUserInfo final : public IUserInfo {
 
     FetchReturnValue Fetch(JobConfig& jobConfig, size_t offset, bool flat) override;
 
+    std::unique_ptr<IUserInfo> Clone() const override;
+
     std::string Identifier;
 };
 } // namespace VodArchiver

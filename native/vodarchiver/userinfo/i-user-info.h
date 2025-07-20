@@ -46,6 +46,8 @@ struct IUserInfo {
 
     virtual FetchReturnValue Fetch(JobConfig& jobConfig, size_t offset, bool flat) = 0;
 
+    virtual std::unique_ptr<IUserInfo> Clone() const = 0;
+
     bool Persistable = false;
     bool AutoDownload = false;
     DateTime LastRefreshedOn;

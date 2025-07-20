@@ -66,4 +66,14 @@ std::string YoutubeChannelUserInfo::ToString() {
     }
     return IUserInfo::ToString();
 }
+
+std::unique_ptr<IUserInfo> YoutubeChannelUserInfo::Clone() const {
+    auto u = std::make_unique<YoutubeChannelUserInfo>();
+    u->Persistable = this->Persistable;
+    u->AutoDownload = this->AutoDownload;
+    u->LastRefreshedOn = this->LastRefreshedOn;
+    u->Channel = this->Channel;
+    u->Comment = this->Comment;
+    return u;
+}
 } // namespace VodArchiver

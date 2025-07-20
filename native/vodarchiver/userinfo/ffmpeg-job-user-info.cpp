@@ -270,4 +270,14 @@ FetchReturnValue FFMpegJobUserInfo::Fetch(JobConfig& jobConfig, size_t offset, b
                             .VideoCountThisFetch = currentVideos,
                             .Videos = std::move(videosToAdd)};
 }
+
+std::unique_ptr<IUserInfo> FFMpegJobUserInfo::Clone() const {
+    auto u = std::make_unique<FFMpegJobUserInfo>();
+    u->Persistable = this->Persistable;
+    u->AutoDownload = this->AutoDownload;
+    u->LastRefreshedOn = this->LastRefreshedOn;
+    u->Path = this->Path;
+    u->Preset = this->Preset;
+    return u;
+}
 } // namespace VodArchiver

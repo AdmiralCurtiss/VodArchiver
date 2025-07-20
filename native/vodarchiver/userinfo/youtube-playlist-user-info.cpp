@@ -67,4 +67,14 @@ std::string YoutubePlaylistUserInfo::ToString() {
     }
     return IUserInfo::ToString();
 }
+
+std::unique_ptr<IUserInfo> YoutubePlaylistUserInfo::Clone() const {
+    auto u = std::make_unique<YoutubePlaylistUserInfo>();
+    u->Persistable = this->Persistable;
+    u->AutoDownload = this->AutoDownload;
+    u->LastRefreshedOn = this->LastRefreshedOn;
+    u->Playlist = this->Playlist;
+    u->Comment = this->Comment;
+    return u;
+}
 } // namespace VodArchiver

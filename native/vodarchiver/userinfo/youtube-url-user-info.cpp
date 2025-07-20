@@ -54,4 +54,13 @@ FetchReturnValue YoutubeUrlUserInfo::Fetch(JobConfig& jobConfig, size_t offset, 
                             .VideoCountThisFetch = currentVideos,
                             .Videos = std::move(videosToAdd)};
 }
+
+std::unique_ptr<IUserInfo> YoutubeUrlUserInfo::Clone() const {
+    auto u = std::make_unique<YoutubeUrlUserInfo>();
+    u->Persistable = this->Persistable;
+    u->AutoDownload = this->AutoDownload;
+    u->LastRefreshedOn = this->LastRefreshedOn;
+    u->Url = this->Url;
+    return u;
+}
 } // namespace VodArchiver

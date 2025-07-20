@@ -83,4 +83,15 @@ FetchReturnValue TwitchUserInfo::Fetch(JobConfig& jobConfig, size_t offset, bool
                             .VideoCountThisFetch = currentVideos,
                             .Videos = std::move(videosToAdd)};
 }
+
+std::unique_ptr<IUserInfo> TwitchUserInfo::Clone() const {
+    auto u = std::make_unique<TwitchUserInfo>();
+    u->Persistable = this->Persistable;
+    u->AutoDownload = this->AutoDownload;
+    u->LastRefreshedOn = this->LastRefreshedOn;
+    u->Username = this->Username;
+    u->UserID = this->UserID;
+    u->Highlights = this->Highlights;
+    return u;
+}
 } // namespace VodArchiver

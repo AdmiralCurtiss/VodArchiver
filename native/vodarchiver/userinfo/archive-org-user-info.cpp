@@ -129,4 +129,13 @@ FetchReturnValue ArchiveOrgUserInfo::Fetch(JobConfig& jobConfig, size_t offset, 
                             .VideoCountThisFetch = currentVideos,
                             .Videos = std::move(videosToAdd)};
 }
+
+std::unique_ptr<IUserInfo> ArchiveOrgUserInfo::Clone() const {
+    auto u = std::make_unique<ArchiveOrgUserInfo>();
+    u->Persistable = this->Persistable;
+    u->AutoDownload = this->AutoDownload;
+    u->LastRefreshedOn = this->LastRefreshedOn;
+    u->Identifier = this->Identifier;
+    return u;
+}
 } // namespace VodArchiver

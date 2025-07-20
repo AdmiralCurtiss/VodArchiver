@@ -15,6 +15,8 @@ struct GenericUserInfo final : public IUserInfo {
 
     FetchReturnValue Fetch(JobConfig& jobConfig, size_t offset, bool flat) override;
 
+    std::unique_ptr<IUserInfo> Clone() const override;
+
     ServiceVideoCategoryType Service;
     std::optional<int64_t> UserID;
     std::string Username;

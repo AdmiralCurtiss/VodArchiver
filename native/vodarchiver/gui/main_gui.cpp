@@ -110,6 +110,9 @@ int RunGui(int argc, char** argvUtf8) {
                     std::lock_guard lock(state.JobsLock);
                     CreateAndEnqueueJob(state.Jobs, std::move(info));
                 },
+                [&]() {
+                    // TODO: invoke a save of UserInfos here
+                },
                 rngSeed));
             rngSeed = ((rngSeed >> 3) | (rngSeed << 29));
         };

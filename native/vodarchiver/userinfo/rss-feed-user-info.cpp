@@ -154,4 +154,13 @@ FetchReturnValue RssFeedUserInfo::Fetch(JobConfig& jobConfig, size_t offset, boo
                             .VideoCountThisFetch = currentVideos,
                             .Videos = std::move(videosToAdd)};
 }
+
+std::unique_ptr<IUserInfo> RssFeedUserInfo::Clone() const {
+    auto u = std::make_unique<RssFeedUserInfo>();
+    u->Persistable = this->Persistable;
+    u->AutoDownload = this->AutoDownload;
+    u->LastRefreshedOn = this->LastRefreshedOn;
+    u->Url = this->Url;
+    return u;
+}
 } // namespace VodArchiver

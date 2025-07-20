@@ -13,6 +13,8 @@ struct YoutubeUrlUserInfo final : public IUserInfo {
     ServiceVideoCategoryType GetType() override;
     std::string GetUserIdentifier() override;
 
+    std::unique_ptr<IUserInfo> Clone() const override;
+
     FetchReturnValue Fetch(JobConfig& jobConfig, size_t offset, bool flat) override;
 
     std::string Url;

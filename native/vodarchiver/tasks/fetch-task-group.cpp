@@ -26,6 +26,7 @@ FetchTaskGroup::FetchTaskGroup(
     JobConfig* jobConfig,
     TaskCancellation* cancellationToken,
     std::function<void(std::unique_ptr<IVideoInfo> info)> enqueueJobCallback,
+    std::function<void()> saveUserInfosCallback,
     uint32_t rngSeed)
   : RNG(rngSeed)
   , Services(std::move(services))
@@ -33,7 +34,8 @@ FetchTaskGroup::FetchTaskGroup(
   , UserInfos(userInfos)
   , JobConf(jobConfig)
   , CancellationToken(cancellationToken)
-  , EnqueueJobCallback(std::move(enqueueJobCallback)) {
+  , EnqueueJobCallback(std::move(enqueueJobCallback))
+  , SaveUserInfosCallback(std::move(saveUserInfosCallback)) {
     FetchRunnerThread = std::thread(std::bind(&FetchTaskGroup::RunFetchRunnerThreadFunc, this));
 }
 
@@ -49,11 +51,13 @@ void FetchTaskGroup::RunFetchRunnerThreadFunc() {
         }
 
         try {
-            // FIXME: This leaks out of the lock
-            IUserInfo* earliestUserInfo = nullptr;
+            std::unique_ptr<IUserInfo> userInfoClone = nullptr;
+            size_t userInfoCloneIndex = 0;
             {
+                IUserInfo* earliestUserInfo = nullptr;
                 std::lock_guard lock(*UserInfosLock);
-                for (auto& u : *UserInfos) {
+                for (size_t i = 0; i < UserInfos->size(); ++i) {
+                    auto& u = (*UserInfos)[i];
                     if (!u->AutoDownload) {
                         continue;
                     }
@@ -65,25 +69,31 @@ void FetchTaskGroup::RunFetchRunnerThreadFunc() {
                         && (earliestUserInfo == nullptr
                             || u->LastRefreshedOn < earliestUserInfo->LastRefreshedOn)) {
                         earliestUserInfo = u.get();
+                        userInfoCloneIndex = i;
                     }
+                }
+                if (earliestUserInfo != nullptr) {
+                    userInfoClone = earliestUserInfo->Clone();
                 }
             }
 
-            if (earliestUserInfo != nullptr) {
-                DateTime earliestStartTime = earliestUserInfo->LastRefreshedOn.AddHours(7);
+            if (userInfoClone != nullptr) {
+                DateTime earliestStartTime = userInfoClone->LastRefreshedOn.AddHours(7);
                 DateTime now = DateTime::UtcNow();
                 if (earliestStartTime <= now) {
                     auto afterFetchScope = HyoutaUtils::MakeScopeGuard([&]() {
                         if (!CancellationToken->IsCancellationRequested()) {
-                            earliestUserInfo->LastRefreshedOn = now;
-                            if (earliestUserInfo->Persistable) {
-                                // TODO
-                                // UserInfoPersister.AddOrUpdate(earliestUserInfo);
-                                // UserInfoPersister.Save();
+                            // try to write back the timestamp into the actual vector
+                            bool writtenBack =
+                                WriteBack(userInfoClone.get(), userInfoCloneIndex, now);
+
+                            // if we have updated the userinfo, request a save to disk
+                            if (writtenBack && userInfoClone->Persistable) {
+                                SaveUserInfosCallback();
                             }
                         }
                     });
-                    DoFetch(earliestUserInfo);
+                    DoFetch(userInfoClone.get());
                 }
             }
         } catch (const std::exception& ex) {
@@ -138,6 +148,35 @@ void FetchTaskGroup::DoFetch(IUserInfo* userInfo) {
         // Console.WriteLine("Enqueueing " + videoInfo.Username + "/" + videoInfo.VideoId);
         EnqueueJobCallback(std::move(videoInfo));
     }
+}
+
+bool FetchTaskGroup::WriteBack(IUserInfo* userInfo, size_t expectedIndex, DateTime now) {
+    ServiceVideoCategoryType type = userInfo->GetType();
+    std::string uid = userInfo->GetUserIdentifier();
+
+    std::lock_guard lock(*UserInfosLock);
+
+    // this only works if the index hasn't changed, but the vector
+    // changes so rarely that it's always a good idea to try first
+    if (UserInfos->size() < expectedIndex) {
+        auto& u = (*UserInfos)[expectedIndex];
+        if (u->GetType() == type && u->GetUserIdentifier() == uid) {
+            u->LastRefreshedOn = now;
+            return true;
+        }
+    }
+
+    // if this didn't work try to find it elsewhere
+    for (size_t i = 0; i < UserInfos->size(); ++i) {
+        auto& u = (*UserInfos)[i];
+        if (u->GetType() == type && u->GetUserIdentifier() == uid) {
+            u->LastRefreshedOn = now;
+            return true;
+        }
+    }
+
+    // couldn't find it
+    return false;
 }
 
 void FetchTaskGroup::AddStatusMessage(std::string_view msg) {

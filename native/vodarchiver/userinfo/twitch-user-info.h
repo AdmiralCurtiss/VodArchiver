@@ -17,6 +17,8 @@ struct TwitchUserInfo final : public IUserInfo {
 
     FetchReturnValue Fetch(JobConfig& jobConfig, size_t offset, bool flat) override;
 
+    std::unique_ptr<IUserInfo> Clone() const override;
+
     std::string Username;
     std::optional<int64_t> UserID;
     bool Highlights = false;
