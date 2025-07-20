@@ -298,6 +298,8 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/statusupdate/null-status-update.cpp
 	vodarchiver/statusupdate/null-status-update.h
 
+	vodarchiver/tasks/fetch-task-group.cpp
+	vodarchiver/tasks/fetch-task-group.h
 	vodarchiver/tasks/video-task-group.cpp
 	vodarchiver/tasks/video-task-group.h
 

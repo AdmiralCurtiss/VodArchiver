@@ -43,6 +43,12 @@ DateTime DateTime::AddMinutes(int minutes) const {
     return DateTime{.Data = this->Data + static_cast<uint64_t>(ticks)};
 }
 
+DateTime DateTime::AddHours(int hours) const {
+    int64_t ticks = static_cast<int64_t>(hours)
+                    * static_cast<int64_t>(60u * 60u * static_cast<int64_t>(TICKS_PER_SECOND));
+    return DateTime{.Data = this->Data + static_cast<uint64_t>(ticks)};
+}
+
 std::string DateTimeToStringForFilesystem(DateTime dt) {
     static constexpr int64_t EPOCH_DIFFERENCE_IN_TICKS = 617569056000000000;
     uint64_t seconds = (dt.Data / DateTime::TICKS_PER_SECOND) % 60;

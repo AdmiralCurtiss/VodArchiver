@@ -14,6 +14,7 @@
 #include "util/text.h"
 #include "vodarchiver/common_paths.h"
 #include "vodarchiver/curl_util.h"
+#include "vodarchiver/job_handling.h"
 #include "vodarchiver/userinfo/serialization.h"
 #include "vodarchiver/videojobs/serialization.h"
 #include "vodarchiver_version.h"
@@ -93,6 +94,33 @@ int RunGui(int argc, char** argvUtf8) {
             []() {},
             &state.JobConf,
             &state.CancellationToken));
+    }
+
+    {
+        uint32_t rngSeed =
+            static_cast<uint32_t>(DateTime::UtcNow().Data / (DateTime::TICKS_PER_SECOND / 1000));
+        auto make_fetch_task_group = [&](std::vector<ServiceVideoCategoryType> services) {
+            state.FetchTaskGroups.emplace_back(std::make_unique<FetchTaskGroup>(
+                std::move(services),
+                &state.UserInfosLock,
+                &state.UserInfos,
+                &state.JobConf,
+                &state.CancellationToken,
+                [&](std::unique_ptr<IVideoInfo> info) {
+                    std::lock_guard lock(state.JobsLock);
+                    CreateAndEnqueueJob(state.Jobs, std::move(info));
+                },
+                rngSeed));
+            rngSeed = ((rngSeed >> 3) | (rngSeed << 29));
+        };
+        make_fetch_task_group({{ServiceVideoCategoryType::TwitchRecordings,
+                                ServiceVideoCategoryType::TwitchHighlights}});
+        make_fetch_task_group({{ServiceVideoCategoryType::YoutubeUser,
+                                ServiceVideoCategoryType::YoutubeChannel,
+                                ServiceVideoCategoryType::YoutubePlaylist,
+                                ServiceVideoCategoryType::YoutubeUrl}});
+        make_fetch_task_group({{ServiceVideoCategoryType::RssFeed}});
+        make_fetch_task_group({{ServiceVideoCategoryType::FFMpegJob}});
     }
 
     state.Windows.emplace_back(std::make_unique<GUI::VodArchiverMainWindow>());

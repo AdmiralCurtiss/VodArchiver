@@ -36,6 +36,7 @@ struct DateTime {
     static DateTime UtcNow();
     DateTime AddSeconds(int64_t seconds) const;
     DateTime AddMinutes(int minutes) const;
+    DateTime AddHours(int hours) const;
 
     auto operator<=>(const DateTime& other) const {
         return this->Data <=> other.Data;
