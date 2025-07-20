@@ -16,21 +16,23 @@
 #include "vodarchiver/videojobs/youtube-video-job.h"
 
 namespace VodArchiver {
-bool CreateAndEnqueueJob(std::vector<std::unique_ptr<IVideoJob>>& jobs,
-                         std::unique_ptr<IVideoInfo> info) {
+bool CreateAndEnqueueJob(JobList& jobs,
+                         std::unique_ptr<IVideoInfo> info,
+                         const std::function<void(IVideoJob* job)>& enqueueCallback) {
     if (info == nullptr) {
         return false;
     }
 
     auto service = info->GetService();
     auto id = info->GetVideoId();
-    return CreateAndEnqueueJob(jobs, service, std::move(id), std::move(info));
+    return CreateAndEnqueueJob(jobs, service, std::move(id), std::move(info), enqueueCallback);
 }
 
-bool CreateAndEnqueueJob(std::vector<std::unique_ptr<IVideoJob>>& jobs,
+bool CreateAndEnqueueJob(JobList& jobs,
                          StreamService service,
                          std::string id,
-                         std::unique_ptr<IVideoInfo> info) {
+                         std::unique_ptr<IVideoInfo> info,
+                         const std::function<void(IVideoJob* job)>& enqueueCallback) {
     std::unique_ptr<IVideoJob> job;
     switch (service) {
         case StreamService::Twitch: {
@@ -94,27 +96,61 @@ bool CreateAndEnqueueJob(std::vector<std::unique_ptr<IVideoJob>>& jobs,
         job->SetVideoInfo(std::move(info));
     }
 
-    return EnqueueJob(jobs, std::move(job));
+    return EnqueueJob(jobs, std::move(job), enqueueCallback);
 }
 
-bool EnqueueJob(std::vector<std::unique_ptr<IVideoJob>>& jobs, std::unique_ptr<IVideoJob> job) {
-    // if (JobSet.Contains(job)) {
-    //     return false;
-    // }
+bool EnqueueJob(JobList& jobs,
+                std::unique_ptr<IVideoJob> job,
+                const std::function<void(IVideoJob* job)>& enqueueCallback) {
+    auto newVideoInfo = job->GetVideoInfo();
+    if (!newVideoInfo) {
+        // invalid job
+        return false;
+    }
 
-    job->StatusUpdater = std::make_unique<NullStatusUpdate>();
-    // .StatusUpdater =
-    //     new StatusUpdate.ObjectListViewStatusUpdate(ObjectListViewUpdater, job);
-    job->Index = jobs.size();
-    job->SetStatus("Waiting...");
-    jobs.push_back(std::move(job));
-    // JobSet.Add(job);
-    // if (VideoTaskGroups[job.VideoInfo.Service].AutoEnqueue) {
-    //     VideoTaskGroups[job.VideoInfo.Service].Add(new WaitingVideoJob(job));
-    // }
+    {
+        std::lock_guard lock(jobs.JobsLock);
+
+        // TODO? C# used a Set here for faster lookup.
+        // Not sure if this is actually needed though, we'll see...
+
+        // see if this job is already in the list, if yes we don't do anything
+        for (size_t i = 0; i < jobs.JobsVector.size(); ++i) {
+            auto& j = jobs.JobsVector[i];
+            auto vi = j->GetVideoInfo();
+            if (vi && vi->GetService() == newVideoInfo->GetService()
+                && vi->GetVideoId() == newVideoInfo->GetVideoId()) {
+                // already in list
+                return false;
+            }
+        }
+
+        job->StatusUpdater = std::make_unique<NullStatusUpdate>();
+        // .StatusUpdater =
+        //     new StatusUpdate.ObjectListViewStatusUpdate(ObjectListViewUpdater, job);
+        job->Index = jobs.JobsVector.size();
+        job->SetStatus("Waiting...");
+        IVideoJob* jobptr = job.get();
+        jobs.JobsVector.push_back(std::move(job));
+
+        enqueueCallback(jobptr);
+    }
 
     // InvokeSaveJobs();
 
     return true;
+}
+
+void AddJobToTaskGroupIfAutoenqueue(std::vector<std::unique_ptr<VideoTaskGroup>>& videoTaskGroups,
+                                    IVideoJob* job) {
+    for (size_t i = 0; i < videoTaskGroups.size(); ++i) {
+        auto& g = videoTaskGroups[i];
+        if (g && g->Service == job->GetVideoInfo()->GetService()) {
+            if (g->AutoEnqueue) {
+                g->Add(job);
+            }
+            return;
+        }
+    }
 }
 } // namespace VodArchiver

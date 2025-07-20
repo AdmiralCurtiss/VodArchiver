@@ -10,6 +10,7 @@
 #include "gui_state.h"
 #include "util/scope.h"
 #include "util/text.h"
+#include "vodarchiver/job_handling.h"
 #include "vodarchiver/videojobs/ffmpeg-split-job.h"
 #include "vodarchiver_imgui_utils.h"
 
@@ -98,11 +99,11 @@ bool VideoSplitWindow::RenderFrame(GuiState& state) {
             std::string_view path = HyoutaUtils::TextUtils::StripToNull(InputPath);
             std::string_view times = HyoutaUtils::TextUtils::StripToNull(SplitTimes);
             if (!path.empty() && !times.empty()) {
-                std::lock_guard lock(state.JobsLock);
                 auto job = std::make_unique<FFMpegSplitJob>(
                     std::string(path), std::string(times), nullptr);
-                FFMpegSplitJob* ptr = job.get();
-                state.Jobs.emplace_back(std::move(job));
+                EnqueueJob(state.Jobs, std::move(job), [&](IVideoJob* newJob) {
+                    AddJobToTaskGroupIfAutoenqueue(state.VideoTaskGroups, newJob);
+                });
                 InputPath[0] = '\0';
                 SplitTimes[0] = '\0';
             }

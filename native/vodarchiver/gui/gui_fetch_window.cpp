@@ -320,8 +320,9 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Actions)) {
                         if (ImGui::Button("Download")) {
-                            std::lock_guard lock(state.JobsLock);
-                            CreateAndEnqueueJob(state.Jobs, item->Clone());
+                            CreateAndEnqueueJob(state.Jobs, item->Clone(), [&](IVideoJob* newJob) {
+                                AddJobToTaskGroupIfAutoenqueue(state.VideoTaskGroups, newJob);
+                            });
                         }
                     }
 
@@ -350,9 +351,10 @@ bool FetchWindow::RenderFrame(GuiState& state) {
 
     ImGui::SameLine();
     if (ImGuiUtils::ButtonRightAlign("Download Fetched")) {
-        std::lock_guard lock(state.JobsLock);
         for (auto& f : FetchedItems) {
-            CreateAndEnqueueJob(state.Jobs, f->Clone());
+            CreateAndEnqueueJob(state.Jobs, f->Clone(), [&](IVideoJob* newJob) {
+                AddJobToTaskGroupIfAutoenqueue(state.VideoTaskGroups, newJob);
+            });
         }
     }
 

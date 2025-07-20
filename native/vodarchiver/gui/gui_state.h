@@ -7,6 +7,7 @@
 #include "imgui.h"
 
 #include "../job_config.h"
+#include "../job_handling.h"
 #include "../task_cancellation.h"
 #include "../tasks/fetch-task-group.h"
 #include "../tasks/video-task-group.h"
@@ -35,8 +36,7 @@ struct GuiState {
 
     float CurrentDpi = 0.0f;
 
-    std::recursive_mutex JobsLock;
-    std::vector<std::unique_ptr<IVideoJob>> Jobs;
+    JobList Jobs;
 
     std::recursive_mutex UserInfosLock;
     std::vector<std::unique_ptr<IUserInfo>> UserInfos;

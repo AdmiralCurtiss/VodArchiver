@@ -102,7 +102,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
     }
 
     {
-        std::lock_guard lock(state.JobsLock);
+        std::lock_guard lock(state.Jobs.JobsLock);
 
         static constexpr ImGuiTableFlags flags =
             ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable
@@ -127,7 +127,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
             ColumnID_Actions,
             ColumnIDCount
         };
-        int items_count = static_cast<int>(state.Jobs.size());
+        int items_count = static_cast<int>(state.Jobs.JobsVector.size());
 
         // Update item list if we changed the number of items
         ImVector<int>& items = this->Items;
@@ -187,7 +187,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
             while (clipper.Step()) {
                 for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; ++row_n) {
                     const int ID = items[row_n];
-                    IVideoJob* item = state.Jobs[ID].get();
+                    IVideoJob* item = state.Jobs.JobsVector[ID].get();
                     // if (!filter.PassFilter(item->Name))
                     //     continue;
 

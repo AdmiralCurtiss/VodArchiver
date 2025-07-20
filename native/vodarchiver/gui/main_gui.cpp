@@ -68,7 +68,7 @@ int RunGui(int argc, char** argvUtf8) {
     {
         auto jobs = ParseJobsFromFile(GetVodXmlPath(state.GuiSettings));
         if (jobs) {
-            state.Jobs = std::move(*jobs);
+            state.Jobs.JobsVector = std::move(*jobs);
         }
     }
     {
@@ -107,8 +107,9 @@ int RunGui(int argc, char** argvUtf8) {
                 &state.JobConf,
                 &state.CancellationToken,
                 [&](std::unique_ptr<IVideoInfo> info) {
-                    std::lock_guard lock(state.JobsLock);
-                    CreateAndEnqueueJob(state.Jobs, std::move(info));
+                    CreateAndEnqueueJob(state.Jobs, std::move(info), [&](IVideoJob* newJob) {
+                        AddJobToTaskGroupIfAutoenqueue(state.VideoTaskGroups, newJob);
+                    });
                 },
                 [&]() {
                     // TODO: invoke a save of UserInfos here
