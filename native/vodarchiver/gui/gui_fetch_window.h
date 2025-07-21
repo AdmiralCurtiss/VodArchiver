@@ -40,6 +40,7 @@ private:
     std::unique_ptr<IUserInfo> FetchTaskActiveUserInfo;
     size_t FetchTaskOffset = 0;
     bool FetchHasMore = false;
+    bool FetchIsNewUser = false;
     BackgroundTask<FetchReturnValue, JobConfig*, IUserInfo*, size_t, bool> FetchTask;
     TaskCancellation FetchTaskCancellation;
     TaskReportingFromThread FetchTaskReporting;

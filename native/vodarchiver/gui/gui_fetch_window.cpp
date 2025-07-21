@@ -64,9 +64,11 @@ bool FetchWindow::RenderFrame(GuiState& state) {
     const bool alreadyEngaged = FetchTask.Engaged();
     auto fetchTaskRunningScope = ImGuiUtils::ConditionallyDisabledScope(alreadyEngaged);
 
+    bool isPresetSelected = false;
     {
         std::lock_guard lock(state.UserInfosLock);
-        auto itemsInListScope = ImGuiUtils::ConditionallyDisabledScope(!FetchedItems.empty());
+        auto itemsInListScope =
+            ImGuiUtils::ConditionallyDisabledScope(FetchTaskActiveUserInfo != nullptr);
         bool noPresetSelected = !(SelectedPreset < state.UserInfos.size());
         static constexpr char noPresetSelectedString[] = " == No Preset == ";
         std::string preview = noPresetSelected ? std::string(noPresetSelectedString)
@@ -79,18 +81,22 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                     ImGui::SetItemDefaultFocus();
             }
             for (size_t i = 0; i < state.UserInfos.size(); ++i) {
+                ImGui::PushID(i);
                 const bool is_selected = (SelectedPreset == i);
                 std::string item_str = state.UserInfos[i]->ToString();
                 if (ImGui::Selectable(item_str.c_str(), is_selected))
                     SelectedPreset = i;
                 if (is_selected)
                     ImGui::SetItemDefaultFocus();
+                ImGui::PopID();
             }
             ImGui::EndCombo();
         }
+        isPresetSelected = (SelectedPreset < state.UserInfos.size());
     }
     {
-        auto itemsInListScope = ImGuiUtils::ConditionallyDisabledScope(!FetchedItems.empty());
+        auto itemsInListScope = ImGuiUtils::ConditionallyDisabledScope(
+            (FetchTaskActiveUserInfo != nullptr) || isPresetSelected);
         std::string preview =
             SelectedService < static_cast<uint32_t>(ServiceVideoCategoryType::COUNT)
                 ? std::string(ServiceVideoCategoryTypeToString(
@@ -110,17 +116,21 @@ bool FetchWindow::RenderFrame(GuiState& state) {
         }
     }
     {
-        auto itemsInListScope = ImGuiUtils::ConditionallyDisabledScope(!FetchedItems.empty());
-        ImGui::InputText("Username", UsernameTextfield.data(), UsernameTextfield.size());
-        ImGui::SameLine();
-        ImGui::Checkbox("Save", &SaveCheckbox);
+        auto itemsInListScope =
+            ImGuiUtils::ConditionallyDisabledScope(FetchTaskActiveUserInfo != nullptr);
+        {
+            auto presetSelectedScope = ImGuiUtils::ConditionallyDisabledScope(isPresetSelected);
+            ImGui::InputText("Username", UsernameTextfield.data(), UsernameTextfield.size());
+            ImGui::SameLine();
+            ImGui::Checkbox("Save", &SaveCheckbox);
+        }
         ImGui::SameLine();
         ImGui::Checkbox("Flat", &FlatCheckbox);
     }
 
     {
-        auto itemsInListScope =
-            ImGuiUtils::ConditionallyDisabledScope(!(FetchedItems.empty() || FetchHasMore));
+        auto itemsInListScope = ImGuiUtils::ConditionallyDisabledScope(
+            !((FetchTaskActiveUserInfo == nullptr) || FetchHasMore));
         ImGui::SameLine();
         if (ImGui::Button(FetchHasMore ? "Fetch More" : "Fetch") && !FetchTask.Engaged()) {
             std::lock_guard lock(state.UserInfosLock);
@@ -128,8 +138,10 @@ bool FetchWindow::RenderFrame(GuiState& state) {
             if (FetchTaskActiveUserInfo) {
                 userInfoToFetch = FetchTaskActiveUserInfo.get();
             } else if (SelectedPreset < state.UserInfos.size()) {
-                // FIXME: This goes out of the lock.
-                userInfoToFetch = state.UserInfos[SelectedPreset].get();
+                std::unique_ptr<IUserInfo> tmp = state.UserInfos[SelectedPreset]->Clone();
+                userInfoToFetch = tmp.get();
+                FetchTaskActiveUserInfo = std::move(tmp);
+                FetchIsNewUser = false;
             } else {
                 std::unique_ptr<IUserInfo> tmp;
                 switch (static_cast<ServiceVideoCategoryType>(SelectedService)) {
@@ -180,6 +192,7 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                 }
                 userInfoToFetch = tmp.get();
                 FetchTaskActiveUserInfo = std::move(tmp);
+                FetchIsNewUser = true;
             }
 
             FetchTask.Engage(&state.JobConf, userInfoToFetch, FetchTaskOffset, FlatCheckbox);
@@ -195,6 +208,14 @@ bool FetchWindow::RenderFrame(GuiState& state) {
             }
             FetchHasMore = rv.HasMore;
         }
+
+        if (rv.Success && FetchIsNewUser && SaveCheckbox && FetchTaskActiveUserInfo != nullptr) {
+            // we need to save this to the presets
+            std::lock_guard lock(state.UserInfosLock);
+            state.UserInfos.push_back(FetchTaskActiveUserInfo->Clone());
+            SelectedPreset = (state.UserInfos.size() - 1);
+            FetchIsNewUser = false;
+        }
     }
 
     ImGui::SameLine();
@@ -203,6 +224,7 @@ bool FetchWindow::RenderFrame(GuiState& state) {
         FetchTaskActiveUserInfo.reset();
         FetchTaskOffset = 0;
         FetchHasMore = false;
+        FetchIsNewUser = false;
     }
 
     {
