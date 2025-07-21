@@ -1,5 +1,6 @@
 #include "gui_fetch_window.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cstdio>
 #include <format>
@@ -262,7 +263,175 @@ bool FetchWindow::RenderFrame(GuiState& state) {
             if (sort_specs && sort_specs->SpecsDirty)
                 items_need_sort = true;
             if (sort_specs && items_need_sort && items.Size > 1) {
-                // TODO: Sort here
+                for (int spec = (sort_specs->SpecsCount - 1); spec >= 0; --spec) {
+                    switch (sort_specs->Specs[spec].ColumnUserID) {
+                        case ColumnID_Service:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetService() < r->GetService();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetService() > r->GetService();
+                                    });
+                            }
+                            break;
+                        case ColumnID_VideoID:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoId() < r->GetVideoId();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoId() > r->GetVideoId();
+                                    });
+                            }
+                            break;
+                        case ColumnID_Username:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetUsername() < r->GetUsername();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetUsername() > r->GetUsername();
+                                    });
+                            }
+                            break;
+                        case ColumnID_Title:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoTitle() < r->GetVideoTitle();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoTitle() > r->GetVideoTitle();
+                                    });
+                            }
+                            break;
+                        case ColumnID_Game:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoGame() < r->GetVideoGame();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoGame() > r->GetVideoGame();
+                                    });
+                            }
+                            break;
+                        case ColumnID_Timestamp:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoTimestamp() < r->GetVideoTimestamp();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoTimestamp() > r->GetVideoTimestamp();
+                                    });
+                            }
+                            break;
+                        case ColumnID_Duration:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoLength() < r->GetVideoLength();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoLength() > r->GetVideoLength();
+                                    });
+                            }
+                            break;
+                        case ColumnID_RecordingState:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoRecordingState()
+                                               < r->GetVideoRecordingState();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoRecordingState()
+                                               > r->GetVideoRecordingState();
+                                    });
+                            }
+                            break;
+                        case ColumnID_Type:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoType() < r->GetVideoType();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoInfo* l = FetchedItems[lhs].get();
+                                        IVideoInfo* r = FetchedItems[rhs].get();
+                                        return l->GetVideoType() > r->GetVideoType();
+                                    });
+                            }
+                            break;
+                        default: break;
+                    }
+                }
                 sort_specs->SpecsDirty = false;
             }
             items_need_sort = false;

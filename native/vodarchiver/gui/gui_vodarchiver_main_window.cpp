@@ -1,5 +1,6 @@
 #include "gui_vodarchiver_main_window.h"
 
+#include <algorithm>
 #include <array>
 #include <condition_variable>
 #include <format>
@@ -175,7 +176,221 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
             if (sort_specs && sort_specs->SpecsDirty)
                 items_need_sort = true;
             if (sort_specs && items_need_sort && items.Size > 1) {
-                // TODO: Sort here
+                for (int spec = (sort_specs->SpecsCount - 1); spec >= 0; --spec) {
+                    switch (sort_specs->Specs[spec].ColumnUserID) {
+                        case ColumnID_Index:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        return lhs < rhs;
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        return lhs > rhs;
+                                    });
+                            }
+                            break;
+                        case ColumnID_Service:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetService()
+                                               < r->GetVideoInfo()->GetService();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetService()
+                                               > r->GetVideoInfo()->GetService();
+                                    });
+                            }
+                            break;
+                        case ColumnID_VideoID:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetVideoId()
+                                               < r->GetVideoInfo()->GetVideoId();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetVideoId()
+                                               > r->GetVideoInfo()->GetVideoId();
+                                    });
+                            }
+                            break;
+                        case ColumnID_Username:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetUsername()
+                                               < r->GetVideoInfo()->GetUsername();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetUsername()
+                                               > r->GetVideoInfo()->GetUsername();
+                                    });
+                            }
+                            break;
+                        case ColumnID_Title:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetVideoTitle()
+                                               < r->GetVideoInfo()->GetVideoTitle();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetVideoTitle()
+                                               > r->GetVideoInfo()->GetVideoTitle();
+                                    });
+                            }
+                            break;
+                        case ColumnID_Game:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetVideoGame()
+                                               < r->GetVideoInfo()->GetVideoGame();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetVideoGame()
+                                               > r->GetVideoInfo()->GetVideoGame();
+                                    });
+                            }
+                            break;
+                        case ColumnID_Timestamp:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetVideoTimestamp()
+                                               < r->GetVideoInfo()->GetVideoTimestamp();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetVideoTimestamp()
+                                               > r->GetVideoInfo()->GetVideoTimestamp();
+                                    });
+                            }
+                            break;
+                        case ColumnID_Duration:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetVideoLength()
+                                               < r->GetVideoInfo()->GetVideoLength();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetVideoLength()
+                                               > r->GetVideoInfo()->GetVideoLength();
+                                    });
+                            }
+                            break;
+                        case ColumnID_RecordingState:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetVideoRecordingState()
+                                               < r->GetVideoInfo()->GetVideoRecordingState();
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->GetVideoInfo()->GetVideoRecordingState()
+                                               > r->GetVideoInfo()->GetVideoRecordingState();
+                                    });
+                            }
+                            break;
+                        case ColumnID_Notes:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->Notes < r->Notes;
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->Notes > r->Notes;
+                                    });
+                            }
+                            break;
+                        case ColumnID_Status:
+                            if (sort_specs->Specs[spec].SortDirection
+                                == ImGuiSortDirection_Ascending) {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->JobStatus < r->JobStatus;
+                                    });
+                            } else {
+                                std::stable_sort(
+                                    items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
+                                        IVideoJob* l = state.Jobs.JobsVector[lhs].get();
+                                        IVideoJob* r = state.Jobs.JobsVector[rhs].get();
+                                        return l->JobStatus > r->JobStatus;
+                                    });
+                            }
+                            break;
+                        default: break;
+                    }
+                }
                 sort_specs->SpecsDirty = false;
             }
             items_need_sort = false;
