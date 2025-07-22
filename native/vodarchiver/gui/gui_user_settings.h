@@ -29,6 +29,9 @@ struct GuiUserSettings {
     std::string CustomPersistentDataPath;
     std::string TwitchClientId;
     std::string TwitchClientSecret;
+    uint64_t MinimumFreeSpaceBytes = 5368709120u;
+    uint64_t AbsoluteMinimumFreeSpaceBytes = 52428800u;
+    bool UseCustomPersistentDataPath = false;
 };
 
 void InitGuiUserSettings(GuiUserSettings& settings);

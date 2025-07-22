@@ -15,6 +15,7 @@
 #include "imgui.h"
 
 #include "gui_fetch_window.h"
+#include "gui_settings_window.h"
 #include "gui_state.h"
 #include "gui_user_settings.h"
 #include "gui_video_split_window.h"
@@ -55,6 +56,9 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
             }
             if (ImGui::MenuItem("Split videos...")) {
                 state.Windows.emplace_back(std::make_unique<GUI::VideoSplitWindow>(state));
+            }
+            if (ImGui::MenuItem("Settings...")) {
+                state.Windows.emplace_back(std::make_unique<GUI::SettingsWindow>(state));
             }
             ImGui::EndMenu();
         }

@@ -13,6 +13,7 @@
 #include "util/file.h"
 #include "util/ini.h"
 #include "util/ini_writer.h"
+#include "util/number.h"
 #include "util/system.h"
 #include "util/text.h"
 
@@ -69,25 +70,42 @@ bool LoadUserSettingsFromIni(GuiUserSettings& settings, const HyoutaUtils::Ini::
             settings.UseCustomFileBrowser = GuiUserSettings_UseCustomFileBrowser::Auto;
         }
     }
-    auto* targetFolderPath = ini.FindValue("Paths", "TargetFolderPath");
+    auto* targetFolderPath = ini.FindValue("VodArchiver", "TargetFolderPath");
     if (targetFolderPath) {
         settings.CustomTargetFolderPath = std::string(targetFolderPath->Value);
     }
-    auto* tempFolderPath = ini.FindValue("Paths", "TempFolderPath");
+    auto* tempFolderPath = ini.FindValue("VodArchiver", "TempFolderPath");
     if (tempFolderPath) {
         settings.CustomTempFolderPath = std::string(tempFolderPath->Value);
     }
-    auto* persistentDataPath = ini.FindValue("Paths", "PersistentDataPath");
+    auto* overridePersistentDataPath = ini.FindValue("VodArchiver", "OverridePersistentDataPath");
+    if (overridePersistentDataPath) {
+        settings.UseCustomPersistentDataPath = HyoutaUtils::TextUtils::CaseInsensitiveEquals(
+            overridePersistentDataPath->Value, "true");
+    }
+    auto* persistentDataPath = ini.FindValue("VodArchiver", "PersistentDataPath");
     if (persistentDataPath) {
         settings.CustomPersistentDataPath = std::string(persistentDataPath->Value);
     }
-    auto* twitchClientId = ini.FindValue("Paths", "TwitchClientId");
+    auto* twitchClientId = ini.FindValue("VodArchiver", "TwitchClientId");
     if (twitchClientId) {
         settings.TwitchClientId = std::string(twitchClientId->Value);
     }
-    auto* twitchClientSecret = ini.FindValue("Paths", "TwitchClientSecret");
+    auto* twitchClientSecret = ini.FindValue("VodArchiver", "TwitchClientSecret");
     if (twitchClientSecret) {
         settings.TwitchClientSecret = std::string(twitchClientSecret->Value);
+    }
+    auto* minimumFreeSpaceBytes = ini.FindValue("VodArchiver", "MinimumFreeSpaceBytes");
+    if (minimumFreeSpaceBytes) {
+        settings.MinimumFreeSpaceBytes =
+            HyoutaUtils::NumberUtils::ParseUInt64(minimumFreeSpaceBytes->Value)
+                .value_or(5368709120u);
+    }
+    auto* absMinimumFreeSpaceBytes = ini.FindValue("VodArchiver", "AbsoluteMinimumFreeSpaceBytes");
+    if (absMinimumFreeSpaceBytes) {
+        settings.AbsoluteMinimumFreeSpaceBytes =
+            HyoutaUtils::NumberUtils::ParseUInt64(absMinimumFreeSpaceBytes->Value)
+                .value_or(52428800u);
     }
     return true;
 }
@@ -117,11 +135,15 @@ bool WriteUserSettingsToIni(const GuiUserSettings& settings, HyoutaUtils::Ini::I
         settings.UseCustomFileBrowser == GuiUserSettings_UseCustomFileBrowser::Always  ? "Always"
         : settings.UseCustomFileBrowser == GuiUserSettings_UseCustomFileBrowser::Never ? "Never"
                                                                                        : "Auto");
-    ini.SetString("Paths", "TargetFolderPath", settings.CustomTargetFolderPath);
-    ini.SetString("Paths", "TempFolderPath", settings.CustomTempFolderPath);
-    ini.SetString("Paths", "PersistentDataPath", settings.CustomPersistentDataPath);
-    ini.SetString("Paths", "TwitchClientId", settings.TwitchClientId);
-    ini.SetString("Paths", "TwitchClientSecret", settings.TwitchClientSecret);
+    ini.SetString("VodArchiver", "TargetFolderPath", settings.CustomTargetFolderPath);
+    ini.SetString("VodArchiver", "TempFolderPath", settings.CustomTempFolderPath);
+    ini.SetBool("VodArchiver", "OverridePersistentDataPath", settings.UseCustomPersistentDataPath);
+    ini.SetString("VodArchiver", "PersistentDataPath", settings.CustomPersistentDataPath);
+    ini.SetString("VodArchiver", "TwitchClientId", settings.TwitchClientId);
+    ini.SetString("VodArchiver", "TwitchClientSecret", settings.TwitchClientSecret);
+    ini.SetUInt64("VodArchiver", "MinimumFreeSpaceBytes", settings.MinimumFreeSpaceBytes);
+    ini.SetUInt64(
+        "VodArchiver", "AbsoluteMinimumFreeSpaceBytes", settings.AbsoluteMinimumFreeSpaceBytes);
     return true;
 }
 
@@ -149,7 +171,7 @@ const std::string& GetTempFolderPath(const GuiUserSettings& settings) {
 }
 
 const std::string& GetPersistentDataPath(const GuiUserSettings& settings) {
-    if (!settings.CustomPersistentDataPath.empty()) {
+    if (settings.UseCustomPersistentDataPath && !settings.CustomPersistentDataPath.empty()) {
         return settings.CustomPersistentDataPath;
     }
     return settings.DefaultPersistentDataPath;

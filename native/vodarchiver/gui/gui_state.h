@@ -30,6 +30,7 @@ struct GuiState {
     // sure if there's a better way to do this with imgui?
     VodArchiver::GUI::WindowIdTracker WindowIdsFetchWindow;
     VodArchiver::GUI::WindowIdTracker WindowIdsVideoSplitWindow;
+    VodArchiver::GUI::WindowIdTracker WindowIdsSettingsWindow;
 
     // User settings, like recently used paths.
     VodArchiver::GuiUserSettings GuiSettings;
