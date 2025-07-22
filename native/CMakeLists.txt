@@ -390,6 +390,8 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/gui/gui_file_browser.h
 	vodarchiver/gui/gui_fonts.cpp
 	vodarchiver/gui/gui_fonts.h
+	vodarchiver/gui/gui_log_window.cpp
+	vodarchiver/gui/gui_log_window.h
 	vodarchiver/gui/gui_settings_window.cpp
 	vodarchiver/gui/gui_settings_window.h
 	vodarchiver/gui/gui_state.cpp

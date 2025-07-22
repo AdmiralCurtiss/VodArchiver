@@ -26,6 +26,7 @@ FetchTaskGroup::FetchTaskGroup(
     JobConfig* jobConfig,
     TaskCancellation* cancellationToken,
     std::function<void(std::unique_ptr<IVideoInfo> info)> enqueueJobCallback,
+    std::function<void(std::string_view msg)> addStatusMessageCallback,
     std::function<void()> saveUserInfosCallback,
     uint32_t rngSeed)
   : RNG(rngSeed)
@@ -35,6 +36,7 @@ FetchTaskGroup::FetchTaskGroup(
   , JobConf(jobConfig)
   , CancellationToken(cancellationToken)
   , EnqueueJobCallback(std::move(enqueueJobCallback))
+  , AddStatusMessageCallback(std::move(addStatusMessageCallback))
   , SaveUserInfosCallback(std::move(saveUserInfosCallback)) {
     FetchRunnerThread = std::thread(std::bind(&FetchTaskGroup::RunFetchRunnerThreadFunc, this));
 }
@@ -180,7 +182,7 @@ bool FetchTaskGroup::WriteBack(IUserInfo* userInfo, size_t expectedIndex, DateTi
 }
 
 void FetchTaskGroup::AddStatusMessage(std::string_view msg) {
-    // TODO
+    AddStatusMessageCallback(msg);
 }
 
 void FetchTaskGroup::WaitForFetchRunnerThreadToEnd() {

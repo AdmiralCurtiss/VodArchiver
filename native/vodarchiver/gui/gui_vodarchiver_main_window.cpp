@@ -15,6 +15,7 @@
 #include "imgui.h"
 
 #include "gui_fetch_window.h"
+#include "gui_log_window.h"
 #include "gui_settings_window.h"
 #include "gui_state.h"
 #include "gui_user_settings.h"
@@ -59,6 +60,14 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
             }
             if (ImGui::MenuItem("Settings...")) {
                 state.Windows.emplace_back(std::make_unique<GUI::SettingsWindow>(state));
+            }
+            if (ImGui::MenuItem("Fetch Log...")) {
+                std::string msg;
+                {
+                    std::lock_guard lock(state.FetchTaskStatusMessageLock);
+                    msg = state.FetchTaskStatusMessages;
+                }
+                state.Windows.emplace_back(std::make_unique<GUI::LogWindow>(state, std::move(msg)));
             }
             ImGui::EndMenu();
         }

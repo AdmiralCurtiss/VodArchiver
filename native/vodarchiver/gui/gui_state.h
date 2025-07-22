@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <mutex>
+#include <string>
 #include <vector>
 
 #include "imgui.h"
@@ -31,6 +32,7 @@ struct GuiState {
     VodArchiver::GUI::WindowIdTracker WindowIdsFetchWindow;
     VodArchiver::GUI::WindowIdTracker WindowIdsVideoSplitWindow;
     VodArchiver::GUI::WindowIdTracker WindowIdsSettingsWindow;
+    VodArchiver::GUI::WindowIdTracker WindowIdsLogWindow;
 
     // User settings, like recently used paths.
     VodArchiver::GuiUserSettings GuiSettings;
@@ -47,6 +49,9 @@ struct GuiState {
     std::vector<std::unique_ptr<FetchTaskGroup>> FetchTaskGroups;
 
     VodArchiver::JobConfig JobConf;
+
+    std::recursive_mutex FetchTaskStatusMessageLock;
+    std::string FetchTaskStatusMessages;
 
     ~GuiState();
 };

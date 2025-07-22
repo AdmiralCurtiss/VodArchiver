@@ -1,5 +1,6 @@
 #include "main_gui.h"
 
+#include <bit>
 #include <string_view>
 
 #include "imgui.h"
@@ -111,11 +112,19 @@ int RunGui(int argc, char** argvUtf8) {
                         AddJobToTaskGroupIfAutoenqueue(state.VideoTaskGroups, newJob);
                     });
                 },
+                [&](std::string_view msg) {
+                    // FIXME: This needs a cap. Or maybe we don't store these at all and just throw
+                    // them to stdout?
+                    std::lock_guard lock(state.FetchTaskStatusMessageLock);
+                    state.FetchTaskStatusMessages.push_back('\n');
+                    state.FetchTaskStatusMessages += msg;
+                },
                 [&]() {
                     // TODO: invoke a save of UserInfos here
                 },
                 rngSeed));
-            rngSeed = ((rngSeed >> 3) | (rngSeed << 29));
+            rngSeed = std::rotr(rngSeed, 3);
+            ++rngSeed;
         };
         make_fetch_task_group({{ServiceVideoCategoryType::TwitchRecordings,
                                 ServiceVideoCategoryType::TwitchHighlights}});

@@ -25,6 +25,7 @@ struct FetchTaskGroup {
     TaskCancellation* CancellationToken = nullptr;
 
     std::function<void(std::unique_ptr<IVideoInfo> info)> EnqueueJobCallback;
+    std::function<void(std::string_view msg)> AddStatusMessageCallback;
     std::function<void()> SaveUserInfosCallback;
 
     std::thread FetchRunnerThread;
@@ -35,6 +36,7 @@ struct FetchTaskGroup {
                    JobConfig* jobConfig,
                    TaskCancellation* cancellationToken,
                    std::function<void(std::unique_ptr<IVideoInfo> info)> enqueueJobCallback,
+                   std::function<void(std::string_view msg)> addStatusMessageCallback,
                    std::function<void()> saveUserInfosCallback,
                    uint32_t rngSeed);
     ~FetchTaskGroup();
