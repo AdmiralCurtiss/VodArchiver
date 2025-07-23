@@ -219,9 +219,10 @@ IVideoJob* VideoTaskGroup::DequeueVideoJobForTask() {
     return nullptr;
 }
 
-void VideoTaskGroup::Add(IVideoJob* job) {
+void VideoTaskGroup::Add(IVideoJob* job, bool startImmediately) {
     auto wj = std::make_unique<WaitingVideoJob>();
     wj->Job = job;
+    wj->StartImmediately = startImmediately;
     Add(std::move(wj));
 }
 

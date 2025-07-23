@@ -478,13 +478,89 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                             ImGui::OpenPopup("JobActionsPopup");
                         }
                         if (ImGui::BeginPopup("JobActionsPopup")) {
-                            if (ImGui::Selectable("Enqueue")) {
-                                auto service = item->GetVideoInfo()->GetService();
+                            auto service = item->GetVideoInfo()->GetService();
+                            auto is_in_queue = [&]() -> bool {
                                 for (auto& g : state.VideoTaskGroups) {
                                     if (g->Service == service) {
-                                        g->Add(item);
-                                        break;
+                                        return g->IsInQueue(item);
                                     }
+                                }
+                                return false;
+                            };
+
+                            auto uir = item->GetUserInputRequest();
+                            if (uir) {
+                                if (ImGui::BeginMenu(uir->GetQuestion().c_str())) {
+                                    for (auto& option : uir->GetOptions()) {
+                                        if (ImGui::MenuItem(option.c_str())) {
+                                            uir->SelectOption(option);
+                                        }
+                                    }
+                                    ImGui::EndMenu();
+                                }
+                            }
+
+                            if (item->JobStatus == VideoJobStatus::NotStarted
+                                || item->JobStatus == VideoJobStatus::Dead) {
+                                if (is_in_queue()) {
+                                    if (ImGui::Selectable("Dequeue")) {
+                                        for (auto& g : state.VideoTaskGroups) {
+                                            if (g->Service == service) {
+                                                g->Dequeue(item);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (ImGui::Selectable("Enqueue")) {
+                                        for (auto& g : state.VideoTaskGroups) {
+                                            if (g->Service == service) {
+                                                g->Add(item);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                if (ImGui::Selectable("Download now")) {
+                                    for (auto& g : state.VideoTaskGroups) {
+                                        if (g->Service == service) {
+                                            g->Add(item, true);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            if (ImGui::Selectable("Copy Video ID")) {
+                                std::string id = item->GetVideoInfo()->GetVideoId();
+                                ImGui::SetClipboardText(id.c_str());
+                            }
+                            if (ImGui::Selectable("Copy Output Filename")) {
+                                std::string fn = item->GenerateOutputFilename();
+                                ImGui::SetClipboardText(fn.c_str());
+                            }
+                            if (ImGui::Selectable("Copy Status")) {
+                                const std::string& status = item->GetStatus();
+                                ImGui::SetClipboardText(status.c_str());
+                            }
+                            if (item->JobStatus == VideoJobStatus::Running) {
+                                if (ImGui::Selectable("Stop")) {
+                                    for (auto& g : state.VideoTaskGroups) {
+                                        if (g->Service == service) {
+                                            g->CancelJob(item);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            if (item->JobStatus == VideoJobStatus::NotStarted) {
+                                if (ImGui::Selectable("Kill")) {
+                                    item->JobStatus = VideoJobStatus::Dead;
+                                    item->_Status = "[Manually killed] " + item->_Status;
+                                }
+                            }
+                            if (item->JobStatus != VideoJobStatus::Running) {
+                                if (ImGui::Selectable("Remove")) {
+                                    // TODO: Figure out a way to do this thread-safely...
                                 }
                             }
                             ImGui::EndPopup();
