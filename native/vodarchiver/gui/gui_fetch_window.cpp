@@ -510,7 +510,7 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Actions)) {
-                        if (ImGui::Button("Download")) {
+                        if (ImGui::SmallButton("Download")) {
                             CreateAndEnqueueJob(state.Jobs, item->Clone(), [&](IVideoJob* newJob) {
                                 AddJobToTaskGroupIfAutoenqueue(state.VideoTaskGroups, newJob);
                             });
