@@ -61,14 +61,6 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
             if (ImGui::MenuItem("Settings...")) {
                 state.Windows.emplace_back(std::make_unique<GUI::SettingsWindow>(state));
             }
-            if (ImGui::MenuItem("Fetch Log...")) {
-                std::string msg;
-                {
-                    std::lock_guard lock(state.FetchTaskStatusMessageLock);
-                    msg = state.FetchTaskStatusMessages;
-                }
-                state.Windows.emplace_back(std::make_unique<GUI::LogWindow>(state, std::move(msg)));
-            }
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Config")) {
@@ -575,9 +567,127 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
         }
     }
 
+    // bottom bar
 
-    if (ImGuiUtils::ButtonRightAlign("Close")) {
-        return false;
+    if (ImGui::Button("Log")) {
+        std::string msg;
+        {
+            std::lock_guard lock(state.FetchTaskStatusMessageLock);
+            msg = state.FetchTaskStatusMessages;
+        }
+        state.Windows.emplace_back(std::make_unique<GUI::LogWindow>(state, std::move(msg)));
+    }
+
+    ImGui::SameLine();
+    {
+        std::lock_guard lock(state.FetchTaskStatusMessageLock);
+        auto pos = state.FetchTaskStatusMessages.rfind('\n');
+        const char* str = state.FetchTaskStatusMessages.c_str();
+        if (pos != std::string::npos) {
+            str = (&state.FetchTaskStatusMessages[pos]) + 1;
+        }
+        ImGui::TextUnformatted(
+            str, state.FetchTaskStatusMessages.data() + state.FetchTaskStatusMessages.size());
+    }
+
+    ImGui::SameLine();
+    {
+        static constexpr char queueSettingsLabel[] = "Queue Settings...";
+        static constexpr char whenFinishedLabel[] = "when downloads are finished";
+        float qTextWidth = ImGui::CalcTextSize(queueSettingsLabel, nullptr, true).x;
+        float wTextWidth = ImGui::CalcTextSize(whenFinishedLabel, nullptr, true).x;
+        float qButtonWidth = qTextWidth + (ImGui::GetStyle().FramePadding.x * 2.0f);
+        float dropdownWidth = 100.0f * state.CurrentDpi;
+
+        ImGui::SetCursorPosX(
+            ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x
+            - (qButtonWidth + ImGui::GetStyle().ItemSpacing.x * 2.0 + dropdownWidth + wTextWidth));
+        if (ImGui::Button(queueSettingsLabel)) {
+            ImGui::OpenPopup("QueueSettingsPopup");
+        }
+        if (ImGui::BeginPopup("QueueSettingsPopup")) {
+            if (ImGui::Selectable("Enqueue all", false, ImGuiSelectableFlags_DontClosePopups)) {
+                std::lock_guard lock(state.Jobs.JobsLock);
+                for (auto& job : state.Jobs.JobsVector) {
+                    if (job->JobStatus == VideoJobStatus::NotStarted) {
+                        StreamService service = job->GetVideoInfo()->GetService();
+                        if (static_cast<int>(service) >= 0
+                            && static_cast<size_t>(static_cast<int>(service))
+                                   < state.VideoTaskGroups.size()) {
+                            state.VideoTaskGroups[static_cast<size_t>(static_cast<int>(service))]
+                                ->Add(job.get());
+                        }
+                    }
+                }
+            }
+            if (ImGui::BeginMenu("Enqueue only...")) {
+                ImGui::PushID("EnqueueOnlyOptions");
+                for (int i = 0; i < static_cast<int>(StreamService::COUNT); ++i) {
+                    ImGui::PushID(i);
+                    std::string_view ss = StreamServiceToString(static_cast<StreamService>(i));
+                    if (ImGui::Selectable(ss.data(), false, ImGuiSelectableFlags_DontClosePopups)) {
+                        std::lock_guard lock(state.Jobs.JobsLock);
+                        for (auto& job : state.Jobs.JobsVector) {
+                            if (job->JobStatus == VideoJobStatus::NotStarted
+                                && job->GetVideoInfo()->GetService()
+                                       == static_cast<StreamService>(i)) {
+                                state.VideoTaskGroups[i]->Add(job.get());
+                            }
+                        }
+                    }
+                    ImGui::PopID();
+                }
+                ImGui::PopID();
+                ImGui::EndMenu();
+            }
+            if (ImGui::Selectable("Dequeue all", false, ImGuiSelectableFlags_DontClosePopups)) {
+                for (auto& g : state.VideoTaskGroups) {
+                    g->DequeueAll();
+                }
+            }
+            if (ImGui::BeginMenu("Dequeue only...")) {
+                ImGui::PushID("DequeueOnlyOptions");
+                for (int i = 0; i < static_cast<int>(StreamService::COUNT); ++i) {
+                    ImGui::PushID(i);
+                    std::string_view ss = StreamServiceToString(static_cast<StreamService>(i));
+                    if (ImGui::Selectable(ss.data(), false, ImGuiSelectableFlags_DontClosePopups)) {
+                        state.VideoTaskGroups[i]->DequeueAll();
+                    }
+                    ImGui::PopID();
+                }
+                ImGui::PopID();
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Auto-enqueue...")) {
+                ImGui::PushID("AutoEnqueueOptions");
+                for (int i = 0; i < static_cast<int>(StreamService::COUNT); ++i) {
+                    ImGui::PushID(i);
+                    std::string_view ss = StreamServiceToString(static_cast<StreamService>(i));
+                    ImGui::Selectable(ss.data(),
+                                      &state.VideoTaskGroups[i]->AutoEnqueue,
+                                      ImGuiSelectableFlags_DontClosePopups);
+                    ImGui::PopID();
+                }
+                ImGui::PopID();
+                ImGui::EndMenu();
+            }
+            ImGui::EndPopup();
+        }
+
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x
+                             - (ImGui::GetStyle().ItemSpacing.x + dropdownWidth + wTextWidth));
+        ImGui::SetNextItemWidth(dropdownWidth);
+        if (ImGui::BeginCombo("##WhenDone", "Do nothing", ImGuiComboFlags_PopupAlignLeft)) {
+            // TODO
+            ImGui::EndCombo();
+        }
+
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x
+                             - wTextWidth);
+        ImGui::TextUnformatted(whenFinishedLabel,
+                               whenFinishedLabel + (sizeof(whenFinishedLabel) - 1));
     }
 
     return true;
