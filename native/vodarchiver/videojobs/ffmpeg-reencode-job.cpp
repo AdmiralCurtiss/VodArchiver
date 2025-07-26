@@ -1,6 +1,7 @@
 #include "ffmpeg-reencode-job.h"
 
 #include <memory>
+#include <utility>
 
 #include "util/file.h"
 
@@ -153,7 +154,9 @@ ResultType FFMpegReencodeJob::Run(JobConfig& jobConfig, TaskCancellation& cancel
         StallWrite(jobConfig,
                    newfile,
                    HyoutaUtils::IO::GetFilesize(std::string_view(*encodeinput)).value_or(0),
-                   cancellationToken);
+                   cancellationToken,
+                   ShouldStallWriteRegularFile,
+                   [this](std::string status) { SetStatus(std::move(status)); });
         if (cancellationToken.IsCancellationRequested()) {
             return ResultType::Cancelled;
         }

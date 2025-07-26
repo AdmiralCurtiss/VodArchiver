@@ -96,20 +96,6 @@ std::string TwitchChatReplayJob::GenerateOutputFilename() {
     return GetTargetFilenameWithoutExtension() + ".json";
 }
 
-bool TwitchChatReplayJob::ShouldStallWrite(JobConfig& jobConfig,
-                                           std::string_view path,
-                                           uint64_t filesize) const {
-    auto freeSpace = GetFreeDiskSpaceAtPath(path);
-    if (!freeSpace.has_value()) {
-        return false;
-    }
-
-    std::lock_guard lock(jobConfig.Mutex);
-    return *freeSpace
-           <= (std::min(jobConfig.AbsoluteMinimumFreeSpaceBytes, jobConfig.MinimumFreeSpaceBytes)
-               + filesize);
-}
-
 static std::string PathCombine(std::string_view lhs, std::string_view rhs) {
     std::string result(lhs);
     HyoutaUtils::IO::AppendPathElement(result, rhs);

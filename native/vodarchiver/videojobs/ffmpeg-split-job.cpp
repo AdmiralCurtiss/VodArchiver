@@ -132,7 +132,9 @@ ResultType FFMpegSplitJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
         StallWrite(jobConfig,
                    exampleOutname,
                    HyoutaUtils::IO::GetFilesize(std::string_view(inname)).value_or(0),
-                   cancellationToken);
+                   cancellationToken,
+                   ShouldStallWriteRegularFile,
+                   [this](std::string status) { SetStatus(std::move(status)); });
         int retval = RunProgram(
             "ffmpeg_split.exe", args, [](std::string_view sv) {}, [](std::string_view sv) {});
         if (retval != 0) {

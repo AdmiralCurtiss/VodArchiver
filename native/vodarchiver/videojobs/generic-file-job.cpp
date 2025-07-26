@@ -182,7 +182,9 @@ ResultType GenericFileJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
         StallWrite(jobConfig,
                    targetFilepath,
                    HyoutaUtils::IO::GetFilesize(std::string_view(movedFilepath)).value_or(0),
-                   cancellationToken);
+                   cancellationToken,
+                   ShouldStallWriteRegularFile,
+                   [this](std::string status) { SetStatus(std::move(status)); });
         if (cancellationToken.IsCancellationRequested()) {
             return ResultType::Cancelled;
         }

@@ -211,7 +211,12 @@ ResultType TwitchVideoJob::Download(JobConfig& jobConfig,
                     continue;
                 }
 
-                StallWrite(jobConfig, outpath_temp, data->Data.size(), cancellationToken);
+                StallWrite(jobConfig,
+                           outpath_temp,
+                           data->Data.size(),
+                           cancellationToken,
+                           ShouldStallWriteRegularFile,
+                           [this](std::string status) { SetStatus(std::move(status)); });
                 if (!HyoutaUtils::IO::WriteFileAtomic(
                         std::string_view(outpath_temp), data->Data.data(), data->Data.size())) {
                     return ResultType::Failure;
@@ -226,7 +231,9 @@ ResultType TwitchVideoJob::Download(JobConfig& jobConfig,
                 StallWrite(jobConfig,
                            outpath,
                            HyoutaUtils::IO::GetFilesize(std::string_view(outpath_temp)).value_or(0),
-                           cancellationToken);
+                           cancellationToken,
+                           ShouldStallWriteRegularFile,
+                           [this](std::string status) { SetStatus(std::move(status)); });
                 if (cancellationToken.IsCancellationRequested()) {
                     return ResultType::Cancelled;
                 }
@@ -690,7 +697,12 @@ ResultType TwitchVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
                 if (HyoutaUtils::IO::FileExists(std::string_view(combinedTempname))) {
                     HyoutaUtils::IO::DeleteFile(std::string_view(combinedTempname));
                 }
-                StallWrite(jobConfig, combinedFilename, expectedTargetFilesize, cancellationToken);
+                StallWrite(jobConfig,
+                           combinedFilename,
+                           expectedTargetFilesize,
+                           cancellationToken,
+                           ShouldStallWriteRegularFile,
+                           [this](std::string status) { SetStatus(std::move(status)); });
                 if (cancellationToken.IsCancellationRequested()) {
                     return ResultType::Cancelled;
                 }
@@ -743,7 +755,9 @@ ResultType TwitchVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
             StallWrite(jobConfig,
                        remuxedFilename,
                        HyoutaUtils::IO::GetFilesize(std::string_view(combinedFilename)).value_or(0),
-                       cancellationToken);
+                       cancellationToken,
+                       ShouldStallWriteRegularFile,
+                       [this](std::string status) { SetStatus(std::move(status)); });
             if (cancellationToken.IsCancellationRequested()) {
                 return ResultType::Cancelled;
             }

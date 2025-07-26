@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -83,16 +84,19 @@ public:
 
     virtual ResultType Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) = 0;
 
-protected:
-    virtual bool
-        ShouldStallWrite(JobConfig& jobConfig, std::string_view path, uint64_t filesize) const;
-
-public:
-    void StallWrite(JobConfig& jobConfig,
-                    std::string_view path,
-                    uint64_t filesize,
-                    TaskCancellation& cancellationToken);
-
     virtual std::string GenerateOutputFilename() = 0;
 };
+
+bool ShouldStallWriteRegularFile(JobConfig& jobConfig, std::string_view path, uint64_t filesize);
+bool ShouldStallWriteSmallFile(JobConfig& jobConfig, std::string_view path, uint64_t filesize);
+
+void StallWrite(
+    JobConfig& jobConfig,
+    std::string_view path,
+    uint64_t filesize,
+    TaskCancellation& cancellationToken,
+    const std::function<bool(JobConfig& jobConfig, std::string_view path, uint64_t filesize)>&
+        shouldStallWriteCallback,
+    const std::function<void(std::string status)>& setStatusCallback);
+
 } // namespace VodArchiver

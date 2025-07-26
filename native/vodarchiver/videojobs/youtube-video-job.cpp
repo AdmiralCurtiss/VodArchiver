@@ -73,7 +73,12 @@ ResultType YoutubeVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancella
             }
             SetStatus("Running youtube-dl...");
             // don't know expected filesize, so hope we have a sensible value in minimum free space
-            StallWrite(jobConfig, tempFilepath, 0, cancellationToken);
+            StallWrite(jobConfig,
+                       tempFilepath,
+                       0,
+                       cancellationToken,
+                       ShouldStallWriteRegularFile,
+                       [this](std::string status) { SetStatus(std::move(status)); });
             if (cancellationToken.IsCancellationRequested()) {
                 return ResultType::Cancelled;
             }

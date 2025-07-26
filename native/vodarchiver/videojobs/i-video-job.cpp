@@ -1,7 +1,14 @@
 #include "i-video-job.h"
 
+#include <algorithm>
+#include <cstdint>
+#include <mutex>
+#include <optional>
+#include <string_view>
+
 #include "util/text.h"
 
+#include "vodarchiver/job_config.h"
 #include "vodarchiver/system_util.h"
 
 namespace VodArchiver {
@@ -100,9 +107,7 @@ void IVideoJob::SetVideoInfo(std::shared_ptr<IVideoInfo> videoInfo) {
     _VideoInfo = videoInfo;
 }
 
-bool IVideoJob::ShouldStallWrite(JobConfig& jobConfig,
-                                 std::string_view path,
-                                 uint64_t filesize) const {
+bool ShouldStallWriteRegularFile(JobConfig& jobConfig, std::string_view path, uint64_t filesize) {
     auto freeSpace = GetFreeDiskSpaceAtPath(path);
     if (!freeSpace.has_value()) {
         return false;
@@ -111,19 +116,34 @@ bool IVideoJob::ShouldStallWrite(JobConfig& jobConfig,
     std::lock_guard lock(jobConfig.Mutex);
     return *freeSpace <= (jobConfig.MinimumFreeSpaceBytes + filesize);
 }
+bool ShouldStallWriteSmallFile(JobConfig& jobConfig, std::string_view path, uint64_t filesize) {
+    auto freeSpace = GetFreeDiskSpaceAtPath(path);
+    if (!freeSpace.has_value()) {
+        return false;
+    }
 
-void IVideoJob::StallWrite(JobConfig& jobConfig,
-                           std::string_view path,
-                           uint64_t filesize,
-                           TaskCancellation& cancellationToken) {
-    if (ShouldStallWrite(jobConfig, path, filesize)) {
-        SetStatus("Not enough free space, stalling...");
+    std::lock_guard lock(jobConfig.Mutex);
+    return *freeSpace
+           <= (std::min(jobConfig.AbsoluteMinimumFreeSpaceBytes, jobConfig.MinimumFreeSpaceBytes)
+               + filesize);
+}
+
+void StallWrite(
+    JobConfig& jobConfig,
+    std::string_view path,
+    uint64_t filesize,
+    TaskCancellation& cancellationToken,
+    const std::function<bool(JobConfig& jobConfig, std::string_view path, uint64_t filesize)>&
+        shouldStallWriteCallback,
+    const std::function<void(std::string status)>& setStatusCallback) {
+    if (shouldStallWriteCallback(jobConfig, path, filesize)) {
+        setStatusCallback("Not enough free space, stalling...");
         do {
             if (cancellationToken.IsCancellationRequested()) {
                 return;
             }
             cancellationToken.DelayFor(std::chrono::seconds(10));
-        } while (ShouldStallWrite(jobConfig, path, filesize));
+        } while (shouldStallWriteCallback(jobConfig, path, filesize));
     }
 }
 
