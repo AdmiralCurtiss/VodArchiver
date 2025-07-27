@@ -68,37 +68,48 @@ static std::string GenerateOutputName(std::string_view inputName, std::string_vi
 
 static ResultType
     RunSplitJob(FFMpegSplitJob& job, JobConfig& jobConfig, TaskCancellation& cancellationToken) {
-    job.JobStatus = VideoJobStatus::Running;
-    job.SetStatus("Checking files...");
+    std::unique_ptr<IVideoInfo> videoInfo;
+    std::string splitTimes;
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.JobStatus = VideoJobStatus::Running;
+        job.TextStatus = "Checking files...";
+        videoInfo = job.VideoInfo->Clone();
+        splitTimes = job.SplitTimes;
+    }
 
     if (cancellationToken.IsCancellationRequested()) {
         return ResultType::Cancelled;
     }
 
-    std::string originalpath = HyoutaUtils::IO::GetAbsolutePath(job.VideoInfo->GetVideoId());
+    std::string originalpath = HyoutaUtils::IO::GetAbsolutePath(videoInfo->GetVideoId());
     std::string newdirpath(HyoutaUtils::IO::GetDirectoryName(originalpath));
     HyoutaUtils::IO::AppendPathElement(newdirpath, std::format("{}", DateTime::UtcNow().Data));
     if (HyoutaUtils::IO::Exists(std::string_view(newdirpath))) {
-        job.SetStatus(
-            std::format("File or directory at {} already exists, cancelling.", newdirpath));
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus =
+            std::format("File or directory at {} already exists, cancelling.", newdirpath);
         return ResultType::Failure;
     }
     if (!HyoutaUtils::IO::CreateDirectory(std::string_view(newdirpath))) {
-        job.SetStatus(std::format("Failed to create directory at {}, cancelling.", newdirpath));
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = std::format("Failed to create directory at {}, cancelling.", newdirpath);
         return ResultType::Failure;
     }
     std::string inname = newdirpath;
     HyoutaUtils::IO::AppendPathElement(inname, HyoutaUtils::IO::GetFileName(originalpath));
     if (HyoutaUtils::IO::Exists(std::string_view(inname))) {
-        job.SetStatus(std::format("File or directory at {} already exists, cancelling.", inname));
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = std::format("File or directory at {} already exists, cancelling.", inname);
         return ResultType::Failure;
     }
     if (!HyoutaUtils::IO::Move(originalpath, inname, false)) {
-        job.SetStatus(std::format("Moving to {} failed, cancelling.", inname));
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = std::format("Moving to {} failed, cancelling.", inname);
         return ResultType::Failure;
     }
 
-    std::string outname = GenerateOutputName(inname, job.VideoInfo->GetVideoId());
+    std::string outname = GenerateOutputName(inname, videoInfo->GetVideoId());
 
     std::vector<std::string> args;
     args.push_back("-i");
@@ -110,7 +121,7 @@ static ResultType
     args.push_back("-f");
     args.push_back("segment");
     args.push_back("-segment_times");
-    args.push_back(job.SplitTimes);
+    args.push_back(splitTimes);
     args.push_back(outname);
     args.push_back("-start_number");
     args.push_back("1");
@@ -124,17 +135,24 @@ static ResultType
             return ResultType::Cancelled;
         }
 
-        job.SetStatus("Splitting...");
+        {
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = "Splitting...";
+        }
         StallWrite(jobConfig,
                    exampleOutname,
                    HyoutaUtils::IO::GetFilesize(std::string_view(inname)).value_or(0),
                    cancellationToken,
                    ShouldStallWriteRegularFile,
-                   [&](std::string status) { job.SetStatus(std::move(status)); });
+                   [&](std::string status) {
+                       std::lock_guard lock(*jobConfig.JobsLock);
+                       job.TextStatus = std::move(status);
+                   });
         int retval = RunProgram(
             "ffmpeg_split.exe", args, [](std::string_view sv) {}, [](std::string_view sv) {});
         if (retval != 0) {
-            job.SetStatus(std::format("ffmpeg_split failed with return value {}", retval));
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = std::format("ffmpeg_split failed with return value {}", retval);
             return ResultType::Failure;
         }
     }
@@ -169,8 +187,11 @@ static ResultType
         }
     }
 
-    job.SetStatus("Done!");
-    job.JobStatus = VideoJobStatus::Finished;
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Done!";
+        job.JobStatus = VideoJobStatus::Finished;
+    }
     return ResultType::Success;
 }
 
