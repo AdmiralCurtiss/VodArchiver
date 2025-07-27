@@ -99,8 +99,7 @@ bool VideoSplitWindow::RenderFrame(GuiState& state) {
             std::string_view path = HyoutaUtils::TextUtils::StripToNull(InputPath);
             std::string_view times = HyoutaUtils::TextUtils::StripToNull(SplitTimes);
             if (!path.empty() && !times.empty()) {
-                auto job = std::make_unique<FFMpegSplitJob>(
-                    std::string(path), std::string(times), nullptr);
+                auto job = std::make_unique<FFMpegSplitJob>(std::string(path), std::string(times));
                 EnqueueJob(state.Jobs, std::move(job), [&](IVideoJob* newJob) {
                     AddJobToTaskGroupIfAutoenqueue(state.VideoTaskGroups, newJob);
                 });

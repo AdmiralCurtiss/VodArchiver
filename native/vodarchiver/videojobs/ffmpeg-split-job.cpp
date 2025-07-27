@@ -12,18 +12,13 @@
 #include "util/text.h"
 
 #include "vodarchiver/exec.h"
-#include "vodarchiver/statusupdate/null-status-update.h"
 #include "vodarchiver/videoinfo/generic-video-info.h"
 
 namespace VodArchiver {
 FFMpegSplitJob::FFMpegSplitJob() {}
 
-FFMpegSplitJob::FFMpegSplitJob(std::string path,
-                               std::string splitTimes,
-                               std::shared_ptr<IStatusUpdate> statusUpdater) {
+FFMpegSplitJob::FFMpegSplitJob(std::string path, std::string splitTimes) {
     JobStatus = VideoJobStatus::NotStarted;
-    StatusUpdater =
-        statusUpdater == nullptr ? std::make_shared<NullStatusUpdate>() : std::move(statusUpdater);
     auto vi = std::make_unique<GenericVideoInfo>();
     vi->Service = StreamService::FFMpegJob;
     vi->VideoId = std::move(path);

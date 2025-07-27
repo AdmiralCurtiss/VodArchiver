@@ -293,11 +293,6 @@ target_sources(vodarchiver PRIVATE
 	vodarchiver/youtube_util.cpp
 	vodarchiver/youtube_util.h
 
-	vodarchiver/statusupdate/i-status-update.cpp
-	vodarchiver/statusupdate/i-status-update.h
-	vodarchiver/statusupdate/null-status-update.cpp
-	vodarchiver/statusupdate/null-status-update.h
-
 	vodarchiver/tasks/fetch-task-group.cpp
 	vodarchiver/tasks/fetch-task-group.h
 	vodarchiver/tasks/video-task-group.cpp

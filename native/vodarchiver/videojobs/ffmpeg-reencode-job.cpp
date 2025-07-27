@@ -7,7 +7,6 @@
 
 #include "vodarchiver/exec.h"
 #include "vodarchiver/ffmpeg_util.h"
-#include "vodarchiver/statusupdate/null-status-update.h"
 #include "vodarchiver/videoinfo/ffmpeg-reencode-job-video-info.h"
 #include "vodarchiver/videoinfo/generic-video-info.h"
 

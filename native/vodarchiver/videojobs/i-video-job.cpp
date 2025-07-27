@@ -74,9 +74,6 @@ const std::string& IVideoJob::GetStatus() const {
 
 void IVideoJob::SetStatus(std::string value) {
     _Status = value;
-    if (StatusUpdater) {
-        StatusUpdater->Update();
-    }
 }
 
 std::shared_ptr<IUserInputRequest> IVideoJob::GetUserInputRequest() const {

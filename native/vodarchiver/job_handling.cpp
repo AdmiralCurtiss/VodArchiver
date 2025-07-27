@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "vodarchiver/statusupdate/null-status-update.h"
 #include "vodarchiver/videoinfo/generic-video-info.h"
 #include "vodarchiver/videoinfo/i-video-info.h"
 #include "vodarchiver/videojobs/ffmpeg-reencode-job.h"
@@ -125,9 +124,6 @@ bool EnqueueJob(JobList& jobs,
             }
         }
 
-        job->StatusUpdater = std::make_unique<NullStatusUpdate>();
-        // .StatusUpdater =
-        //     new StatusUpdate.ObjectListViewStatusUpdate(ObjectListViewUpdater, job);
         job->Index = jobs.JobsVector.size();
         job->SetStatus("Waiting...");
         IVideoJob* jobptr = job.get();

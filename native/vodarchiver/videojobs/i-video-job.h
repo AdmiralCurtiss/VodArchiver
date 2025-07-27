@@ -9,7 +9,6 @@
 #include <string_view>
 #include <vector>
 
-#include "../statusupdate/i-status-update.h"
 #include "../videoinfo/i-video-info.h"
 
 #include "../job_config.h"
@@ -61,8 +60,6 @@ public:
     virtual std::string GetHumanReadableJobName() const;
 
 public:
-    std::shared_ptr<IStatusUpdate> StatusUpdater;
-
     size_t Index = 0; // FIXME: Is this even used for anything?
 
     VideoJobStatus JobStatus = VideoJobStatus::NotStarted;
