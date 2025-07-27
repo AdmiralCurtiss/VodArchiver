@@ -17,7 +17,6 @@ ResultType HitboxVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
 }
 
 std::string HitboxVideoJob::GenerateOutputFilename() {
-    auto vi = GetVideoInfo();
-    return GetFinalFilenameWithoutExtension(*vi) + ".mp4";
+    return GetFinalFilenameWithoutExtension(*this->VideoInfo) + ".mp4";
 }
 } // namespace VodArchiver

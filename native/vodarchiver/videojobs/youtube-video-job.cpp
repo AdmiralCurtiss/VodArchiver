@@ -224,7 +224,6 @@ ResultType YoutubeVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancella
 }
 
 std::string YoutubeVideoJob::GenerateOutputFilename() {
-    auto vi = GetVideoInfo();
-    return GetTargetFilename(*vi);
+    return GetTargetFilename(*this->VideoInfo);
 }
 } // namespace VodArchiver

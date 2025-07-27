@@ -39,7 +39,12 @@ struct RunningVideoJob {
 struct VideoTaskGroup {
     StreamService Service = StreamService::Unknown;
     std::vector<std::unique_ptr<WaitingVideoJob>> WaitingJobs;
+
+    // TODO: There's likely a deadlock between the JobsLock and the JobQueueLock because the
+    // VideoTaskGroup itself locks the JobQueueLock first and the JobsLock second, but some external
+    // code may call the Add(), IsInQueue(), etc. functions while holding the JobsLock. Fix this.
     std::recursive_mutex JobQueueLock;
+
     size_t MaxJobsRunningPerType = 0;
     JobConfig* JobConf = nullptr;
     TaskCancellation* CancellationToken = nullptr;

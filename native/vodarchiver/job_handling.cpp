@@ -92,7 +92,7 @@ bool CreateAndEnqueueJob(JobList& jobs,
     }
 
     if (info != nullptr) {
-        job->SetVideoInfo(std::move(info));
+        job->VideoInfo = std::move(info);
     }
 
     return EnqueueJob(jobs, std::move(job), enqueueCallback);
@@ -101,7 +101,7 @@ bool CreateAndEnqueueJob(JobList& jobs,
 bool EnqueueJob(JobList& jobs,
                 std::unique_ptr<IVideoJob> job,
                 const std::function<void(IVideoJob* job)>& enqueueCallback) {
-    auto newVideoInfo = job->GetVideoInfo();
+    IVideoInfo* newVideoInfo = job->VideoInfo.get();
     if (!newVideoInfo) {
         // invalid job
         return false;
@@ -116,7 +116,7 @@ bool EnqueueJob(JobList& jobs,
         // see if this job is already in the list, if yes we don't do anything
         for (size_t i = 0; i < jobs.JobsVector.size(); ++i) {
             auto& j = jobs.JobsVector[i];
-            auto vi = j->GetVideoInfo();
+            IVideoInfo* vi = j->VideoInfo.get();
             if (vi && vi->GetService() == newVideoInfo->GetService()
                 && vi->GetVideoId() == newVideoInfo->GetVideoId()) {
                 // already in list
@@ -140,7 +140,7 @@ void AddJobToTaskGroupIfAutoenqueue(std::vector<std::unique_ptr<VideoTaskGroup>>
                                     IVideoJob* job) {
     for (size_t i = 0; i < videoTaskGroups.size(); ++i) {
         auto& g = videoTaskGroups[i];
-        if (g && g->Service == job->GetVideoInfo()->GetService()) {
+        if (g && g->Service == job->VideoInfo->GetService()) {
             if (g->AutoEnqueue) {
                 g->Add(job);
             }

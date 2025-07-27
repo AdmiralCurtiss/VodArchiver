@@ -523,7 +523,7 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
         return ResultType::Failure;
     }
     {
-        auto newVideoInfo = std::make_shared<TwitchVideoInfo>();
+        auto newVideoInfo = std::make_unique<TwitchVideoInfo>();
         newVideoInfo->Service = StreamService::Twitch;
         newVideoInfo->Video = *twitchVideoFromJson;
         videoInfo = newVideoInfo->Clone();
@@ -591,7 +591,7 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
                 }
 
                 {
-                    auto newVideoInfo = std::make_shared<TwitchVideoInfo>();
+                    auto newVideoInfo = std::make_unique<TwitchVideoInfo>();
                     newVideoInfo->Service = StreamService::Twitch;
                     newVideoInfo->Video = *twitchVideoFromJson;
                     videoInfo = newVideoInfo->Clone();
@@ -900,7 +900,6 @@ ResultType TwitchVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
 }
 
 std::string TwitchVideoJob::GenerateOutputFilename() {
-    auto vi = this->GetVideoInfo();
-    return GetFinalFilenameWithoutExtension(*vi, this->VideoQuality) + ".mp4";
+    return GetFinalFilenameWithoutExtension(*this->VideoInfo, this->VideoQuality) + ".mp4";
 }
 } // namespace VodArchiver

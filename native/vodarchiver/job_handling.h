@@ -20,6 +20,7 @@ struct JobList {
     std::vector<std::unique_ptr<IVideoJob>> JobsVector;
 };
 
+// note for all of these: JobsLock will be held when enqueueCallback is called
 bool CreateAndEnqueueJob(JobList& jobs,
                          std::unique_ptr<IVideoInfo> info,
                          const std::function<void(IVideoJob* job)>& enqueueCallback);
@@ -32,6 +33,7 @@ bool EnqueueJob(JobList& jobs,
                 std::unique_ptr<IVideoJob> job,
                 const std::function<void(IVideoJob* job)>& enqueueCallback);
 
+// must hold the JobsLock when calling this!
 void AddJobToTaskGroupIfAutoenqueue(std::vector<std::unique_ptr<VideoTaskGroup>>& videoTaskGroups,
                                     IVideoJob* job);
 } // namespace VodArchiver

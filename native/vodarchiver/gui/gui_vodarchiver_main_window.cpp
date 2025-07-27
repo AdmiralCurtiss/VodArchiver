@@ -204,16 +204,16 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetService()
-                                               < r->GetVideoInfo()->GetService();
+                                        return l->VideoInfo->GetService()
+                                               < r->VideoInfo->GetService();
                                     });
                             } else {
                                 std::stable_sort(
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetService()
-                                               > r->GetVideoInfo()->GetService();
+                                        return l->VideoInfo->GetService()
+                                               > r->VideoInfo->GetService();
                                     });
                             }
                             break;
@@ -224,16 +224,16 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetVideoId()
-                                               < r->GetVideoInfo()->GetVideoId();
+                                        return l->VideoInfo->GetVideoId()
+                                               < r->VideoInfo->GetVideoId();
                                     });
                             } else {
                                 std::stable_sort(
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetVideoId()
-                                               > r->GetVideoInfo()->GetVideoId();
+                                        return l->VideoInfo->GetVideoId()
+                                               > r->VideoInfo->GetVideoId();
                                     });
                             }
                             break;
@@ -244,16 +244,16 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetUsername()
-                                               < r->GetVideoInfo()->GetUsername();
+                                        return l->VideoInfo->GetUsername()
+                                               < r->VideoInfo->GetUsername();
                                     });
                             } else {
                                 std::stable_sort(
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetUsername()
-                                               > r->GetVideoInfo()->GetUsername();
+                                        return l->VideoInfo->GetUsername()
+                                               > r->VideoInfo->GetUsername();
                                     });
                             }
                             break;
@@ -264,16 +264,16 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetVideoTitle()
-                                               < r->GetVideoInfo()->GetVideoTitle();
+                                        return l->VideoInfo->GetVideoTitle()
+                                               < r->VideoInfo->GetVideoTitle();
                                     });
                             } else {
                                 std::stable_sort(
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetVideoTitle()
-                                               > r->GetVideoInfo()->GetVideoTitle();
+                                        return l->VideoInfo->GetVideoTitle()
+                                               > r->VideoInfo->GetVideoTitle();
                                     });
                             }
                             break;
@@ -284,16 +284,16 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetVideoGame()
-                                               < r->GetVideoInfo()->GetVideoGame();
+                                        return l->VideoInfo->GetVideoGame()
+                                               < r->VideoInfo->GetVideoGame();
                                     });
                             } else {
                                 std::stable_sort(
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetVideoGame()
-                                               > r->GetVideoInfo()->GetVideoGame();
+                                        return l->VideoInfo->GetVideoGame()
+                                               > r->VideoInfo->GetVideoGame();
                                     });
                             }
                             break;
@@ -304,16 +304,16 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetVideoTimestamp()
-                                               < r->GetVideoInfo()->GetVideoTimestamp();
+                                        return l->VideoInfo->GetVideoTimestamp()
+                                               < r->VideoInfo->GetVideoTimestamp();
                                     });
                             } else {
                                 std::stable_sort(
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetVideoTimestamp()
-                                               > r->GetVideoInfo()->GetVideoTimestamp();
+                                        return l->VideoInfo->GetVideoTimestamp()
+                                               > r->VideoInfo->GetVideoTimestamp();
                                     });
                             }
                             break;
@@ -324,16 +324,16 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetVideoLength()
-                                               < r->GetVideoInfo()->GetVideoLength();
+                                        return l->VideoInfo->GetVideoLength()
+                                               < r->VideoInfo->GetVideoLength();
                                     });
                             } else {
                                 std::stable_sort(
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetVideoLength()
-                                               > r->GetVideoInfo()->GetVideoLength();
+                                        return l->VideoInfo->GetVideoLength()
+                                               > r->VideoInfo->GetVideoLength();
                                     });
                             }
                             break;
@@ -344,16 +344,16 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetVideoRecordingState()
-                                               < r->GetVideoInfo()->GetVideoRecordingState();
+                                        return l->VideoInfo->GetVideoRecordingState()
+                                               < r->VideoInfo->GetVideoRecordingState();
                                     });
                             } else {
                                 std::stable_sort(
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoJob* l = state.Jobs.JobsVector[lhs].get();
                                         IVideoJob* r = state.Jobs.JobsVector[rhs].get();
-                                        return l->GetVideoInfo()->GetVideoRecordingState()
-                                               > r->GetVideoInfo()->GetVideoRecordingState();
+                                        return l->VideoInfo->GetVideoRecordingState()
+                                               > r->VideoInfo->GetVideoRecordingState();
                                     });
                             }
                             break;
@@ -422,39 +422,38 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                         ImGui::Text("%s", item->HasBeenValidated ? "true" : "false");
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Service)) {
-                        std::string_view sv =
-                            StreamServiceToString(item->GetVideoInfo()->GetService());
+                        std::string_view sv = StreamServiceToString(item->VideoInfo->GetService());
                         ImGui::TextUnformatted(sv.data(), sv.data() + sv.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_VideoID)) {
-                        std::string s = item->GetVideoInfo()->GetVideoId();
+                        std::string s = item->VideoInfo->GetVideoId();
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Username)) {
-                        std::string s = item->GetVideoInfo()->GetUsername();
+                        std::string s = item->VideoInfo->GetUsername();
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Title)) {
-                        std::string s = item->GetVideoInfo()->GetVideoTitle();
+                        std::string s = item->VideoInfo->GetVideoTitle();
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Game)) {
-                        std::string s = item->GetVideoInfo()->GetVideoGame();
+                        std::string s = item->VideoInfo->GetVideoGame();
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Timestamp)) {
                         std::string s =
-                            DateTimeToStringForGui(item->GetVideoInfo()->GetVideoTimestamp());
+                            DateTimeToStringForGui(item->VideoInfo->GetVideoTimestamp());
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Duration)) {
-                        std::string s = std::format(
-                            "{}", item->GetVideoInfo()->GetVideoLength().GetTotalSeconds());
+                        std::string s =
+                            std::format("{}", item->VideoInfo->GetVideoLength().GetTotalSeconds());
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_RecordingState)) {
                         std::string_view s =
-                            RecordingStateToString(item->GetVideoInfo()->GetVideoRecordingState());
+                            RecordingStateToString(item->VideoInfo->GetVideoRecordingState());
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Notes)) {
@@ -470,7 +469,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                             ImGui::OpenPopup("JobActionsPopup");
                         }
                         if (ImGui::BeginPopup("JobActionsPopup")) {
-                            auto service = item->GetVideoInfo()->GetService();
+                            auto service = item->VideoInfo->GetService();
                             auto is_in_queue = [&]() -> bool {
                                 for (auto& g : state.VideoTaskGroups) {
                                     if (g->Service == service) {
@@ -523,7 +522,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                 }
                             }
                             if (ImGui::Selectable("Copy Video ID")) {
-                                std::string id = item->GetVideoInfo()->GetVideoId();
+                                std::string id = item->VideoInfo->GetVideoId();
                                 ImGui::SetClipboardText(id.c_str());
                             }
                             if (ImGui::Selectable("Copy Output Filename")) {
@@ -610,7 +609,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                 std::lock_guard lock(state.Jobs.JobsLock);
                 for (auto& job : state.Jobs.JobsVector) {
                     if (job->JobStatus == VideoJobStatus::NotStarted) {
-                        StreamService service = job->GetVideoInfo()->GetService();
+                        StreamService service = job->VideoInfo->GetService();
                         if (static_cast<int>(service) >= 0
                             && static_cast<size_t>(static_cast<int>(service))
                                    < state.VideoTaskGroups.size()) {
@@ -629,8 +628,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                         std::lock_guard lock(state.Jobs.JobsLock);
                         for (auto& job : state.Jobs.JobsVector) {
                             if (job->JobStatus == VideoJobStatus::NotStarted
-                                && job->GetVideoInfo()->GetService()
-                                       == static_cast<StreamService>(i)) {
+                                && job->VideoInfo->GetService() == static_cast<StreamService>(i)) {
                                 state.VideoTaskGroups[i]->Add(job.get());
                             }
                         }

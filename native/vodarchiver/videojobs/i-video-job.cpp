@@ -77,27 +77,19 @@ std::shared_ptr<IUserInputRequest> IVideoJob::GetUserInputRequest() const {
 }
 
 std::string IVideoJob::GetHumanReadableJobName() const {
-    auto VideoInfo = GetVideoInfo();
-    if (VideoInfo) {
-        std::string username = VideoInfo->GetUsername();
+    IVideoInfo* videoInfo = this->VideoInfo.get();
+    if (videoInfo) {
+        std::string username = videoInfo->GetUsername();
         if (!HyoutaUtils::TextUtils::Trim(username).empty()) {
-            return username + "/" + VideoInfo->GetVideoId() + " ("
-                   + std::string(StreamServiceToString(VideoInfo->GetService())) + ")";
+            return username + "/" + videoInfo->GetVideoId() + " ("
+                   + std::string(StreamServiceToString(videoInfo->GetService())) + ")";
         } else {
-            return VideoInfo->GetVideoId() + " ("
-                   + std::string(StreamServiceToString(VideoInfo->GetService())) + ")";
+            return videoInfo->GetVideoId() + " ("
+                   + std::string(StreamServiceToString(videoInfo->GetService())) + ")";
         }
     } else {
         return "Unknown Video";
     }
-}
-
-std::shared_ptr<IVideoInfo> IVideoJob::GetVideoInfo() const {
-    return VideoInfo;
-}
-
-void IVideoJob::SetVideoInfo(std::shared_ptr<IVideoInfo> videoInfo) {
-    VideoInfo = videoInfo;
 }
 
 bool ShouldStallWriteRegularFile(JobConfig& jobConfig, std::string_view path, uint64_t filesize) {

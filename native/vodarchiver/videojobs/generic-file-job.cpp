@@ -214,6 +214,6 @@ ResultType GenericFileJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
 }
 
 std::string GenericFileJob::GenerateOutputFilename() {
-    return GetTargetFilename(*GetVideoInfo());
+    return GetTargetFilename(*this->VideoInfo);
 }
 } // namespace VodArchiver

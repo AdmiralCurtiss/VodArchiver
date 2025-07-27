@@ -56,8 +56,6 @@ struct IVideoJob {
     virtual ~IVideoJob();
 
     void SetStatus(std::string value);
-    std::shared_ptr<IVideoInfo> GetVideoInfo() const;
-    void SetVideoInfo(std::shared_ptr<IVideoInfo> videoInfo);
     std::string GetHumanReadableJobName() const;
 
     virtual bool IsWaitingForUserInput() const = 0;
@@ -68,7 +66,7 @@ struct IVideoJob {
     std::string TextStatus;
     VideoJobStatus JobStatus = VideoJobStatus::NotStarted;
     bool HasBeenValidated = false;
-    std::shared_ptr<IVideoInfo> VideoInfo;
+    std::unique_ptr<IVideoInfo> VideoInfo;
     DateTime JobStartTimestamp{.Data = 0};
     DateTime JobFinishTimestamp{.Data = 0};
     std::string Notes;

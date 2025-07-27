@@ -211,7 +211,6 @@ ResultType TwitchChatReplayJob::Run(JobConfig& jobConfig, TaskCancellation& canc
 }
 
 std::string TwitchChatReplayJob::GenerateOutputFilename() {
-    auto videoInfo = GetVideoInfo();
-    return GetTargetFilenameWithoutExtension(*videoInfo) + ".json";
+    return GetTargetFilenameWithoutExtension(*this->VideoInfo) + ".json";
 }
 } // namespace VodArchiver
