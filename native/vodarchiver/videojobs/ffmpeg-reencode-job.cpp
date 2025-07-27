@@ -1,9 +1,13 @@
 #include "ffmpeg-reencode-job.h"
 
 #include <memory>
+#include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
 #include "util/file.h"
+#include "util/text.h"
 
 #include "vodarchiver/exec.h"
 #include "vodarchiver/ffmpeg_util.h"
@@ -18,6 +22,7 @@ bool FFMpegReencodeJob::IsWaitingForUserInput() const {
 }
 
 static bool Reencode(FFMpegReencodeJob& job,
+                     JobConfig& jobConfig,
                      const std::string& targetName,
                      const std::string& sourceName,
                      const std::string& tempName,
@@ -35,7 +40,18 @@ static bool Reencode(FFMpegReencodeJob& job,
             [](std::string_view sv) {},
             [&](std::string_view sv) {
                 output.append(sv);
-                job.SetStatus(output);
+
+                // only keep the last line
+                std::string_view trimmed = HyoutaUtils::TextUtils::Trim(output);
+                auto pos = trimmed.find_last_of("\r\n");
+                if (pos != std::string_view::npos) {
+                    output.assign(trimmed.substr(pos + 1));
+                }
+
+                {
+                    std::lock_guard lock(*jobConfig.JobsLock);
+                    job.TextStatus = output;
+                }
             })
         != 0) {
         return false;
@@ -60,14 +76,18 @@ static std::string PathCombine(std::string_view lhs, std::string_view mhs, std::
 static ResultType RunReencodeJob(FFMpegReencodeJob& job,
                                  JobConfig& jobConfig,
                                  TaskCancellation& cancellationToken) {
-    job.JobStatus = VideoJobStatus::Running;
-    job.SetStatus("Checking files...");
+    std::unique_ptr<IVideoInfo> videoInfo;
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.JobStatus = VideoJobStatus::Running;
+        job.TextStatus = "Checking files...";
+        videoInfo = job.VideoInfo->Clone();
+    }
 
     if (cancellationToken.IsCancellationRequested()) {
         return ResultType::Cancelled;
     }
 
-    auto videoInfo = job.GetVideoInfo();
     std::string file = videoInfo->GetVideoId();
     std::string_view path = HyoutaUtils::IO::GetDirectoryName(file);
     std::string_view name = HyoutaUtils::IO::GetFileNameWithoutExtension(file);
@@ -125,8 +145,12 @@ static ResultType RunReencodeJob(FFMpegReencodeJob& job,
     }
 
     if (probe.has_value()) {
-        job.VideoInfo = std::make_unique<FFMpegReencodeJobVideoInfo>(
+        auto newVideoInfo = std::make_unique<FFMpegReencodeJobVideoInfo>(
             file, *probe, ffmpegOptions, postfixOld, postfixNew, outputformat);
+        videoInfo = newVideoInfo->Clone();
+
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.VideoInfo = std::move(newVideoInfo);
     }
 
     // if the input file doesn't exist we might still be in a state where we can set this to
@@ -137,13 +161,15 @@ static ResultType RunReencodeJob(FFMpegReencodeJob& job,
     if (!newfileexists && !newfilelocalexists) {
         if (!encodeinput.has_value()) {
             // neither input nor output exist, bail
-            job.SetStatus("Missing!");
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = "Missing!";
             return ResultType::Failure;
         }
 
         if (HyoutaUtils::IO::FileExists(std::string_view(tempfile))) {
             if (!HyoutaUtils::IO::DeleteFile(std::string_view(tempfile))) {
-                job.SetStatus("Internal error.");
+                std::lock_guard lock(*jobConfig.JobsLock);
+                job.TextStatus = "Internal error.";
                 return ResultType::Failure;
             }
         }
@@ -152,39 +178,51 @@ static ResultType RunReencodeJob(FFMpegReencodeJob& job,
             return ResultType::Cancelled;
         }
 
-        job.SetStatus("Encoding " + newfile + "...");
+        {
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = ("Encoding " + newfile + "...");
+        }
         StallWrite(jobConfig,
                    newfile,
                    HyoutaUtils::IO::GetFilesize(std::string_view(*encodeinput)).value_or(0),
                    cancellationToken,
                    ShouldStallWriteRegularFile,
-                   [&](std::string status) { job.SetStatus(std::move(status)); });
+                   [&](std::string status) {
+                       std::lock_guard lock(*jobConfig.JobsLock);
+                       job.TextStatus = std::move(status);
+                   });
         if (cancellationToken.IsCancellationRequested()) {
             return ResultType::Cancelled;
         }
         if (!HyoutaUtils::IO::CreateDirectory(std::string_view(postfixdir))) {
-            job.SetStatus("Internal error.");
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = "Internal error.";
             return ResultType::Failure;
         }
         FFMpegReencodeJobVideoInfo* ffmpegVideoInfo =
-            dynamic_cast<FFMpegReencodeJobVideoInfo*>(job.VideoInfo.get());
+            dynamic_cast<FFMpegReencodeJobVideoInfo*>(videoInfo.get());
         if (!ffmpegVideoInfo) {
-            job.SetStatus("Internal error.");
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = "Internal error.";
             return ResultType::Failure;
         }
-        if (!Reencode(job, newfile, *encodeinput, tempfile, ffmpegVideoInfo->FFMpegOptions)) {
-            job.SetStatus("Internal error.");
+        if (!Reencode(
+                job, jobConfig, newfile, *encodeinput, tempfile, ffmpegVideoInfo->FFMpegOptions)) {
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = "Internal error.";
             return ResultType::Failure;
         }
     }
 
     if (!newfileexists && newfilelocalexists) {
         if (!HyoutaUtils::IO::CreateDirectory(std::string_view(postfixdir))) {
-            job.SetStatus("Internal error.");
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = "Internal error.";
             return ResultType::Failure;
         }
         if (!HyoutaUtils::IO::Move(newfileinlocal, newfile)) {
-            job.SetStatus("Internal error.");
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = "Internal error.";
             return ResultType::Failure;
         }
     }
@@ -192,17 +230,22 @@ static ResultType RunReencodeJob(FFMpegReencodeJob& job,
     if (HyoutaUtils::IO::FileExists(std::string_view(file))
         && !HyoutaUtils::IO::FileExists(std::string_view(oldfileinchunked))) {
         if (!HyoutaUtils::IO::CreateDirectory(std::string_view(chunkeddir))) {
-            job.SetStatus("Internal error.");
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = "Internal error.";
             return ResultType::Failure;
         }
         if (!HyoutaUtils::IO::Move(file, oldfileinchunked)) {
-            job.SetStatus("Internal error.");
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = "Internal error.";
             return ResultType::Failure;
         }
     }
 
-    job.SetStatus("Done!");
-    job.JobStatus = VideoJobStatus::Finished;
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Done!";
+        job.JobStatus = VideoJobStatus::Finished;
+    }
     return ResultType::Success;
 }
 
