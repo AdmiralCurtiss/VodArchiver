@@ -29,13 +29,12 @@ static std::string GetTempFoldername() {
     return std::format("rawurl_{}", c);
 }
 
-std::string GenericFileJob::GetTargetFilename() const {
+static std::string GetTargetFilename(IVideoInfo& videoInfo) {
     // best guess...
-    auto videoInfo = this->GetVideoInfo();
-    std::string videoId = videoInfo->GetVideoId();
-    std::string rawUsername = videoInfo->GetUsername();
-    std::string rawTitle = videoInfo->GetVideoTitle();
-    DateTime rawTimestamp = videoInfo->GetVideoTimestamp();
+    std::string videoId = videoInfo.GetVideoId();
+    std::string rawUsername = videoInfo.GetUsername();
+    std::string rawTitle = videoInfo.GetVideoTitle();
+    DateTime rawTimestamp = videoInfo.GetVideoTimestamp();
     std::string extension;
     {
         auto slash = HyoutaUtils::TextUtils::Split(HyoutaUtils::TextUtils::Trim(videoId), "/");
@@ -71,10 +70,6 @@ std::string GenericFileJob::GetTargetFilename() const {
                                : std::format("{}_{}", prefix, title);
 
     return StringToFilename(basename, extension);
-}
-
-std::string GenericFileJob::GenerateOutputFilename() {
-    return GetTargetFilename();
 }
 
 static std::string PathCombine(std::string_view lhs, std::string_view rhs) {
@@ -114,9 +109,11 @@ static bool DeleteDirectoryRecursive(std::string_view path) {
     return DeleteDirectoryRecursive(HyoutaUtils::IO::FilesystemPathFromUtf8(path));
 }
 
-ResultType GenericFileJob::Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) {
-    this->JobStatus = VideoJobStatus::Running;
-    this->SetStatus("Downloading...");
+static ResultType RunGenericFileJob(GenericFileJob& job,
+                                    JobConfig& jobConfig,
+                                    TaskCancellation& cancellationToken) {
+    job.JobStatus = VideoJobStatus::Running;
+    job.SetStatus("Downloading...");
 
     std::string tempFolderPath;
     std::string targetFolderPath;
@@ -135,7 +132,7 @@ ResultType GenericFileJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
     std::string progressFilepath = PathCombine(tempFoldername, progressFilename);
     std::string movedFilename = "done.bin";
     std::string movedFilepath = PathCombine(tempFoldername, movedFilename);
-    std::string targetFilename = GetTargetFilename();
+    std::string targetFilename = GetTargetFilename(*job.GetVideoInfo());
     std::string targetFilepath = PathCombine(targetFolderPath, targetFilename);
 
     if (!HyoutaUtils::IO::Exists(std::string_view(targetFilepath))) {
@@ -153,7 +150,7 @@ ResultType GenericFileJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
                 return ResultType::Cancelled;
             }
 
-            std::string videoId = GetVideoInfo()->GetVideoId();
+            std::string videoId = job.GetVideoInfo()->GetVideoId();
             if (!HyoutaUtils::IO::WriteFileAtomic(urlFilepath, videoId.data(), videoId.size())) {
                 return ResultType::Failure;
             }
@@ -184,7 +181,7 @@ ResultType GenericFileJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
                    HyoutaUtils::IO::GetFilesize(std::string_view(movedFilepath)).value_or(0),
                    cancellationToken,
                    ShouldStallWriteRegularFile,
-                   [this](std::string status) { SetStatus(std::move(status)); });
+                   [&](std::string status) { job.SetStatus(std::move(status)); });
         if (cancellationToken.IsCancellationRequested()) {
             return ResultType::Cancelled;
         }
@@ -196,8 +193,16 @@ ResultType GenericFileJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
         }
     }
 
-    SetStatus("Done!");
-    JobStatus = VideoJobStatus::Finished;
+    job.SetStatus("Done!");
+    job.JobStatus = VideoJobStatus::Finished;
     return ResultType::Success;
+}
+
+ResultType GenericFileJob::Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) {
+    return RunGenericFileJob(*this, jobConfig, cancellationToken);
+}
+
+std::string GenericFileJob::GenerateOutputFilename() {
+    return GetTargetFilename(*GetVideoInfo());
 }
 } // namespace VodArchiver

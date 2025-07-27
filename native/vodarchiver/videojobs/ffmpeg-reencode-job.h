@@ -11,11 +11,5 @@ struct FFMpegReencodeJob : public IVideoJob {
     std::string GenerateOutputFilename() override;
 
     FFMpegReencodeJob();
-
-private:
-    bool Reencode(const std::string& targetName,
-                  const std::string& sourceName,
-                  const std::string& tempName,
-                  const std::vector<std::string>& options);
 };
 } // namespace VodArchiver

@@ -17,8 +17,5 @@ struct FFMpegSplitJob : public IVideoJob {
     FFMpegSplitJob(std::string path,
                    std::string splitTimes,
                    std::shared_ptr<IStatusUpdate> statusUpdater = nullptr);
-
-private:
-    std::string GenerateOutputName(std::string_view inputName);
 };
 } // namespace VodArchiver

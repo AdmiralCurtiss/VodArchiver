@@ -72,28 +72,23 @@ struct UserInputRequestStreamLiveTwitchChatReplay : IUserInputRequest {
 } // namespace
 
 bool TwitchChatReplayJob::IsWaitingForUserInput() const {
-    return false;
+    return false; // yes, this is correct, there is a possible user input request here but it never
+                  // blocks running the task
 }
 
 std::shared_ptr<IUserInputRequest> TwitchChatReplayJob::GetUserInputRequest() const {
     return _UserInputRequest;
 }
 
-std::string TwitchChatReplayJob::GetTempFilenameWithoutExtension() const {
-    auto videoInfo = GetVideoInfo();
-    return std::format("twitch_{}_v{}_chat_gql", videoInfo->GetUsername(), videoInfo->GetVideoId());
+static std::string GetTempFilenameWithoutExtension(IVideoInfo& videoInfo) {
+    return std::format("twitch_{}_v{}_chat_gql", videoInfo.GetUsername(), videoInfo.GetVideoId());
 }
 
-std::string TwitchChatReplayJob::GetTargetFilenameWithoutExtension() const {
-    auto videoInfo = GetVideoInfo();
+static std::string GetTargetFilenameWithoutExtension(IVideoInfo& videoInfo) {
     return std::format("twitch_{}_{}_v{}_chat_gql",
-                       videoInfo->GetUsername(),
-                       DateTimeToStringForFilesystem(videoInfo->GetVideoTimestamp()),
-                       videoInfo->GetVideoId());
-}
-
-std::string TwitchChatReplayJob::GenerateOutputFilename() {
-    return GetTargetFilenameWithoutExtension() + ".json";
+                       videoInfo.GetUsername(),
+                       DateTimeToStringForFilesystem(videoInfo.GetVideoTimestamp()),
+                       videoInfo.GetVideoId());
 }
 
 static std::string PathCombine(std::string_view lhs, std::string_view rhs) {
@@ -102,7 +97,9 @@ static std::string PathCombine(std::string_view lhs, std::string_view rhs) {
     return result;
 }
 
-ResultType TwitchChatReplayJob::Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) {
+ResultType RunChatJob(TwitchChatReplayJob& job,
+                      JobConfig& jobConfig,
+                      TaskCancellation& cancellationToken) {
     if (cancellationToken.IsCancellationRequested()) {
         return ResultType::Cancelled;
     }
@@ -115,14 +112,14 @@ ResultType TwitchChatReplayJob::Run(JobConfig& jobConfig, TaskCancellation& canc
         targetFolderPath = jobConfig.TargetFolderPath;
     }
 
-    auto videoInfo = GetVideoInfo();
+    auto videoInfo = job.GetVideoInfo();
     auto videoId = HyoutaUtils::NumberUtils::ParseInt64(videoInfo->GetVideoId());
     if (!videoId) {
         return ResultType::Failure;
     }
 
-    JobStatus = VideoJobStatus::Running;
-    SetStatus("Retrieving video info...");
+    job.JobStatus = VideoJobStatus::Running;
+    job.SetStatus("Retrieving video info...");
     auto video_json = TwitchYTDL::GetVideoJson(*videoId);
     if (!video_json) {
         return ResultType::Failure;
@@ -131,17 +128,18 @@ ResultType TwitchChatReplayJob::Run(JobConfig& jobConfig, TaskCancellation& canc
     auto newVideoInfo = std::make_shared<TwitchVideoInfo>();
     newVideoInfo->_Service = StreamService::TwitchChatReplay;
     newVideoInfo->_Video = std::move(*twitchVideoData);
-    SetVideoInfo(newVideoInfo);
+    job.SetVideoInfo(newVideoInfo);
 
-    if (!AssumeFinished && newVideoInfo->GetVideoRecordingState() == RecordingState::Live) {
-        _UserInputRequest = std::make_unique<UserInputRequestStreamLiveTwitchChatReplay>(this);
+    if (!job.AssumeFinished && newVideoInfo->GetVideoRecordingState() == RecordingState::Live) {
+        job._UserInputRequest = std::make_unique<UserInputRequestStreamLiveTwitchChatReplay>(&job);
         return ResultType::TemporarilyUnavailable;
     }
 
-    std::string tempfolder = PathCombine(tempFolderPath, GetTempFilenameWithoutExtension());
+    std::string tempfolder =
+        PathCombine(tempFolderPath, GetTempFilenameWithoutExtension(*newVideoInfo));
     std::string tempname = PathCombine(tempfolder, "a.json");
     std::string filename =
-        PathCombine(targetFolderPath, GetTargetFilenameWithoutExtension() + ".json");
+        PathCombine(targetFolderPath, GetTargetFilenameWithoutExtension(*newVideoInfo) + ".json");
 
     if (HyoutaUtils::IO::DirectoryExists(std::string_view(tempfolder))) {
         if (!DeleteDirectoryRecursive(std::string_view(tempfolder))) {
@@ -152,7 +150,7 @@ ResultType TwitchChatReplayJob::Run(JobConfig& jobConfig, TaskCancellation& canc
         return ResultType::Failure;
     }
 
-    SetStatus("Downloading chat data...");
+    job.SetStatus("Downloading chat data...");
     std::vector<std::string> args;
     args.push_back("chatdownload");
     args.push_back("-E");
@@ -179,8 +177,17 @@ ResultType TwitchChatReplayJob::Run(JobConfig& jobConfig, TaskCancellation& canc
 
     DeleteDirectoryRecursive(std::string_view(tempfolder));
 
-    SetStatus("Done!");
-    JobStatus = VideoJobStatus::Finished;
+    job.SetStatus("Done!");
+    job.JobStatus = VideoJobStatus::Finished;
     return ResultType::Success;
+}
+
+ResultType TwitchChatReplayJob::Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) {
+    return RunChatJob(*this, jobConfig, cancellationToken);
+}
+
+std::string TwitchChatReplayJob::GenerateOutputFilename() {
+    auto videoInfo = GetVideoInfo();
+    return GetTargetFilenameWithoutExtension(*videoInfo) + ".json";
 }
 } // namespace VodArchiver

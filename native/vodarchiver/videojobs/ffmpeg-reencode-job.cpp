@@ -18,10 +18,11 @@ bool FFMpegReencodeJob::IsWaitingForUserInput() const {
     return false;
 }
 
-bool FFMpegReencodeJob::Reencode(const std::string& targetName,
-                                 const std::string& sourceName,
-                                 const std::string& tempName,
-                                 const std::vector<std::string>& options) {
+static bool Reencode(FFMpegReencodeJob& job,
+                     const std::string& targetName,
+                     const std::string& sourceName,
+                     const std::string& tempName,
+                     const std::vector<std::string>& options) {
     std::vector<std::string> args;
     args.push_back("-i");
     args.push_back(sourceName);
@@ -35,7 +36,7 @@ bool FFMpegReencodeJob::Reencode(const std::string& targetName,
             [](std::string_view sv) {},
             [&](std::string_view sv) {
                 output.append(sv);
-                SetStatus(output);
+                job.SetStatus(output);
             })
         != 0) {
         return false;
@@ -57,15 +58,17 @@ static std::string PathCombine(std::string_view lhs, std::string_view mhs, std::
     return result;
 }
 
-ResultType FFMpegReencodeJob::Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) {
-    JobStatus = VideoJobStatus::Running;
-    SetStatus("Checking files...");
+static ResultType RunReencodeJob(FFMpegReencodeJob& job,
+                                 JobConfig& jobConfig,
+                                 TaskCancellation& cancellationToken) {
+    job.JobStatus = VideoJobStatus::Running;
+    job.SetStatus("Checking files...");
 
     if (cancellationToken.IsCancellationRequested()) {
         return ResultType::Cancelled;
     }
 
-    auto videoInfo = GetVideoInfo();
+    auto videoInfo = job.GetVideoInfo();
     std::string file = videoInfo->GetVideoId();
     std::string_view path = HyoutaUtils::IO::GetDirectoryName(file);
     std::string_view name = HyoutaUtils::IO::GetFileNameWithoutExtension(file);
@@ -123,7 +126,7 @@ ResultType FFMpegReencodeJob::Run(JobConfig& jobConfig, TaskCancellation& cancel
     }
 
     if (probe.has_value()) {
-        _VideoInfo = std::make_unique<FFMpegReencodeJobVideoInfo>(
+        job._VideoInfo = std::make_unique<FFMpegReencodeJobVideoInfo>(
             file, *probe, ffmpegOptions, postfixOld, postfixNew, outputformat);
     }
 
@@ -135,13 +138,13 @@ ResultType FFMpegReencodeJob::Run(JobConfig& jobConfig, TaskCancellation& cancel
     if (!newfileexists && !newfilelocalexists) {
         if (!encodeinput.has_value()) {
             // neither input nor output exist, bail
-            SetStatus("Missing!");
+            job.SetStatus("Missing!");
             return ResultType::Failure;
         }
 
         if (HyoutaUtils::IO::FileExists(std::string_view(tempfile))) {
             if (!HyoutaUtils::IO::DeleteFile(std::string_view(tempfile))) {
-                SetStatus("Internal error.");
+                job.SetStatus("Internal error.");
                 return ResultType::Failure;
             }
         }
@@ -150,39 +153,39 @@ ResultType FFMpegReencodeJob::Run(JobConfig& jobConfig, TaskCancellation& cancel
             return ResultType::Cancelled;
         }
 
-        SetStatus("Encoding " + newfile + "...");
+        job.SetStatus("Encoding " + newfile + "...");
         StallWrite(jobConfig,
                    newfile,
                    HyoutaUtils::IO::GetFilesize(std::string_view(*encodeinput)).value_or(0),
                    cancellationToken,
                    ShouldStallWriteRegularFile,
-                   [this](std::string status) { SetStatus(std::move(status)); });
+                   [&](std::string status) { job.SetStatus(std::move(status)); });
         if (cancellationToken.IsCancellationRequested()) {
             return ResultType::Cancelled;
         }
         if (!HyoutaUtils::IO::CreateDirectory(std::string_view(postfixdir))) {
-            SetStatus("Internal error.");
+            job.SetStatus("Internal error.");
             return ResultType::Failure;
         }
         FFMpegReencodeJobVideoInfo* ffmpegVideoInfo =
-            dynamic_cast<FFMpegReencodeJobVideoInfo*>(_VideoInfo.get());
+            dynamic_cast<FFMpegReencodeJobVideoInfo*>(job._VideoInfo.get());
         if (!ffmpegVideoInfo) {
-            SetStatus("Internal error.");
+            job.SetStatus("Internal error.");
             return ResultType::Failure;
         }
-        if (!Reencode(newfile, *encodeinput, tempfile, ffmpegVideoInfo->FFMpegOptions)) {
-            SetStatus("Internal error.");
+        if (!Reencode(job, newfile, *encodeinput, tempfile, ffmpegVideoInfo->FFMpegOptions)) {
+            job.SetStatus("Internal error.");
             return ResultType::Failure;
         }
     }
 
     if (!newfileexists && newfilelocalexists) {
         if (!HyoutaUtils::IO::CreateDirectory(std::string_view(postfixdir))) {
-            SetStatus("Internal error.");
+            job.SetStatus("Internal error.");
             return ResultType::Failure;
         }
         if (!HyoutaUtils::IO::Move(newfileinlocal, newfile)) {
-            SetStatus("Internal error.");
+            job.SetStatus("Internal error.");
             return ResultType::Failure;
         }
     }
@@ -190,21 +193,25 @@ ResultType FFMpegReencodeJob::Run(JobConfig& jobConfig, TaskCancellation& cancel
     if (HyoutaUtils::IO::FileExists(std::string_view(file))
         && !HyoutaUtils::IO::FileExists(std::string_view(oldfileinchunked))) {
         if (!HyoutaUtils::IO::CreateDirectory(std::string_view(chunkeddir))) {
-            SetStatus("Internal error.");
+            job.SetStatus("Internal error.");
             return ResultType::Failure;
         }
         if (!HyoutaUtils::IO::Move(file, oldfileinchunked)) {
-            SetStatus("Internal error.");
+            job.SetStatus("Internal error.");
             return ResultType::Failure;
         }
     }
 
-    SetStatus("Done!");
-    JobStatus = VideoJobStatus::Finished;
+    job.SetStatus("Done!");
+    job.JobStatus = VideoJobStatus::Finished;
     return ResultType::Success;
 }
 
+ResultType FFMpegReencodeJob::Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) {
+    return RunReencodeJob(*this, jobConfig, cancellationToken);
+}
+
 std::string FFMpegReencodeJob::GenerateOutputFilename() {
-    throw "not implemented";
+    return "not implemented";
 }
 } // namespace VodArchiver

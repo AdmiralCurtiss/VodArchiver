@@ -10,9 +10,6 @@ struct TwitchChatReplayJob : public IVideoJob {
     ResultType Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) override;
     std::string GenerateOutputFilename() override;
 
-    std::string GetTempFilenameWithoutExtension() const;
-    std::string GetTargetFilenameWithoutExtension() const;
-
     std::shared_ptr<IUserInputRequest> GetUserInputRequest() const override;
     std::shared_ptr<IUserInputRequest> _UserInputRequest = nullptr;
     bool AssumeFinished = false;

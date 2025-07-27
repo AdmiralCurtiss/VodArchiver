@@ -12,11 +12,7 @@ namespace VodArchiver {
 struct TwitchVideoJob : public IVideoJob {
     bool IsWaitingForUserInput() const override;
     ResultType Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) override;
-
     std::string GenerateOutputFilename() override;
-
-    std::string GetTempFilenameWithoutExtension() const;
-    std::string GetFinalFilenameWithoutExtension() const;
 
     std::shared_ptr<IUserInputRequest> GetUserInputRequest() const override;
     std::shared_ptr<IUserInputRequest> _UserInputRequest = nullptr;
@@ -27,32 +23,5 @@ struct TwitchVideoJob : public IVideoJob {
     bool IgnoreTimeDifferenceRemuxed = false;
 
     std::string VideoQuality = "chunked";
-
-private:
-    struct DownloadInfo {
-        std::string Url;
-        std::string FilesystemId;
-        std::optional<uint64_t> Offset;
-        std::optional<uint64_t> Length;
-    };
-    ResultType GetFileUrlsOfVod(std::vector<DownloadInfo>& downloadInfos,
-                                const std::string& targetFolderPath,
-                                const std::string& tempFolderPath,
-                                TaskCancellation& cancellationToken);
-    void GetFilenamesFromM3U8(std::vector<DownloadInfo>& downloadInfos,
-                              const std::string& baseurl,
-                              const std::string& m3u8);
-    ResultType Download(JobConfig& jobConfig,
-                        std::vector<std::string>& files,
-                        TaskCancellation& cancellationToken,
-                        const std::string& targetFolder,
-                        const std::vector<DownloadInfo>& downloadInfos,
-                        int delayPerDownload = 0);
-    ResultType Combine(TaskCancellation& cancellationToken,
-                       const std::string& combinedFilename,
-                       const std::vector<std::string>& files);
-    bool Remux(const std::string& targetName,
-               const std::string& sourceName,
-               const std::string& tempName);
 };
 } // namespace VodArchiver
