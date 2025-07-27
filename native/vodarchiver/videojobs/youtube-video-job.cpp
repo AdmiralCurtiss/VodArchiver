@@ -1,6 +1,10 @@
 #include "youtube-video-job.h"
 
 #include <format>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <utility>
 
 #include "util/file.h"
 #include "util/text.h"
@@ -33,8 +37,13 @@ static std::string GetTargetFilename(IVideoInfo& vi) {
 static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
                                      JobConfig& jobConfig,
                                      TaskCancellation& cancellationToken) {
-    if (cancellationToken.IsCancellationRequested()) {
-        return ResultType::Cancelled;
+    std::unique_ptr<IVideoInfo> vi;
+    bool wantCookies = false;
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.JobStatus = VideoJobStatus::Running;
+        vi = job.VideoInfo->Clone();
+        wantCookies = (job.Notes.find("cookies") != std::string::npos);
     }
 
     std::string tempFolderPath;
@@ -45,17 +54,24 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
         targetFolderPath = jobConfig.TargetFolderPath;
     }
 
-    std::shared_ptr<IVideoInfo> vi = job.GetVideoInfo();
-    job.JobStatus = VideoJobStatus::Running;
+    if (cancellationToken.IsCancellationRequested()) {
+        return ResultType::Cancelled;
+    }
+
     if (dynamic_cast<YoutubeVideoInfo*>(vi.get()) == nullptr) {
-        job.SetStatus("Retrieving video info...");
-        bool wantCookies = (job.Notes.find("cookies") != std::string::npos);
+        {
+            std::lock_guard lock(jobConfig.Mutex);
+            job.TextStatus = "Retrieving video info...";
+        }
         auto result = Youtube::RetrieveVideo(vi->GetVideoId(), vi->GetUsername(), wantCookies);
 
         switch (result.result) {
             case Youtube::RetrieveVideoResult::Success:
-                vi = std::move(result.info);
-                job.SetVideoInfo(vi);
+                vi = result.info->Clone();
+                {
+                    std::lock_guard lock(jobConfig.Mutex);
+                    job.VideoInfo = std::move(result.info);
+                }
                 break;
             case Youtube::RetrieveVideoResult::ParseFailure:
                 // this seems to happen randomly from time to time, just retry later
@@ -81,14 +97,20 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
             if (!HyoutaUtils::IO::CreateDirectory(std::string_view(tempFolder))) {
                 return ResultType::Failure;
             }
-            job.SetStatus("Running youtube-dl...");
+            {
+                std::lock_guard lock(jobConfig.Mutex);
+                job.TextStatus = "Running youtube-dl...";
+            }
             // don't know expected filesize, so hope we have a sensible value in minimum free space
             StallWrite(jobConfig,
                        tempFilepath,
                        0,
                        cancellationToken,
                        ShouldStallWriteRegularFile,
-                       [&](std::string status) { job.SetStatus(std::move(status)); });
+                       [&](std::string status) {
+                           std::lock_guard lock(jobConfig.Mutex);
+                           job.TextStatus = std::move(status);
+                       });
             if (cancellationToken.IsCancellationRequested()) {
                 return ResultType::Cancelled;
             }
@@ -104,7 +126,6 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
                 "--abort-on-unavailable-fragment",
                 "--no-sponsorblock",
             }};
-            const bool wantCookies = (job.Notes.find("cookies") != std::string::npos);
             if (wantCookies) {
                 args.push_back("--cookies");
                 args.push_back("d:\\cookies.txt");
@@ -116,7 +137,18 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
                     args,
                     [&](std::string_view sv) {
                         output.append(sv);
-                        job.SetStatus(output);
+
+                        // only keep the last line
+                        std::string_view trimmed = HyoutaUtils::TextUtils::Trim(output);
+                        auto pos = trimmed.find_last_of("\r\n");
+                        if (pos != std::string_view::npos) {
+                            output.assign(trimmed.substr(pos + 1));
+                        }
+
+                        {
+                            std::lock_guard lock(*jobConfig.JobsLock);
+                            job.TextStatus = output;
+                        }
                     },
                     [](std::string_view sv) {})
                 != 0) {
@@ -127,11 +159,15 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
         std::string finalFilename = GetTargetFilename(*vi);
         std::string finalFilepath = PathCombine(targetFolderPath, finalFilename);
         if (HyoutaUtils::IO::Exists(std::string_view(finalFilepath))) {
-            job.SetStatus("File exists: " + finalFilepath);
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = ("File exists: " + finalFilepath);
             return ResultType::Failure;
         }
 
-        job.SetStatus("Waiting for free disk IO slot to move...");
+        {
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = "Waiting for free disk IO slot to move...";
+        }
         {
             auto diskLock = jobConfig.ExpensiveDiskIO.WaitForFreeSlot(cancellationToken);
             if (cancellationToken.IsCancellationRequested()) {
@@ -139,24 +175,32 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
             }
 
             // sanity check
-            job.SetStatus("Sanity check on downloaded video...");
+            {
+                std::lock_guard lock(*jobConfig.JobsLock);
+                job.TextStatus = "Sanity check on downloaded video...";
+            }
             auto probe = FFMpegProbe(tempFilepath);
             if (!probe) {
-                job.SetStatus("Probe failed!");
+                std::lock_guard lock(*jobConfig.JobsLock);
+                job.TextStatus = "Probe failed!";
                 return ResultType::Failure;
             }
             TimeSpan actualVideoLength = probe->Duration;
             TimeSpan expectedVideoLength = vi->GetVideoLength();
             if (std::abs((actualVideoLength - expectedVideoLength).GetTotalSeconds()) > 5.0) {
                 // if difference is bigger than 5 seconds something is off, report
-                job.SetStatus(std::format(
+                std::lock_guard lock(*jobConfig.JobsLock);
+                job.TextStatus = std::format(
                     "Large time difference between expected ({}s) and actual ({}s), stopping.",
                     expectedVideoLength.GetTotalSeconds(),
-                    actualVideoLength.GetTotalSeconds()));
+                    actualVideoLength.GetTotalSeconds());
                 return ResultType::Failure;
             }
 
-            job.SetStatus("Moving...");
+            {
+                std::lock_guard lock(*jobConfig.JobsLock);
+                job.TextStatus = "Moving...";
+            }
             if (!HyoutaUtils::IO::Move(
                     std::string_view(tempFilepath), std::string_view(finalFilepath), true)) {
                 return ResultType::Failure;
@@ -167,8 +211,11 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
         }
     }
 
-    job.SetStatus("Done!");
-    job.JobStatus = VideoJobStatus::Finished;
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Done!";
+        job.JobStatus = VideoJobStatus::Finished;
+    }
     return ResultType::Success;
 }
 
