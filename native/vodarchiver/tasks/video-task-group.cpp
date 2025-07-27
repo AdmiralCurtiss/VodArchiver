@@ -126,6 +126,7 @@ void VideoTaskGroup::ProcessFinishedTasks() {
                     Add(std::move(wvj));
                 }
             } else {
+                std::lock_guard lock2(*JobConf->JobsLock);
                 if (!task->ErrorString.empty()) {
                     task->Job->SetStatus("Failed via unexpected exception: " + task->ErrorString);
                 } else {
@@ -148,12 +149,18 @@ void VideoTaskGroup::RunJobThreadFunc(RunningVideoJob* rvj) {
     TaskDoneEnum taskDoneEnum = TaskDoneEnum::FinishedWithError;
     auto scope = HyoutaUtils::MakeScopeGuard([&] { rvj->Done.store(taskDoneEnum); });
     if (rvj->Job != nullptr) {
+        std::unique_lock lock(*rvj->JobConf->JobsLock);
         IVideoJob& job = *rvj->Job;
         bool wasDead = job.JobStatus == VideoJobStatus::Dead;
         try {
             if (job.JobStatus != VideoJobStatus::Finished) {
                 job.JobStartTimestamp = DateTime::UtcNow();
-                ResultType result = job.Run(*rvj->JobConf, rvj->CancellationToken);
+                ResultType result = ResultType::Failure;
+                {
+                    lock.unlock();
+                    result = job.Run(*rvj->JobConf, rvj->CancellationToken);
+                    lock.lock();
+                }
                 if (result == ResultType::Success) {
                     job.JobFinishTimestamp = DateTime::UtcNow();
                     job.JobStatus = VideoJobStatus::Finished;
@@ -200,13 +207,16 @@ IVideoJob* VideoTaskGroup::DequeueVideoJobForTask() {
     std::lock_guard lock(JobQueueLock);
     bool found = false;
     size_t waitingJobIndex = 0;
-    for (size_t i = 0; i < WaitingJobs.size(); ++i) {
-        auto& wj = *WaitingJobs[i];
-        if (wj.StartImmediately
-            || (RunningTasks.size() < MaxJobsRunningPerType && IsAllowedToStart(wj))) {
-            waitingJobIndex = i;
-            found = true;
-            break;
+    {
+        std::lock_guard lock2(*JobConf->JobsLock);
+        for (size_t i = 0; i < WaitingJobs.size(); ++i) {
+            auto& wj = *WaitingJobs[i];
+            if (wj.StartImmediately
+                || (RunningTasks.size() < MaxJobsRunningPerType && IsAllowedToStart(wj))) {
+                waitingJobIndex = i;
+                found = true;
+                break;
+            }
         }
     }
 
