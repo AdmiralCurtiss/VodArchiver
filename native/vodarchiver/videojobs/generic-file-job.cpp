@@ -112,8 +112,13 @@ static bool DeleteDirectoryRecursive(std::string_view path) {
 static ResultType RunGenericFileJob(GenericFileJob& job,
                                     JobConfig& jobConfig,
                                     TaskCancellation& cancellationToken) {
-    job.JobStatus = VideoJobStatus::Running;
-    job.SetStatus("Downloading...");
+    std::unique_ptr<IVideoInfo> videoInfo;
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.JobStatus = VideoJobStatus::Running;
+        job.TextStatus = "Downloading...";
+        videoInfo = job.VideoInfo->Clone();
+    }
 
     std::string tempFolderPath;
     std::string targetFolderPath;
@@ -132,7 +137,7 @@ static ResultType RunGenericFileJob(GenericFileJob& job,
     std::string progressFilepath = PathCombine(tempFoldername, progressFilename);
     std::string movedFilename = "done.bin";
     std::string movedFilepath = PathCombine(tempFoldername, movedFilename);
-    std::string targetFilename = GetTargetFilename(*job.GetVideoInfo());
+    std::string targetFilename = GetTargetFilename(*videoInfo);
     std::string targetFilepath = PathCombine(targetFolderPath, targetFilename);
 
     if (!HyoutaUtils::IO::Exists(std::string_view(targetFilepath))) {
@@ -150,7 +155,7 @@ static ResultType RunGenericFileJob(GenericFileJob& job,
                 return ResultType::Cancelled;
             }
 
-            std::string videoId = job.GetVideoInfo()->GetVideoId();
+            std::string videoId = videoInfo->GetVideoId();
             if (!HyoutaUtils::IO::WriteFileAtomic(urlFilepath, videoId.data(), videoId.size())) {
                 return ResultType::Failure;
             }
@@ -181,7 +186,10 @@ static ResultType RunGenericFileJob(GenericFileJob& job,
                    HyoutaUtils::IO::GetFilesize(std::string_view(movedFilepath)).value_or(0),
                    cancellationToken,
                    ShouldStallWriteRegularFile,
-                   [&](std::string status) { job.SetStatus(std::move(status)); });
+                   [&](std::string status) {
+                       std::lock_guard lock(*jobConfig.JobsLock);
+                       job.TextStatus = std::move(status);
+                   });
         if (cancellationToken.IsCancellationRequested()) {
             return ResultType::Cancelled;
         }
@@ -193,8 +201,11 @@ static ResultType RunGenericFileJob(GenericFileJob& job,
         }
     }
 
-    job.SetStatus("Done!");
-    job.JobStatus = VideoJobStatus::Finished;
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Done!";
+        job.JobStatus = VideoJobStatus::Finished;
+    }
     return ResultType::Success;
 }
 
