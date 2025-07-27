@@ -50,8 +50,8 @@ struct UserInputRequestTimeMismatchCombined : IUserInputRequest {
         if (option == "Accept despite the mismatch") {
             Job->IgnoreTimeDifferenceCombined = true;
         }
-        Job->_IsWaitingForUserInput = false;
-        Job->_UserInputRequest = nullptr;
+        Job->WaitingForUserInput = false;
+        Job->UserInputRequest = nullptr;
     }
 };
 struct UserInputRequestTimeMismatchRemuxed : IUserInputRequest {
@@ -77,8 +77,8 @@ struct UserInputRequestTimeMismatchRemuxed : IUserInputRequest {
         if (option == "Accept despite the mismatch") {
             Job->IgnoreTimeDifferenceRemuxed = true;
         }
-        Job->_IsWaitingForUserInput = false;
-        Job->_UserInputRequest = nullptr;
+        Job->WaitingForUserInput = false;
+        Job->UserInputRequest = nullptr;
     }
 };
 struct UserInputRequestStreamLiveTwitch : IUserInputRequest {
@@ -113,11 +113,11 @@ static std::string PathCombine(std::string_view lhs, std::string_view rhs) {
 }
 
 bool TwitchVideoJob::IsWaitingForUserInput() const {
-    return _IsWaitingForUserInput;
+    return WaitingForUserInput;
 }
 
 std::shared_ptr<IUserInputRequest> TwitchVideoJob::GetUserInputRequest() const {
-    return _UserInputRequest;
+    return UserInputRequest;
 }
 
 static std::string GetTempFilenameWithoutExtension(IVideoInfo& vi,
@@ -154,8 +154,9 @@ static ResultType Download(TwitchVideoJob& job,
     int triesLeft = MaxTries;
     while (files.size() < downloadInfos.size()) {
         if (triesLeft <= 0) {
-            job.SetStatus(std::format(
-                "Failed to download individual parts after {} tries, aborting.", MaxTries));
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = std::format(
+                "Failed to download individual parts after {} tries, aborting.", MaxTries);
             return ResultType::Failure;
         }
         files.clear();
@@ -179,8 +180,9 @@ static ResultType Download(TwitchVideoJob& job,
                     + "--2e--ts__.ts";
                 if (HyoutaUtils::IO::FileExists(std::string_view(alt_outpath))) {
                     if (i % 100 == 99) {
-                        job.SetStatus(
-                            std::format("Already have part {}/{}...", i + 1, downloadInfos.size()));
+                        std::lock_guard lock(*jobConfig.JobsLock);
+                        job.TextStatus =
+                            std::format("Already have part {}/{}...", i + 1, downloadInfos.size());
                     }
                     files.push_back(std::move(alt_outpath));
                     continue;
@@ -189,8 +191,9 @@ static ResultType Download(TwitchVideoJob& job,
 
             if (HyoutaUtils::IO::FileExists(std::string_view(outpath))) {
                 if (i % 100 == 99) {
-                    job.SetStatus(
-                        std::format("Already have part {}/{}...", i + 1, downloadInfos.size()));
+                    std::lock_guard lock(*jobConfig.JobsLock);
+                    job.TextStatus =
+                        std::format("Already have part {}/{}...", i + 1, downloadInfos.size());
                 }
                 files.push_back(std::move(outpath));
                 continue;
@@ -198,9 +201,11 @@ static ResultType Download(TwitchVideoJob& job,
 
             bool success = false;
             {
-                job.SetStatus(std::format(
-                    "Downloading files... ({}/{})", files.size() + 1, downloadInfos.size()));
-
+                std::lock_guard lock(*jobConfig.JobsLock);
+                job.TextStatus = std::format(
+                    "Downloading files... ({}/{})", files.size() + 1, downloadInfos.size());
+            }
+            {
                 std::vector<VodArchiver::curl::Range> ranges;
                 if (downloadInfo.Length && downloadInfo.Offset) {
                     ranges.reserve(1);
@@ -219,7 +224,10 @@ static ResultType Download(TwitchVideoJob& job,
                            data->Data.size(),
                            cancellationToken,
                            ShouldStallWriteRegularFile,
-                           [&](std::string status) { job.SetStatus(std::move(status)); });
+                           [&](std::string status) {
+                               std::lock_guard lock(*jobConfig.JobsLock);
+                               job.TextStatus = std::move(status);
+                           });
                 if (!HyoutaUtils::IO::WriteFileAtomic(
                         std::string_view(outpath_temp), data->Data.data(), data->Data.size())) {
                     return ResultType::Failure;
@@ -236,7 +244,10 @@ static ResultType Download(TwitchVideoJob& job,
                            HyoutaUtils::IO::GetFilesize(std::string_view(outpath_temp)).value_or(0),
                            cancellationToken,
                            ShouldStallWriteRegularFile,
-                           [&](std::string status) { job.SetStatus(std::move(status)); });
+                           [&](std::string status) {
+                               std::lock_guard lock(*jobConfig.JobsLock);
+                               job.TextStatus = std::move(status);
+                           });
                 if (cancellationToken.IsCancellationRequested()) {
                     return ResultType::Cancelled;
                 }
@@ -491,12 +502,15 @@ static void GetFilenamesFromM3U8(std::vector<DownloadInfo>& downloadInfos,
 }
 
 static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
+                                   JobConfig& jobConfig,
+                                   std::unique_ptr<IVideoInfo>& videoInfo,
                                    std::vector<DownloadInfo>& downloadInfos,
                                    const std::string& tempFolderPath,
-                                   TaskCancellation& cancellationToken) {
+                                   TaskCancellation& cancellationToken,
+                                   const std::string& videoQuality) {
     downloadInfos.clear();
 
-    auto videoId = HyoutaUtils::NumberUtils::ParseInt64(job.GetVideoInfo()->GetVideoId());
+    auto videoId = HyoutaUtils::NumberUtils::ParseInt64(videoInfo->GetVideoId());
     if (!videoId) {
         return ResultType::Failure;
     }
@@ -508,18 +522,22 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
     if (!twitchVideoFromJson) {
         return ResultType::Failure;
     }
-    auto videoInfo = std::make_shared<TwitchVideoInfo>();
-    videoInfo->Service = StreamService::Twitch;
-    videoInfo->Video = *twitchVideoFromJson;
-    job.SetVideoInfo(videoInfo);
+    {
+        auto newVideoInfo = std::make_shared<TwitchVideoInfo>();
+        newVideoInfo->Service = StreamService::Twitch;
+        newVideoInfo->Video = *twitchVideoFromJson;
+        videoInfo = newVideoInfo->Clone();
+
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.VideoInfo = std::move(newVideoInfo);
+    }
 
     std::string folderpath;
     while (true) {
         bool interactive = false;
         if (interactive) {
-            job.SetStatus("");
             std::string tempFilenameWithoutExt =
-                GetTempFilenameWithoutExtension(*videoInfo, job.VideoQuality);
+                GetTempFilenameWithoutExtension(*videoInfo, videoQuality);
             std::string tmp1 = PathCombine(tempFolderPath, tempFilenameWithoutExt + "_baseurl.txt");
             std::string tmp2 = PathCombine(tempFolderPath, tempFilenameWithoutExt + "_tsnames.txt");
             std::optional<std::string> linesbaseurl = TryGetUserCopyBaseurlM3U(tmp1);
@@ -540,7 +558,7 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
                 return ResultType::UserInputRequired;
             }
 
-            auto m3u8path = GetM3U8PathFromM3U(*linesbaseurl, job.VideoQuality);
+            auto m3u8path = GetM3U8PathFromM3U(*linesbaseurl, videoQuality);
             if (!m3u8path) {
                 return ResultType::Failure;
             }
@@ -571,10 +589,16 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
                 if (!twitchVideoFromJson) {
                     return ResultType::Failure;
                 }
-                videoInfo = std::make_shared<TwitchVideoInfo>();
-                videoInfo->Service = StreamService::Twitch;
-                videoInfo->Video = *twitchVideoFromJson;
-                job.SetVideoInfo(videoInfo);
+
+                {
+                    auto newVideoInfo = std::make_shared<TwitchVideoInfo>();
+                    newVideoInfo->Service = StreamService::Twitch;
+                    newVideoInfo->Video = *twitchVideoFromJson;
+                    videoInfo = newVideoInfo->Clone();
+
+                    std::lock_guard lock(*jobConfig.JobsLock);
+                    job.VideoInfo = std::move(newVideoInfo);
+                }
                 continue;
             }
             std::string m3u8(result->Data.data(), result->Data.size());
@@ -589,12 +613,15 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
 static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                                     JobConfig& jobConfig,
                                     TaskCancellation& cancellationToken) {
-    if (cancellationToken.IsCancellationRequested()) {
-        return ResultType::Cancelled;
+    std::unique_ptr<IVideoInfo> videoInfo;
+    std::string videoQuality;
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.JobStatus = VideoJobStatus::Running;
+        job.TextStatus = "Retrieving video info...";
+        videoInfo = job.VideoInfo->Clone();
+        videoQuality = job.VideoQuality;
     }
-
-    job.JobStatus = VideoJobStatus::Running;
-    job.SetStatus("Retrieving video info...");
 
     std::string tempFolderPath;
     std::string targetFolderPath;
@@ -604,22 +631,28 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
         targetFolderPath = jobConfig.TargetFolderPath;
     }
 
+    if (cancellationToken.IsCancellationRequested()) {
+        return ResultType::Cancelled;
+    }
+
     std::vector<DownloadInfo> downloadInfos;
-    ResultType getFileUrlsResult =
-        GetFileUrlsOfVod(job, downloadInfos, tempFolderPath, cancellationToken);
+    ResultType getFileUrlsResult = GetFileUrlsOfVod(
+        job, jobConfig, videoInfo, downloadInfos, tempFolderPath, cancellationToken, videoQuality);
     if (getFileUrlsResult == ResultType::UserInputRequired) {
-        job.SetStatus("Need manual fetch of file URLs.");
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Need manual fetch of file URLs.";
         return ResultType::UserInputRequired;
     }
     if (getFileUrlsResult != ResultType::Success) {
-        job.SetStatus("Failed retrieving file URLs.");
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Failed retrieving file URLs.";
         return ResultType::Failure;
     }
 
     std::string finalFilenameWithoutExtension =
-        GetFinalFilenameWithoutExtension(*job.GetVideoInfo(), job.VideoQuality);
+        GetFinalFilenameWithoutExtension(*videoInfo, videoQuality);
     std::string tempFilenameWithoutExtension =
-        GetTempFilenameWithoutExtension(*job.GetVideoInfo(), job.VideoQuality);
+        GetTempFilenameWithoutExtension(*videoInfo, videoQuality);
 
     std::string combinedTempname =
         PathCombine(tempFolderPath, tempFilenameWithoutExtension + "_combined.ts");
@@ -643,7 +676,10 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                 return ResultType::Cancelled;
             }
 
-            job.SetStatus("Downloading files...");
+            {
+                std::lock_guard lock(*jobConfig.JobsLock);
+                job.TextStatus = "Downloading files...";
+            }
             std::vector<std::string> files;
             while (true) {
                 if (cancellationToken.IsCancellationRequested()) {
@@ -658,8 +694,13 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                 if (downloadResult != ResultType::Success) {
                     return downloadResult;
                 }
-                if (job.AssumeFinished
-                    || job.GetVideoInfo()->GetVideoRecordingState() == RecordingState::Recorded) {
+                bool assumeFinished = false;
+                {
+                    std::lock_guard lock(*jobConfig.JobsLock);
+                    assumeFinished = job.AssumeFinished;
+                }
+                if (assumeFinished
+                    || videoInfo->GetVideoRecordingState() == RecordingState::Recorded) {
                     break;
                 } else {
                     // we're downloading a stream that is still streaming
@@ -670,10 +711,13 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                     if (timerDifference < std::chrono::seconds(150)) {
                         auto ts = std::chrono::seconds(150) - timerDifference;
                         const std::chrono::duration<double, std::ratio<1, 1>> tsDouble = ts;
-                        job.SetStatus(std::format("Waiting {} seconds for stream to update...",
-                                                  tsDouble.count()));
-                        job._UserInputRequest =
-                            std::make_unique<UserInputRequestStreamLiveTwitch>(&job);
+                        {
+                            std::lock_guard lock(*jobConfig.JobsLock);
+                            job.TextStatus = std::format(
+                                "Waiting {} seconds for stream to update...", tsDouble.count());
+                            job.UserInputRequest =
+                                std::make_unique<UserInputRequestStreamLiveTwitch>(&job);
+                        }
                         if (!cancellationToken.DelayFor(ts)) {
                             return ResultType::Cancelled;
                         }
@@ -681,17 +725,25 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                     if (HyoutaUtils::IO::FileExists(std::string_view(tsnamesfilepath))) {
                         HyoutaUtils::IO::DeleteFile(std::string_view(tsnamesfilepath));
                     }
-                    getFileUrlsResult =
-                        GetFileUrlsOfVod(job, downloadInfos, tempFolderPath, cancellationToken);
+                    getFileUrlsResult = GetFileUrlsOfVod(job,
+                                                         jobConfig,
+                                                         videoInfo,
+                                                         downloadInfos,
+                                                         tempFolderPath,
+                                                         cancellationToken,
+                                                         videoQuality);
                     if (getFileUrlsResult != ResultType::Success) {
-                        job.SetStatus("Failed retrieving file URLs.");
+                        std::lock_guard lock(*jobConfig.JobsLock);
+                        job.TextStatus = "Failed retrieving file URLs.";
                         return ResultType::Failure;
                     }
                 }
             }
-            job._UserInputRequest = nullptr;
-
-            job.SetStatus("Waiting for free disk IO slot to combine...");
+            {
+                std::lock_guard lock(*jobConfig.JobsLock);
+                job.UserInputRequest = nullptr;
+                job.TextStatus = "Waiting for free disk IO slot to combine...";
+            }
             {
                 auto diskLock = jobConfig.ExpensiveDiskIO.WaitForFreeSlot(cancellationToken);
                 if (cancellationToken.IsCancellationRequested()) {
@@ -703,7 +755,10 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                         HyoutaUtils::IO::GetFilesize(std::string_view(file)).value_or(0);
                 }
 
-                job.SetStatus("Combining downloaded video parts...");
+                {
+                    std::lock_guard lock(*jobConfig.JobsLock);
+                    job.TextStatus = "Combining downloaded video parts...";
+                }
                 if (HyoutaUtils::IO::FileExists(std::string_view(combinedTempname))) {
                     HyoutaUtils::IO::DeleteFile(std::string_view(combinedTempname));
                 }
@@ -712,7 +767,10 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                            expectedTargetFilesize,
                            cancellationToken,
                            ShouldStallWriteRegularFile,
-                           [&](std::string status) { job.SetStatus(std::move(status)); });
+                           [&](std::string status) {
+                               std::lock_guard lock(*jobConfig.JobsLock);
+                               job.TextStatus = std::move(status);
+                           });
                 if (cancellationToken.IsCancellationRequested()) {
                     return ResultType::Cancelled;
                 }
@@ -722,26 +780,32 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                 }
 
                 // sanity check
-                job.SetStatus("Sanity check on combined video...");
+                {
+                    std::lock_guard lock(*jobConfig.JobsLock);
+                    job.TextStatus = "Sanity check on combined video...";
+                }
                 auto probe = FFMpegProbe(combinedTempname);
                 if (!probe) {
                     return ResultType::Failure;
                 }
                 TimeSpan actualVideoLength = probe->Duration;
-                TimeSpan expectedVideoLength = job.GetVideoInfo()->GetVideoLength();
-                if (!job.IgnoreTimeDifferenceCombined
-                    && std::abs((actualVideoLength - expectedVideoLength).GetTotalSeconds())
-                           > 5.0) {
-                    // if difference is bigger than 5 seconds something is off, report
-                    job.SetStatus(
-                        std::format("Large time difference between expected ({}s) and combined "
-                                    "({}s), stopping.",
-                                    expectedVideoLength.GetTotalSeconds(),
-                                    actualVideoLength.GetTotalSeconds()));
-                    job._UserInputRequest =
-                        std::make_unique<UserInputRequestTimeMismatchCombined>(&job);
-                    job._IsWaitingForUserInput = true;
-                    return ResultType::UserInputRequired;
+                TimeSpan expectedVideoLength = videoInfo->GetVideoLength();
+                {
+                    std::lock_guard lock(*jobConfig.JobsLock);
+                    if (!job.IgnoreTimeDifferenceCombined
+                        && std::abs((actualVideoLength - expectedVideoLength).GetTotalSeconds())
+                               > 5.0) {
+                        // if difference is bigger than 5 seconds something is off, report
+                        job.TextStatus = std::format(
+                            "Large time difference between expected ({}s) and combined "
+                            "({}s), stopping.",
+                            expectedVideoLength.GetTotalSeconds(),
+                            actualVideoLength.GetTotalSeconds());
+                        job.UserInputRequest =
+                            std::make_unique<UserInputRequestTimeMismatchCombined>(&job);
+                        job.WaitingForUserInput = true;
+                        return ResultType::UserInputRequired;
+                    }
                 }
 
                 HyoutaUtils::IO::Move(combinedTempname, combinedFilename, true);
@@ -752,13 +816,19 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
             }
         }
 
-        job.SetStatus("Waiting for free disk IO slot to remux...");
+        {
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = "Waiting for free disk IO slot to remux...";
+        }
         {
             auto diskLock = jobConfig.ExpensiveDiskIO.WaitForFreeSlot(cancellationToken);
             if (cancellationToken.IsCancellationRequested()) {
                 return ResultType::Cancelled;
             }
-            job.SetStatus("Remuxing to MP4...");
+            {
+                std::lock_guard lock(*jobConfig.JobsLock);
+                job.TextStatus = "Remuxing to MP4...";
+            }
             if (HyoutaUtils::IO::FileExists(std::string_view(remuxedTempname))) {
                 HyoutaUtils::IO::DeleteFile(std::string_view(remuxedTempname));
             }
@@ -767,7 +837,10 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                        HyoutaUtils::IO::GetFilesize(std::string_view(combinedFilename)).value_or(0),
                        cancellationToken,
                        ShouldStallWriteRegularFile,
-                       [&](std::string status) { job.SetStatus(std::move(status)); });
+                       [&](std::string status) {
+                           std::lock_guard lock(*jobConfig.JobsLock);
+                           job.TextStatus = std::move(status);
+                       });
             if (cancellationToken.IsCancellationRequested()) {
                 return ResultType::Cancelled;
             }
@@ -776,23 +849,31 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
             }
 
             // sanity check
-            job.SetStatus("Sanity check on remuxed video...");
+            {
+                std::lock_guard lock(*jobConfig.JobsLock);
+                job.TextStatus = "Sanity check on remuxed video...";
+            }
             auto probe = FFMpegProbe(remuxedFilename);
             if (!probe) {
                 return ResultType::Failure;
             }
             TimeSpan actualVideoLength = probe->Duration;
-            TimeSpan expectedVideoLength = job.GetVideoInfo()->GetVideoLength();
-            if (!job.IgnoreTimeDifferenceRemuxed
-                && std::abs((actualVideoLength - expectedVideoLength).GetTotalSeconds()) > 5.0) {
-                // if difference is bigger than 5 seconds something is off, report
-                job.SetStatus(std::format(
-                    "Large time difference between expected ({}s) and remuxed ({}s), stopping.",
-                    expectedVideoLength.GetTotalSeconds(),
-                    actualVideoLength.GetTotalSeconds()));
-                job._UserInputRequest = std::make_unique<UserInputRequestTimeMismatchRemuxed>(&job);
-                job._IsWaitingForUserInput = true;
-                return ResultType::UserInputRequired;
+            TimeSpan expectedVideoLength = videoInfo->GetVideoLength();
+            {
+                std::lock_guard lock(*jobConfig.JobsLock);
+                if (!job.IgnoreTimeDifferenceRemuxed
+                    && std::abs((actualVideoLength - expectedVideoLength).GetTotalSeconds())
+                           > 5.0) {
+                    // if difference is bigger than 5 seconds something is off, report
+                    job.TextStatus = std::format(
+                        "Large time difference between expected ({}s) and remuxed ({}s), stopping.",
+                        expectedVideoLength.GetTotalSeconds(),
+                        actualVideoLength.GetTotalSeconds());
+                    job.UserInputRequest =
+                        std::make_unique<UserInputRequestTimeMismatchRemuxed>(&job);
+                    job.WaitingForUserInput = true;
+                    return ResultType::UserInputRequired;
+                }
             }
 
             HyoutaUtils::IO::Move(remuxedFilename, targetFilename, true);
@@ -800,13 +881,16 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
         }
     }
 
-    job.SetStatus("Done!");
-    job.JobStatus = VideoJobStatus::Finished;
     if (HyoutaUtils::IO::FileExists(std::string_view(tsnamesfilepath))) {
         HyoutaUtils::IO::DeleteFile(std::string_view(tsnamesfilepath));
     }
     if (HyoutaUtils::IO::FileExists(std::string_view(baseurlfilepath))) {
         HyoutaUtils::IO::DeleteFile(std::string_view(baseurlfilepath));
+    }
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Done!";
+        job.JobStatus = VideoJobStatus::Finished;
     }
     return ResultType::Success;
 }

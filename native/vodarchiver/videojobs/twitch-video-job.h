@@ -15,8 +15,8 @@ struct TwitchVideoJob : public IVideoJob {
     std::string GenerateOutputFilename() override;
 
     std::shared_ptr<IUserInputRequest> GetUserInputRequest() const override;
-    std::shared_ptr<IUserInputRequest> _UserInputRequest = nullptr;
-    bool _IsWaitingForUserInput = false;
+    std::shared_ptr<IUserInputRequest> UserInputRequest = nullptr;
+    bool WaitingForUserInput = false;
     bool AssumeFinished = false;
 
     bool IgnoreTimeDifferenceCombined = false;
