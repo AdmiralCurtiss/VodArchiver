@@ -17,7 +17,13 @@ struct JobConfig {
     uint64_t MinimumFreeSpaceBytes = 0;
     uint64_t AbsoluteMinimumFreeSpaceBytes = 0;
 
-    // this may be accessed without the mutex held
+    // things below this line do not require holding the Mutex
+
+    // pointer to JobList::JobsLock
+    std::recursive_mutex* JobsLock;
+
+    // global disk IO locking so multiple threads don't slow eachother to a crawl by accessing the
+    // same hard drive at the same time
     DiskMutex ExpensiveDiskIO;
 };
 } // namespace VodArchiver

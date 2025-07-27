@@ -84,6 +84,11 @@ int RunGui(int argc, char** argvUtf8) {
         state.JobConf.TempFolderPath = GetTempFolderPath(state.GuiSettings);
         state.JobConf.TwitchClientId = state.GuiSettings.TwitchClientId;
         state.JobConf.TwitchClientSecret = state.GuiSettings.TwitchClientSecret;
+        state.JobConf.MinimumFreeSpaceBytes = state.GuiSettings.MinimumFreeSpaceBytes;
+        state.JobConf.AbsoluteMinimumFreeSpaceBytes =
+            state.GuiSettings.AbsoluteMinimumFreeSpaceBytes;
+
+        state.JobConf.JobsLock = &state.Jobs.JobsLock;
     }
 
     for (int s = static_cast<int>(StreamService::Unknown);

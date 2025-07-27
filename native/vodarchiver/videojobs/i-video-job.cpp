@@ -68,10 +68,6 @@ IUserInputRequest::~IUserInputRequest() = default;
 
 IVideoJob::~IVideoJob() = default;
 
-const std::string& IVideoJob::GetStatus() const {
-    return TextStatus;
-}
-
 void IVideoJob::SetStatus(std::string value) {
     TextStatus = value;
 }

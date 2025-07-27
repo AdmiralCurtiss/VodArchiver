@@ -462,7 +462,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Status)) {
-                        const std::string& s = item->GetStatus();
+                        const std::string& s = item->TextStatus;
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Actions)) {
@@ -531,7 +531,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                 ImGui::SetClipboardText(fn.c_str());
                             }
                             if (ImGui::Selectable("Copy Status")) {
-                                const std::string& status = item->GetStatus();
+                                const std::string& status = item->TextStatus;
                                 ImGui::SetClipboardText(status.c_str());
                             }
                             if (item->JobStatus == VideoJobStatus::Running) {

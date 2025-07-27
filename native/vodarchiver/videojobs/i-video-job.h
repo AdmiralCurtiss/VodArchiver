@@ -44,44 +44,34 @@ struct IUserInputRequest {
 };
 
 struct IVideoJob {
+    // To document this somewhere...
+    // We have a somewhat complicated access logic for the data stored by jobs. Jobs that are stored
+    // in the JobList are accessed by multiple threads, so the access must be synchronized to avoid
+    // race conditions. None of this applies to jobs that are not stored in the JobList.
+    //
+    // All access (both read and write) to the job data *must* be done while holding the
+    // JobList::JobsLock. There is one exception to this: The Run() function may be called without
+    // holding this lock, it will take care of the locking on its own.
+
     virtual ~IVideoJob();
 
-public: // should be private
-    std::string TextStatus;
-
-public:
-    const std::string& GetStatus() const;
     void SetStatus(std::string value);
-
-    virtual bool IsWaitingForUserInput() const = 0;
-
-    virtual std::shared_ptr<IUserInputRequest> GetUserInputRequest() const;
-
-    std::string GetHumanReadableJobName() const;
-
-public:
-    size_t Index = 0; // FIXME: Is this even used for anything?
-
-    VideoJobStatus JobStatus = VideoJobStatus::NotStarted;
-
-public: // should be private
-    std::shared_ptr<IVideoInfo> VideoInfo;
-
-public:
     std::shared_ptr<IVideoInfo> GetVideoInfo() const;
     void SetVideoInfo(std::shared_ptr<IVideoInfo> videoInfo);
+    std::string GetHumanReadableJobName() const;
 
-    bool HasBeenValidated = false;
-
-    std::string Notes;
-
-    DateTime JobStartTimestamp{.Data = 0};
-
-    DateTime JobFinishTimestamp{.Data = 0};
-
+    virtual bool IsWaitingForUserInput() const = 0;
+    virtual std::shared_ptr<IUserInputRequest> GetUserInputRequest() const;
     virtual ResultType Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) = 0;
-
     virtual std::string GenerateOutputFilename() = 0;
+
+    std::string TextStatus;
+    VideoJobStatus JobStatus = VideoJobStatus::NotStarted;
+    bool HasBeenValidated = false;
+    std::shared_ptr<IVideoInfo> VideoInfo;
+    DateTime JobStartTimestamp{.Data = 0};
+    DateTime JobFinishTimestamp{.Data = 0};
+    std::string Notes;
 };
 
 bool ShouldStallWriteRegularFile(JobConfig& jobConfig, std::string_view path, uint64_t filesize);

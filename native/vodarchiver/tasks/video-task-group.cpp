@@ -165,7 +165,7 @@ void VideoTaskGroup::RunJobThreadFunc(RunningVideoJob* rvj) {
                 }
 
                 if (result == ResultType::Cancelled) {
-                    job.SetStatus("Cancelled during: " + job.GetStatus());
+                    job.SetStatus("Cancelled during: " + job.TextStatus);
                 }
 
                 if (result == ResultType::TemporarilyUnavailable) {

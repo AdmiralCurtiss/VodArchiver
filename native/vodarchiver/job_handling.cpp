@@ -124,7 +124,6 @@ bool EnqueueJob(JobList& jobs,
             }
         }
 
-        job->Index = jobs.JobsVector.size();
         job->SetStatus("Waiting...");
         IVideoJob* jobptr = job.get();
         jobs.JobsVector.push_back(std::move(job));
