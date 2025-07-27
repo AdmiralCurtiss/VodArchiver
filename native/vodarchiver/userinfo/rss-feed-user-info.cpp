@@ -118,7 +118,7 @@ static std::optional<std::vector<std::unique_ptr<IVideoInfo>>>
     }
 
     for (auto& vi : media) {
-        vi->SetUsername(feedTitle);
+        static_cast<GenericVideoInfo*>(vi.get())->Username = feedTitle;
     }
 
     return media;

@@ -33,23 +33,14 @@ struct HitboxVideo {
 struct HitboxVideoInfo : public IVideoInfo {
     ~HitboxVideoInfo() override;
     StreamService GetService() const override;
-    void SetService(StreamService service) override;
     std::string GetUsername() const override;
-    void SetUsername(std::string username) override;
     std::string GetVideoId() const override;
-    void SetVideoId(std::string videoId) override;
     std::string GetVideoTitle() const override;
-    void SetVideoTitle(std::string videoTitle) override;
     std::string GetVideoGame() const override;
-    void SetVideoGame(std::string videoGame) override;
     DateTime GetVideoTimestamp() const override;
-    void SetVideoTimestamp(DateTime timestamp) override;
     TimeSpan GetVideoLength() const override;
-    void SetVideoLength(TimeSpan length) override;
     RecordingState GetVideoRecordingState() const override;
-    void SetVideoRecordingState(RecordingState videoRecordingState) override;
     VideoFileType GetVideoType() const override;
-    void SetVideoType(VideoFileType videoType) override;
 
     std::unique_ptr<IVideoInfo> Clone() const override;
 
