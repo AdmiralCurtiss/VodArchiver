@@ -50,14 +50,14 @@ public: // should be private
     std::string TextStatus;
 
 public:
-    virtual const std::string& GetStatus() const;
-    virtual void SetStatus(std::string value);
+    const std::string& GetStatus() const;
+    void SetStatus(std::string value);
 
     virtual bool IsWaitingForUserInput() const = 0;
 
     virtual std::shared_ptr<IUserInputRequest> GetUserInputRequest() const;
 
-    virtual std::string GetHumanReadableJobName() const;
+    std::string GetHumanReadableJobName() const;
 
 public:
     size_t Index = 0; // FIXME: Is this even used for anything?
@@ -68,8 +68,8 @@ public: // should be private
     std::shared_ptr<IVideoInfo> VideoInfo;
 
 public:
-    virtual std::shared_ptr<IVideoInfo> GetVideoInfo() const;
-    virtual void SetVideoInfo(std::shared_ptr<IVideoInfo> videoInfo);
+    std::shared_ptr<IVideoInfo> GetVideoInfo() const;
+    void SetVideoInfo(std::shared_ptr<IVideoInfo> videoInfo);
 
     bool HasBeenValidated = false;
 
