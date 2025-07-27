@@ -24,8 +24,8 @@ FFMpegSplitJob::FFMpegSplitJob(std::string path, std::string splitTimes) {
     vi->VideoId = std::move(path);
     vi->Username = "_split";
     vi->VideoTitle = splitTimes;
-    _VideoInfo = std::move(vi);
-    _Status = "...";
+    VideoInfo = std::move(vi);
+    TextStatus = "...";
     SplitTimes = std::move(splitTimes);
 }
 
@@ -75,7 +75,7 @@ static ResultType
         return ResultType::Cancelled;
     }
 
-    std::string originalpath = HyoutaUtils::IO::GetAbsolutePath(job._VideoInfo->GetVideoId());
+    std::string originalpath = HyoutaUtils::IO::GetAbsolutePath(job.VideoInfo->GetVideoId());
     std::string newdirpath(HyoutaUtils::IO::GetDirectoryName(originalpath));
     HyoutaUtils::IO::AppendPathElement(newdirpath, std::format("{}", DateTime::UtcNow().Data));
     if (HyoutaUtils::IO::Exists(std::string_view(newdirpath))) {
@@ -98,7 +98,7 @@ static ResultType
         return ResultType::Failure;
     }
 
-    std::string outname = GenerateOutputName(inname, job._VideoInfo->GetVideoId());
+    std::string outname = GenerateOutputName(inname, job.VideoInfo->GetVideoId());
 
     std::vector<std::string> args;
     args.push_back("-i");
@@ -179,7 +179,7 @@ ResultType FFMpegSplitJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
 }
 
 std::string FFMpegSplitJob::GenerateOutputFilename() {
-    std::string fullPath = _VideoInfo->GetVideoId();
+    std::string fullPath = VideoInfo->GetVideoId();
     return GenerateOutputFilenameInternal(fullPath);
 }
 } // namespace VodArchiver

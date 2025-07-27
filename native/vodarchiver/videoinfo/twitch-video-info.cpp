@@ -36,35 +36,35 @@ std::optional<TwitchVideoType> TwitchVideoTypeFromString(std::string_view sv) {
 TwitchVideoInfo::~TwitchVideoInfo() = default;
 
 StreamService TwitchVideoInfo::GetService() const {
-    return this->_Service;
+    return this->Service;
 }
 
 std::string TwitchVideoInfo::GetUsername() const {
-    return this->_Video.Username.value_or("");
+    return this->Video.Username.value_or("");
 }
 
 std::string TwitchVideoInfo::GetVideoGame() const {
-    return this->_Video.Game.value_or("");
+    return this->Video.Game.value_or("");
 }
 
 std::string TwitchVideoInfo::GetVideoId() const {
-    return std::format("{}", _Video.ID);
+    return std::format("{}", this->Video.ID);
 }
 
 TimeSpan TwitchVideoInfo::GetVideoLength() const {
-    return TimeSpan::FromSeconds(this->_Video.Duration);
+    return TimeSpan::FromSeconds(this->Video.Duration);
 }
 
 RecordingState TwitchVideoInfo::GetVideoRecordingState() const {
-    return this->_Video.State;
+    return this->Video.State;
 }
 
 DateTime TwitchVideoInfo::GetVideoTimestamp() const {
-    return this->_Video.PublishedAt.value_or(DateTime::FromBinary(0));
+    return this->Video.PublishedAt.value_or(DateTime::FromBinary(0));
 }
 
 std::string TwitchVideoInfo::GetVideoTitle() const {
-    return this->_Video.Title.value_or("");
+    return this->Video.Title.value_or("");
 }
 
 VideoFileType TwitchVideoInfo::GetVideoType() const {

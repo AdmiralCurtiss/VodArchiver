@@ -61,10 +61,10 @@ FetchReturnValue TwitchUserInfo::Fetch(JobConfig& jobConfig, size_t offset, bool
     for (auto& v : broadcasts->Videos) {
         auto tv = std::make_unique<TwitchVideoInfo>();
         auto tc = std::make_unique<TwitchVideoInfo>();
-        tv->_Service = StreamService::Twitch;
-        tc->_Service = StreamService::TwitchChatReplay;
-        tv->_Video = v;
-        tc->_Video = std::move(v);
+        tv->Service = StreamService::Twitch;
+        tc->Service = StreamService::TwitchChatReplay;
+        tv->Video = v;
+        tc->Video = std::move(v);
         videosToAdd.push_back(std::move(tv));
         videosToAdd.push_back(std::move(tc));
     }

@@ -47,7 +47,7 @@ struct IVideoJob {
     virtual ~IVideoJob();
 
 public: // should be private
-    std::string _Status;
+    std::string TextStatus;
 
 public:
     virtual const std::string& GetStatus() const;
@@ -65,7 +65,7 @@ public:
     VideoJobStatus JobStatus = VideoJobStatus::NotStarted;
 
 public: // should be private
-    std::shared_ptr<IVideoInfo> _VideoInfo;
+    std::shared_ptr<IVideoInfo> VideoInfo;
 
 public:
     virtual std::shared_ptr<IVideoInfo> GetVideoInfo() const;

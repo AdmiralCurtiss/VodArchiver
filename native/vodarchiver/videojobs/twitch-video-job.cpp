@@ -509,8 +509,8 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
         return ResultType::Failure;
     }
     auto videoInfo = std::make_shared<TwitchVideoInfo>();
-    videoInfo->_Service = StreamService::Twitch;
-    videoInfo->_Video = *twitchVideoFromJson;
+    videoInfo->Service = StreamService::Twitch;
+    videoInfo->Video = *twitchVideoFromJson;
     job.SetVideoInfo(videoInfo);
 
     std::string folderpath;
@@ -572,8 +572,8 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
                     return ResultType::Failure;
                 }
                 videoInfo = std::make_shared<TwitchVideoInfo>();
-                videoInfo->_Service = StreamService::Twitch;
-                videoInfo->_Video = *twitchVideoFromJson;
+                videoInfo->Service = StreamService::Twitch;
+                videoInfo->Video = *twitchVideoFromJson;
                 job.SetVideoInfo(videoInfo);
                 continue;
             }

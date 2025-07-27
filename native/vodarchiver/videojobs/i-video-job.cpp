@@ -69,11 +69,11 @@ IUserInputRequest::~IUserInputRequest() = default;
 IVideoJob::~IVideoJob() = default;
 
 const std::string& IVideoJob::GetStatus() const {
-    return _Status;
+    return TextStatus;
 }
 
 void IVideoJob::SetStatus(std::string value) {
-    _Status = value;
+    TextStatus = value;
 }
 
 std::shared_ptr<IUserInputRequest> IVideoJob::GetUserInputRequest() const {
@@ -97,11 +97,11 @@ std::string IVideoJob::GetHumanReadableJobName() const {
 }
 
 std::shared_ptr<IVideoInfo> IVideoJob::GetVideoInfo() const {
-    return _VideoInfo;
+    return VideoInfo;
 }
 
 void IVideoJob::SetVideoInfo(std::shared_ptr<IVideoInfo> videoInfo) {
-    _VideoInfo = videoInfo;
+    VideoInfo = videoInfo;
 }
 
 bool ShouldStallWriteRegularFile(JobConfig& jobConfig, std::string_view path, uint64_t filesize) {

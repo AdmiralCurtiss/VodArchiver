@@ -43,7 +43,7 @@ struct TwitchVideoInfo : public IVideoInfo {
 
     std::unique_ptr<IVideoInfo> Clone() const override;
 
-    TwitchVideo _Video;
-    StreamService _Service;
+    TwitchVideo Video;
+    StreamService Service;
 };
 } // namespace VodArchiver

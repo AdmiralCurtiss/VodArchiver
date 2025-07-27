@@ -39,7 +39,7 @@ bool CreateAndEnqueueJob(JobList& jobs,
             auto vi = std::make_unique<GenericVideoInfo>();
             vi->Service = StreamService::Twitch;
             vi->VideoId = std::move(id);
-            j->_VideoInfo = std::move(vi);
+            j->VideoInfo = std::move(vi);
             job = std::move(j);
             break;
         }
@@ -48,7 +48,7 @@ bool CreateAndEnqueueJob(JobList& jobs,
             auto vi = std::make_unique<GenericVideoInfo>();
             vi->Service = StreamService::TwitchChatReplay;
             vi->VideoId = std::move(id);
-            j->_VideoInfo = std::move(vi);
+            j->VideoInfo = std::move(vi);
             job = std::move(j);
             break;
         }
@@ -57,7 +57,7 @@ bool CreateAndEnqueueJob(JobList& jobs,
             auto vi = std::make_unique<GenericVideoInfo>();
             vi->Service = StreamService::Hitbox;
             vi->VideoId = std::move(id);
-            j->_VideoInfo = std::move(vi);
+            j->VideoInfo = std::move(vi);
             job = std::move(j);
             break;
         }
@@ -66,7 +66,7 @@ bool CreateAndEnqueueJob(JobList& jobs,
             auto vi = std::make_unique<GenericVideoInfo>();
             vi->Service = StreamService::Youtube;
             vi->VideoId = std::move(id);
-            j->_VideoInfo = std::move(vi);
+            j->VideoInfo = std::move(vi);
             job = std::move(j);
             break;
         }
@@ -75,7 +75,7 @@ bool CreateAndEnqueueJob(JobList& jobs,
             auto vi = std::make_unique<GenericVideoInfo>();
             vi->Service = StreamService::RawUrl;
             vi->VideoId = std::move(id);
-            j->_VideoInfo = std::move(vi);
+            j->VideoInfo = std::move(vi);
             job = std::move(j);
             break;
         }
@@ -84,7 +84,7 @@ bool CreateAndEnqueueJob(JobList& jobs,
             auto vi = std::make_unique<GenericVideoInfo>();
             vi->Service = StreamService::FFMpegJob;
             vi->VideoId = std::move(id);
-            j->_VideoInfo = std::move(vi);
+            j->VideoInfo = std::move(vi);
             job = std::move(j);
             break;
         }

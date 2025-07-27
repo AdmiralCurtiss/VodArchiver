@@ -547,7 +547,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                             if (item->JobStatus == VideoJobStatus::NotStarted) {
                                 if (ImGui::Selectable("Kill")) {
                                     item->JobStatus = VideoJobStatus::Dead;
-                                    item->_Status = "[Manually killed] " + item->_Status;
+                                    item->TextStatus = "[Manually killed] " + item->TextStatus;
                                 }
                             }
                             if (item->JobStatus != VideoJobStatus::Running) {

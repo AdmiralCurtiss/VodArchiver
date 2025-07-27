@@ -126,8 +126,8 @@ ResultType RunChatJob(TwitchChatReplayJob& job,
     }
     auto twitchVideoData = TwitchYTDL::VideoFromJson(*video_json);
     auto newVideoInfo = std::make_shared<TwitchVideoInfo>();
-    newVideoInfo->_Service = StreamService::TwitchChatReplay;
-    newVideoInfo->_Video = std::move(*twitchVideoData);
+    newVideoInfo->Service = StreamService::TwitchChatReplay;
+    newVideoInfo->Video = std::move(*twitchVideoData);
     job.SetVideoInfo(newVideoInfo);
 
     if (!job.AssumeFinished && newVideoInfo->GetVideoRecordingState() == RecordingState::Live) {

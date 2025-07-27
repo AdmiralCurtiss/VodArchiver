@@ -125,7 +125,7 @@ static ResultType RunReencodeJob(FFMpegReencodeJob& job,
     }
 
     if (probe.has_value()) {
-        job._VideoInfo = std::make_unique<FFMpegReencodeJobVideoInfo>(
+        job.VideoInfo = std::make_unique<FFMpegReencodeJobVideoInfo>(
             file, *probe, ffmpegOptions, postfixOld, postfixNew, outputformat);
     }
 
@@ -167,7 +167,7 @@ static ResultType RunReencodeJob(FFMpegReencodeJob& job,
             return ResultType::Failure;
         }
         FFMpegReencodeJobVideoInfo* ffmpegVideoInfo =
-            dynamic_cast<FFMpegReencodeJobVideoInfo*>(job._VideoInfo.get());
+            dynamic_cast<FFMpegReencodeJobVideoInfo*>(job.VideoInfo.get());
         if (!ffmpegVideoInfo) {
             job.SetStatus("Internal error.");
             return ResultType::Failure;

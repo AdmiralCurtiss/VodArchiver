@@ -347,7 +347,7 @@ static std::unique_ptr<IVideoInfo> DeserializeIVideoInfo(rapidxml::xml_node<char
                 std::string_view value(a->value(), a->value_size());
                 if (!serviceRead && name == "service") {
                     if (auto service = StreamServiceFromString(value)) {
-                        info->_Service = *service;
+                        info->Service = *service;
                         serviceRead = true;
                     }
                 }
@@ -358,54 +358,54 @@ static std::unique_ptr<IVideoInfo> DeserializeIVideoInfo(rapidxml::xml_node<char
                     std::string_view value(a->value(), a->value_size());
                     if (!idRead && name == "id") {
                         if (auto id = HyoutaUtils::NumberUtils::ParseInt64(value)) {
-                            info->_Video.ID = *id;
+                            info->Video.ID = *id;
                             idRead = true;
                         }
                     } else if (!userIdRead && name == "userid") {
                         if (auto id = HyoutaUtils::NumberUtils::ParseInt64(value)) {
-                            info->_Video.UserID = *id;
+                            info->Video.UserID = *id;
                             userIdRead = true;
                         }
                     } else if (!usernameRead && name == "username") {
-                        info->_Video.Username = std::string(value);
+                        info->Video.Username = std::string(value);
                         usernameRead = true;
                     } else if (!titleRead && name == "title") {
-                        info->_Video.Title = std::string(value);
+                        info->Video.Title = std::string(value);
                         titleRead = true;
                     } else if (!gameRead && name == "game") {
-                        info->_Video.Game = std::string(value);
+                        info->Video.Game = std::string(value);
                         gameRead = true;
                     } else if (!descriptionRead && name == "description") {
-                        info->_Video.Description = std::string(value);
+                        info->Video.Description = std::string(value);
                         descriptionRead = true;
                     } else if (!createdAtRead && name == "created_at") {
                         if (auto v = HyoutaUtils::NumberUtils::ParseInt64(value)) {
-                            info->_Video.CreatedAt = DateTime::FromBinary(*v);
+                            info->Video.CreatedAt = DateTime::FromBinary(*v);
                             createdAtRead = true;
                         }
                     } else if (!publishedAtRead && name == "published_at") {
                         if (auto v = HyoutaUtils::NumberUtils::ParseInt64(value)) {
-                            info->_Video.PublishedAt = DateTime::FromBinary(*v);
+                            info->Video.PublishedAt = DateTime::FromBinary(*v);
                             publishedAtRead = true;
                         }
                     } else if (!durationRead && name == "duration") {
                         if (auto v = HyoutaUtils::NumberUtils::ParseInt64(value)) {
-                            info->_Video.Duration = *v;
+                            info->Video.Duration = *v;
                             durationRead = true;
                         }
                     } else if (!viewCountRead && name == "view_count") {
                         if (auto v = HyoutaUtils::NumberUtils::ParseInt64(value)) {
-                            info->_Video.ViewCount = *v;
+                            info->Video.ViewCount = *v;
                             viewCountRead = true;
                         }
                     } else if (!typeRead && name == "type") {
                         if (auto v = TwitchVideoTypeFromString(value)) {
-                            info->_Video.Type = *v;
+                            info->Video.Type = *v;
                             typeRead = true;
                         }
                     } else if (!stateRead && name == "state") {
                         if (auto v = RecordingStateFromString(value)) {
-                            info->_Video.State = *v;
+                            info->Video.State = *v;
                             stateRead = true;
                         }
                     }
@@ -578,7 +578,7 @@ static bool ParseBaseIVideoJob(IVideoJob& job, rapidxml::xml_node<char>* node) {
         std::string_view name(a->name(), a->name_size());
         std::string_view value(a->value(), a->value_size());
         if (!statusRead && name == "textStatus") {
-            job._Status = std::string(value);
+            job.TextStatus = std::string(value);
             statusRead = true;
         } else if (!jobStatusRead && name == "jobStatus") {
             auto s = VideoJobStatusFromString(value);
@@ -623,7 +623,7 @@ static bool ParseBaseIVideoJob(IVideoJob& job, rapidxml::xml_node<char>* node) {
     }
     auto vi = DeserializeIVideoInfo(videoInfoXml);
     if (vi) {
-        job._VideoInfo = std::move(vi);
+        job.VideoInfo = std::move(vi);
         videoInfoRead = true;
     }
 
@@ -665,7 +665,7 @@ static bool ParseFFMpegSplitJob(FFMpegSplitJob& job, rapidxml::xml_node<char>* n
     }
 
     if (splitTimesRead) {
-        if (auto* gvi = dynamic_cast<GenericVideoInfo*>(job._VideoInfo.get())) {
+        if (auto* gvi = dynamic_cast<GenericVideoInfo*>(job.VideoInfo.get())) {
             gvi->VideoTitle = job.SplitTimes;
         }
     }
@@ -967,41 +967,39 @@ static bool SerializeVideoInfo(rapidxml::xml_document<char>& xml,
         node.append_attribute(AllocateAttribute(xml, "_type", "TwitchVideoInfo"));
         auto* subnode = xml.allocate_node(rapidxml::node_type::node_element, "VideoInfo");
         subnode->append_attribute(AllocateAttribute(xml, "_type", "TwitchVideo"));
-        subnode->append_attribute(AllocateAttribute(xml, "id", std::format("{}", c->_Video.ID)));
+        subnode->append_attribute(AllocateAttribute(xml, "id", std::format("{}", c->Video.ID)));
         subnode->append_attribute(
-            AllocateAttribute(xml, "userid", std::format("{}", c->_Video.UserID)));
-        if (c->_Video.Username.has_value()) {
-            subnode->append_attribute(AllocateAttribute(xml, "username", *c->_Video.Username));
+            AllocateAttribute(xml, "userid", std::format("{}", c->Video.UserID)));
+        if (c->Video.Username.has_value()) {
+            subnode->append_attribute(AllocateAttribute(xml, "username", *c->Video.Username));
         }
-        if (c->_Video.Title.has_value()) {
-            subnode->append_attribute(AllocateAttribute(xml, "title", *c->_Video.Title));
+        if (c->Video.Title.has_value()) {
+            subnode->append_attribute(AllocateAttribute(xml, "title", *c->Video.Title));
         }
-        if (c->_Video.Game.has_value()) {
-            subnode->append_attribute(AllocateAttribute(xml, "game", *c->_Video.Game));
+        if (c->Video.Game.has_value()) {
+            subnode->append_attribute(AllocateAttribute(xml, "game", *c->Video.Game));
         }
-        if (c->_Video.Description.has_value()) {
+        if (c->Video.Description.has_value()) {
+            subnode->append_attribute(AllocateAttribute(xml, "description", *c->Video.Description));
+        }
+        if (c->Video.CreatedAt.has_value()) {
             subnode->append_attribute(
-                AllocateAttribute(xml, "description", *c->_Video.Description));
+                AllocateAttribute(xml, "created_at", GetDateTimeBinaryString(*c->Video.CreatedAt)));
         }
-        if (c->_Video.CreatedAt.has_value()) {
+        if (c->Video.PublishedAt.has_value()) {
             subnode->append_attribute(AllocateAttribute(
-                xml, "created_at", GetDateTimeBinaryString(*c->_Video.CreatedAt)));
-        }
-        if (c->_Video.PublishedAt.has_value()) {
-            subnode->append_attribute(AllocateAttribute(
-                xml, "published_at", GetDateTimeBinaryString(*c->_Video.PublishedAt)));
+                xml, "published_at", GetDateTimeBinaryString(*c->Video.PublishedAt)));
         }
         subnode->append_attribute(
-            AllocateAttribute(xml, "duration", std::format("{}", c->_Video.Duration)));
+            AllocateAttribute(xml, "duration", std::format("{}", c->Video.Duration)));
         subnode->append_attribute(
-            AllocateAttribute(xml, "view_count", std::format("{}", c->_Video.ViewCount)));
+            AllocateAttribute(xml, "view_count", std::format("{}", c->Video.ViewCount)));
         subnode->append_attribute(
-            AllocateAttribute(xml, "type", TwitchVideoTypeToString(c->_Video.Type)));
+            AllocateAttribute(xml, "type", TwitchVideoTypeToString(c->Video.Type)));
         subnode->append_attribute(
-            AllocateAttribute(xml, "state", RecordingStateToString(c->_Video.State)));
+            AllocateAttribute(xml, "state", RecordingStateToString(c->Video.State)));
         node.append_node(subnode);
-        node.append_attribute(
-            AllocateAttribute(xml, "service", StreamServiceToString(c->_Service)));
+        node.append_attribute(AllocateAttribute(xml, "service", StreamServiceToString(c->Service)));
         return true;
     } else if (auto* c = dynamic_cast<YoutubeVideoInfo*>(&info)) {
         node.append_attribute(AllocateAttribute(xml, "_type", "YoutubeVideoInfo"));
@@ -1048,12 +1046,12 @@ static bool SerializeVideoInfo(rapidxml::xml_document<char>& xml,
 static bool SerializeBaseIVideoJob(rapidxml::xml_document<char>& xml,
                                    rapidxml::xml_node<char>& node,
                                    IVideoJob& job) {
-    node.append_attribute(AllocateAttribute(xml, "textStatus", job._Status));
+    node.append_attribute(AllocateAttribute(xml, "textStatus", job.TextStatus));
     node.append_attribute(
         AllocateAttribute(xml, "jobStatus", VideoJobStatusToString(job.JobStatus)));
     {
         auto* vi = xml.allocate_node(rapidxml::node_type::node_element, "VideoInfo");
-        if (!SerializeVideoInfo(xml, *vi, *job._VideoInfo)) {
+        if (!SerializeVideoInfo(xml, *vi, *job.VideoInfo)) {
             return false;
         }
         node.append_node(vi);
