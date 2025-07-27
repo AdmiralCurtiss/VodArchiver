@@ -77,7 +77,7 @@ bool TwitchChatReplayJob::IsWaitingForUserInput() const {
 }
 
 std::shared_ptr<IUserInputRequest> TwitchChatReplayJob::GetUserInputRequest() const {
-    return _UserInputRequest;
+    return UserInputRequest;
 }
 
 static std::string GetTempFilenameWithoutExtension(IVideoInfo& videoInfo) {
@@ -100,8 +100,13 @@ static std::string PathCombine(std::string_view lhs, std::string_view rhs) {
 ResultType RunChatJob(TwitchChatReplayJob& job,
                       JobConfig& jobConfig,
                       TaskCancellation& cancellationToken) {
-    if (cancellationToken.IsCancellationRequested()) {
-        return ResultType::Cancelled;
+    std::unique_ptr<IVideoInfo> videoInfo;
+    bool assumeFinished = false;
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.JobStatus = VideoJobStatus::Running;
+        videoInfo = job.VideoInfo->Clone();
+        assumeFinished = job.AssumeFinished;
     }
 
     std::string tempFolderPath;
@@ -112,34 +117,47 @@ ResultType RunChatJob(TwitchChatReplayJob& job,
         targetFolderPath = jobConfig.TargetFolderPath;
     }
 
-    auto videoInfo = job.GetVideoInfo();
+    if (cancellationToken.IsCancellationRequested()) {
+        return ResultType::Cancelled;
+    }
+
     auto videoId = HyoutaUtils::NumberUtils::ParseInt64(videoInfo->GetVideoId());
     if (!videoId) {
         return ResultType::Failure;
     }
 
-    job.JobStatus = VideoJobStatus::Running;
-    job.SetStatus("Retrieving video info...");
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.JobStatus = VideoJobStatus::Running;
+        job.TextStatus = "Retrieving video info...";
+    }
     auto video_json = TwitchYTDL::GetVideoJson(*videoId);
     if (!video_json) {
         return ResultType::Failure;
     }
     auto twitchVideoData = TwitchYTDL::VideoFromJson(*video_json);
-    auto newVideoInfo = std::make_shared<TwitchVideoInfo>();
-    newVideoInfo->Service = StreamService::TwitchChatReplay;
-    newVideoInfo->Video = std::move(*twitchVideoData);
-    job.SetVideoInfo(newVideoInfo);
 
-    if (!job.AssumeFinished && newVideoInfo->GetVideoRecordingState() == RecordingState::Live) {
-        job._UserInputRequest = std::make_unique<UserInputRequestStreamLiveTwitchChatReplay>(&job);
+    {
+        auto newVideoInfo = std::make_unique<TwitchVideoInfo>();
+        newVideoInfo->Service = StreamService::TwitchChatReplay;
+        newVideoInfo->Video = std::move(*twitchVideoData);
+        videoInfo = newVideoInfo->Clone();
+
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.VideoInfo = std::move(newVideoInfo);
+    }
+
+    if (!assumeFinished && videoInfo->GetVideoRecordingState() == RecordingState::Live) {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.UserInputRequest = std::make_unique<UserInputRequestStreamLiveTwitchChatReplay>(&job);
         return ResultType::TemporarilyUnavailable;
     }
 
     std::string tempfolder =
-        PathCombine(tempFolderPath, GetTempFilenameWithoutExtension(*newVideoInfo));
+        PathCombine(tempFolderPath, GetTempFilenameWithoutExtension(*videoInfo));
     std::string tempname = PathCombine(tempfolder, "a.json");
     std::string filename =
-        PathCombine(targetFolderPath, GetTargetFilenameWithoutExtension(*newVideoInfo) + ".json");
+        PathCombine(targetFolderPath, GetTargetFilenameWithoutExtension(*videoInfo) + ".json");
 
     if (HyoutaUtils::IO::DirectoryExists(std::string_view(tempfolder))) {
         if (!DeleteDirectoryRecursive(std::string_view(tempfolder))) {
@@ -150,7 +168,10 @@ ResultType RunChatJob(TwitchChatReplayJob& job,
         return ResultType::Failure;
     }
 
-    job.SetStatus("Downloading chat data...");
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Downloading chat data...";
+    }
     std::vector<std::string> args;
     args.push_back("chatdownload");
     args.push_back("-E");
@@ -159,7 +180,7 @@ ResultType RunChatJob(TwitchChatReplayJob& job,
     args.push_back("--chat-connections");
     args.push_back("1");
     args.push_back("--id");
-    args.push_back(newVideoInfo->GetVideoId());
+    args.push_back(videoInfo->GetVideoId());
     args.push_back("-o");
     args.push_back(tempname);
     if (RunProgram(
@@ -177,8 +198,11 @@ ResultType RunChatJob(TwitchChatReplayJob& job,
 
     DeleteDirectoryRecursive(std::string_view(tempfolder));
 
-    job.SetStatus("Done!");
-    job.JobStatus = VideoJobStatus::Finished;
+    {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Done!";
+        job.JobStatus = VideoJobStatus::Finished;
+    }
     return ResultType::Success;
 }
 

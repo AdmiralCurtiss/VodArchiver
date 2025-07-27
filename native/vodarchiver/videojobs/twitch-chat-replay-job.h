@@ -11,7 +11,7 @@ struct TwitchChatReplayJob : public IVideoJob {
     std::string GenerateOutputFilename() override;
 
     std::shared_ptr<IUserInputRequest> GetUserInputRequest() const override;
-    std::shared_ptr<IUserInputRequest> _UserInputRequest = nullptr;
+    std::shared_ptr<IUserInputRequest> UserInputRequest = nullptr;
     bool AssumeFinished = false;
 };
 } // namespace VodArchiver
