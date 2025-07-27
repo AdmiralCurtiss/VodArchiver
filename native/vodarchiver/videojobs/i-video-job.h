@@ -59,7 +59,7 @@ struct IVideoJob {
     std::string GetHumanReadableJobName() const;
 
     virtual bool IsWaitingForUserInput() const = 0;
-    virtual std::shared_ptr<IUserInputRequest> GetUserInputRequest() const;
+    virtual IUserInputRequest* GetUserInputRequest() const;
     virtual ResultType Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) = 0;
     virtual std::string GenerateOutputFilename() = 0;
 

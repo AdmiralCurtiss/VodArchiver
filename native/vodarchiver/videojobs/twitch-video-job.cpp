@@ -116,8 +116,8 @@ bool TwitchVideoJob::IsWaitingForUserInput() const {
     return WaitingForUserInput;
 }
 
-std::shared_ptr<IUserInputRequest> TwitchVideoJob::GetUserInputRequest() const {
-    return UserInputRequest;
+IUserInputRequest* TwitchVideoJob::GetUserInputRequest() const {
+    return UserInputRequest.get();
 }
 
 static std::string GetTempFilenameWithoutExtension(IVideoInfo& vi,

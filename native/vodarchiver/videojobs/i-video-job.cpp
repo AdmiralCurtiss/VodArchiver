@@ -72,7 +72,7 @@ void IVideoJob::SetStatus(std::string value) {
     TextStatus = value;
 }
 
-std::shared_ptr<IUserInputRequest> IVideoJob::GetUserInputRequest() const {
+IUserInputRequest* IVideoJob::GetUserInputRequest() const {
     return nullptr;
 }
 

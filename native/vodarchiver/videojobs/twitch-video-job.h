@@ -14,8 +14,8 @@ struct TwitchVideoJob : public IVideoJob {
     ResultType Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) override;
     std::string GenerateOutputFilename() override;
 
-    std::shared_ptr<IUserInputRequest> GetUserInputRequest() const override;
-    std::shared_ptr<IUserInputRequest> UserInputRequest = nullptr;
+    IUserInputRequest* GetUserInputRequest() const override;
+    std::unique_ptr<IUserInputRequest> UserInputRequest = nullptr;
     bool WaitingForUserInput = false;
     bool AssumeFinished = false;
 

@@ -76,8 +76,8 @@ bool TwitchChatReplayJob::IsWaitingForUserInput() const {
                   // blocks running the task
 }
 
-std::shared_ptr<IUserInputRequest> TwitchChatReplayJob::GetUserInputRequest() const {
-    return UserInputRequest;
+IUserInputRequest* TwitchChatReplayJob::GetUserInputRequest() const {
+    return UserInputRequest.get();
 }
 
 static std::string GetTempFilenameWithoutExtension(IVideoInfo& videoInfo) {

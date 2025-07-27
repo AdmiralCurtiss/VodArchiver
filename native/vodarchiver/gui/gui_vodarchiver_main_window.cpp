@@ -479,7 +479,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                 return false;
                             };
 
-                            auto uir = item->GetUserInputRequest();
+                            IUserInputRequest* uir = item->GetUserInputRequest();
                             if (uir) {
                                 if (ImGui::BeginMenu(uir->GetQuestion().c_str())) {
                                     for (auto& option : uir->GetOptions()) {
