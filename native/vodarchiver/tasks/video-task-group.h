@@ -53,7 +53,7 @@ struct VideoTaskGroup {
     std::function<void()> RequestSaveJobs;
     std::function<void()> RequestPowerEvent;
 
-    bool AutoEnqueue = false;
+    std::atomic<bool> AutoEnqueue = false;
 
     VideoTaskGroup(StreamService service,
                    std::function<void()> saveJobsDelegate,
@@ -68,6 +68,14 @@ struct VideoTaskGroup {
     bool IsInQueue(IVideoJob* job);
     bool Dequeue(IVideoJob* job);
     void DequeueAll();
+
+    bool IsAutoEnqueue() const {
+        return AutoEnqueue.load(std::memory_order_relaxed);
+    }
+
+    void SetAutoEnqueue(bool autoEnqueue) {
+        AutoEnqueue.store(autoEnqueue, std::memory_order_relaxed);
+    }
 
 private:
     void RunJobRunnerThreadFunc();

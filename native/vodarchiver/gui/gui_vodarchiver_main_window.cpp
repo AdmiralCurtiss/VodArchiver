@@ -661,9 +661,13 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                 for (int i = 0; i < static_cast<int>(StreamService::COUNT); ++i) {
                     ImGui::PushID(i);
                     std::string_view ss = StreamServiceToString(static_cast<StreamService>(i));
-                    ImGui::Selectable(ss.data(),
-                                      &state.VideoTaskGroups[i]->AutoEnqueue,
-                                      ImGuiSelectableFlags_DontClosePopups);
+                    bool previousAutoEnqueue = state.VideoTaskGroups[i]->IsAutoEnqueue();
+                    bool newAutoEnqueue = previousAutoEnqueue;
+                    ImGui::Selectable(
+                        ss.data(), &newAutoEnqueue, ImGuiSelectableFlags_DontClosePopups);
+                    if (previousAutoEnqueue != newAutoEnqueue) {
+                        state.VideoTaskGroups[i]->SetAutoEnqueue(newAutoEnqueue);
+                    }
                     ImGui::PopID();
                 }
                 ImGui::PopID();
