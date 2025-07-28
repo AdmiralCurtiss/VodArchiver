@@ -186,6 +186,8 @@ set(SOURCES_UTIL
 	util/system.h
 	util/text.cpp
 	util/text.h
+	util/thread.cpp
+	util/thread.h
 	util/vector.cpp
 	util/vector.h
 )

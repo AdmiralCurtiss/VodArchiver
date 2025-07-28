@@ -18,6 +18,7 @@
 #include "util/file.h"
 #include "util/scope.h"
 #include "util/text.h"
+#include "util/thread.h"
 #include "vodarchiver_imgui_utils.h"
 
 #ifdef BUILD_FOR_WINDOWS
@@ -134,6 +135,8 @@ FileBrowserResult FileBrowser::RenderFrame(GuiState& state, std::string_view tit
     if (PImpl->UseNativeDialogIfAvailable) {
         FileBrowserResult result = FileBrowserResult::Canceled;
         std::thread nativeFileDialogThread([&]() -> void {
+            HyoutaUtils::SetThreadName("GuiFileDialog");
+
             // native Windows file dialog is COM, so we need to init that
             HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
             if (FAILED(hr)) {

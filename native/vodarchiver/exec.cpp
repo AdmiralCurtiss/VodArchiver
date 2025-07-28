@@ -7,6 +7,7 @@
 
 #include "util/scope.h"
 #include "util/text.h"
+#include "util/thread.h"
 
 #ifdef BUILD_FOR_WINDOWS
 #define WIN32_LEAN_AND_MEAN
@@ -275,13 +276,19 @@ int RunProgram(const std::string& programName,
     CloseHandle(handleStdErrWrite);
     handleStdErrWrite = nullptr;
 
-    std::thread stdOutThread([&]() { RedirectOutput(handleStdOutRead, stdOutRedirect); });
+    std::thread stdOutThread([&]() {
+        HyoutaUtils::SetThreadName("stdoutThread");
+        RedirectOutput(handleStdOutRead, stdOutRedirect);
+    });
     auto joinStdOutThread = HyoutaUtils::MakeScopeGuard([&]() {
         if (stdOutThread.joinable()) {
             stdOutThread.join();
         }
     });
-    std::thread stdErrThread([&]() { RedirectOutput(handleStdErrRead, stdErrRedirect); });
+    std::thread stdErrThread([&]() {
+        HyoutaUtils::SetThreadName("stderrThread");
+        RedirectOutput(handleStdErrRead, stdErrRedirect);
+    });
     auto joinStdErrThread = HyoutaUtils::MakeScopeGuard([&]() {
         if (stdErrThread.joinable()) {
             stdErrThread.join();

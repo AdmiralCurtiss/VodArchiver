@@ -8,10 +8,13 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
 #include "util/scope.h"
+#include "util/thread.h"
 #include "util/xorshift.h"
 
 #include "vodarchiver/job_config.h"
@@ -47,6 +50,14 @@ FetchTaskGroup::~FetchTaskGroup() {
 }
 
 void FetchTaskGroup::RunFetchRunnerThreadFunc() {
+    {
+        std::string_view invalidServices = "None";
+        std::string threadName = std::format(
+            "Fetch{}",
+            Services.empty() ? invalidServices : ServiceVideoCategoryTypeToString(Services[0]));
+        HyoutaUtils::SetThreadName(threadName.c_str());
+    }
+
     while (true) {
         if (!CancellationToken->DelayFor(std::chrono::seconds(3))) {
             return;

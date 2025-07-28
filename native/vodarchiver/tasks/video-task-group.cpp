@@ -4,10 +4,13 @@
 #include <format>
 #include <functional>
 #include <mutex>
+#include <string>
+#include <string_view>
 #include <thread>
 #include <utility>
 
 #include "util/scope.h"
+#include "util/thread.h"
 
 #include "../time_types.h"
 #include "../videojobs/i-video-job.h"
@@ -35,6 +38,7 @@ static void RunJobThreadFunc(RunningVideoJob* rvj) {
         return;
     }
 
+    HyoutaUtils::SetThreadName("JobThread");
     rvj->Done.store(TaskDoneEnum::NotDone);
     TaskDoneEnum taskDoneEnum = TaskDoneEnum::FinishedWithError;
     auto scope = HyoutaUtils::MakeScopeGuard([&] { rvj->Done.store(taskDoneEnum); });
@@ -132,6 +136,11 @@ VideoTaskGroup::~VideoTaskGroup() {
 }
 
 void VideoTaskGroup::RunJobRunnerThreadFunc() {
+    {
+        std::string threadName = std::format("JobRunner{}", StreamServiceToString(Service));
+        HyoutaUtils::SetThreadName(threadName.c_str());
+    }
+
     while (true) {
         if (CancellationToken->IsCancellationRequested()) {
             std::lock_guard lock(JobQueueLock);

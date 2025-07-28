@@ -12,6 +12,7 @@
 #include "gui_state.h"
 #include "util/scope.h"
 #include "util/text.h"
+#include "util/thread.h"
 #include "vodarchiver/job_handling.h"
 #include "vodarchiver/userinfo/archive-org-user-info.h"
 #include "vodarchiver/userinfo/ffmpeg-job-user-info.h"
@@ -27,6 +28,7 @@
 namespace VodArchiver::GUI {
 static FetchReturnValue
     RunFetchTask(JobConfig* jobConfig, IUserInfo* userInfo, size_t offset, bool flat) {
+    HyoutaUtils::SetThreadName("GuiFetch");
     if (userInfo == nullptr) {
         return FetchReturnValue{.Success = false, .HasMore = false};
     }
