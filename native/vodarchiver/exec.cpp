@@ -15,12 +15,77 @@
 
 namespace VodArchiver {
 #ifdef BUILD_FOR_WINDOWS
+void AppendArgEscaped(std::string& s, std::string_view arg) {
+    s.push_back('"');
+    size_t i = 0;
+    while (i < arg.size()) {
+        char c = arg[i];
+        if (c == '\\') {
+            // this is the weird one. we must now read ahead and count the number of backslashes,
+            // then check if the next character after is a quote or not
+            size_t numberOfBackslashes = 1;
+            ++i;
+            while (i < arg.size() && arg[i] == '\\') {
+                ++numberOfBackslashes;
+                ++i;
+            }
+            const bool nextIsQuote = (i < arg.size() && arg[i] == '"');
+            if (nextIsQuote) {
+                // append (numberOfBackslashes*2)+1 backslashes, then the quote
+                for (size_t j = 0; j < numberOfBackslashes; ++j) {
+                    s.push_back('\\');
+                    s.push_back('\\');
+                }
+                s.push_back('\\');
+                s.push_back(arg[i]);
+            } else if (i < arg.size()) {
+                // just append the backslashes and next character as-is
+                for (size_t j = 0; j < numberOfBackslashes; ++j) {
+                    s.push_back('\\');
+                }
+                s.push_back(arg[i]);
+            } else {
+                // end of the argument
+                // append (numberOfBackslashes*2) backslashes, then the closing quote
+                for (size_t j = 0; j < numberOfBackslashes; ++j) {
+                    s.push_back('\\');
+                    s.push_back('\\');
+                }
+                break;
+            }
+        } else if (c == '"') {
+            // this only happens if the quote wasn't preceeded by backslashes,
+            // so we can safely escape this with one backslash
+            s.push_back('\\');
+            s.push_back(c);
+        } else {
+            s.push_back(c);
+        }
+        ++i;
+    }
+    s.push_back('"');
+}
+
 std::string BuildArgsString(const std::string& programName, const std::vector<std::string>& args) {
-    std::string s = std::format("\"{}\"", programName);
+    std::string s;
+
+    // the program name is part of the arg string but has different escaping rules. as far as I can
+    // tell it's impossible to pass a quote in this string, doing so just toggles the in-quote state
+    // of the argument parser, so we just drop them. everything else is passed verbatim.
+    s.push_back('"');
+    for (size_t i = 0; i < programName.size(); ++i) {
+        char c = programName[i];
+        if (c != '"') {
+            s.push_back(c);
+        }
+    }
+    s.push_back('"');
+
     for (const std::string& arg : args) {
         s.push_back(' ');
-        s.append(std::format("\"{}\"", HyoutaUtils::TextUtils::Replace(arg, "\"", "\\\"")));
+        AppendArgEscaped(s, arg);
     }
+
     return s;
 }
 
