@@ -142,7 +142,7 @@ void AddJobToTaskGroupIfAutoenqueue(std::vector<std::unique_ptr<VideoTaskGroup>>
         auto& g = videoTaskGroups[i];
         if (g && g->Service == job->VideoInfo->GetService()) {
             if (g->AutoEnqueue) {
-                g->Add(job);
+                g->Enqueue(job);
             }
             return;
         }

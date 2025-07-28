@@ -506,7 +506,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                     if (ImGui::Selectable("Enqueue")) {
                                         for (auto& g : state.VideoTaskGroups) {
                                             if (g->Service == service) {
-                                                g->Add(item);
+                                                g->Enqueue(item);
                                                 break;
                                             }
                                         }
@@ -515,7 +515,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                 if (ImGui::Selectable("Download now")) {
                                     for (auto& g : state.VideoTaskGroups) {
                                         if (g->Service == service) {
-                                            g->Add(item, true);
+                                            g->Enqueue(item, true);
                                             break;
                                         }
                                     }
@@ -614,7 +614,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                             && static_cast<size_t>(static_cast<int>(service))
                                    < state.VideoTaskGroups.size()) {
                             state.VideoTaskGroups[static_cast<size_t>(static_cast<int>(service))]
-                                ->Add(job.get());
+                                ->Enqueue(job.get());
                         }
                     }
                 }
@@ -629,7 +629,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                         for (auto& job : state.Jobs.JobsVector) {
                             if (job->JobStatus == VideoJobStatus::NotStarted
                                 && job->VideoInfo->GetService() == static_cast<StreamService>(i)) {
-                                state.VideoTaskGroups[i]->Add(job.get());
+                                state.VideoTaskGroups[i]->Enqueue(job.get());
                             }
                         }
                     }

@@ -40,10 +40,8 @@ struct VideoTaskGroup {
     StreamService Service = StreamService::Unknown;
     std::vector<std::unique_ptr<WaitingVideoJob>> WaitingJobs;
 
-    // TODO: There's likely a deadlock between the JobsLock and the JobQueueLock because the
-    // VideoTaskGroup itself locks the JobQueueLock first and the JobsLock second, but some external
-    // code may call the Add(), IsInQueue(), etc. functions while holding the JobsLock. Fix this.
-    std::recursive_mutex JobQueueLock;
+    // This mutex guards access to WaitingJobs and RunningTasks.
+    std::mutex JobQueueLock;
 
     size_t MaxJobsRunningPerType = 0;
     JobConfig* JobConf = nullptr;
@@ -64,25 +62,26 @@ struct VideoTaskGroup {
                    TaskCancellation* cancellationToken);
     ~VideoTaskGroup();
 
-    void Add(IVideoJob* job, bool startImmediately = false);
-    void Add(std::unique_ptr<WaitingVideoJob> wj);
-
+    void Enqueue(IVideoJob* job, bool startImmediately = false);
     bool IsEmpty();
     bool CancelJob(IVideoJob* job);
     bool IsInQueue(IVideoJob* job);
     bool Dequeue(IVideoJob* job);
     void DequeueAll();
 
-    void WaitForJobRunnerThreadToEnd();
-
 private:
     void RunJobRunnerThreadFunc();
     void ProcessFinishedTasks();
-    void RunJobThreadFunc(RunningVideoJob* rvj);
     IVideoJob* DequeueVideoJobForTask();
 
-    bool IsJobWaiting(IVideoJob* job);
-    bool IsJobRunning(IVideoJob* job);
-    bool IsJobWaitingOrRunning(IVideoJob* job);
+    void EnqueueNoLock(IVideoJob* job, bool startImmediately);
+    void EnqueueNoLock(std::unique_ptr<WaitingVideoJob> wj);
+    bool IsEmptyNoLock();
+    bool CancelJobNoLock(IVideoJob* job);
+    bool IsJobWaitingNoLock(IVideoJob* job);
+    bool IsJobRunningNoLock(IVideoJob* job);
+    bool IsJobWaitingOrRunningNoLock(IVideoJob* job);
+    bool DequeueNoLock(IVideoJob* job);
+    void DequeueAllNoLock();
 };
 } // namespace VodArchiver
