@@ -472,7 +472,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                             auto service = item->VideoInfo->GetService();
                             auto is_in_queue = [&]() -> bool {
                                 for (auto& g : state.VideoTaskGroups) {
-                                    if (g->Service == service) {
+                                    if (g->GetService() == service) {
                                         return g->IsInQueue(item);
                                     }
                                 }
@@ -496,7 +496,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                 if (is_in_queue()) {
                                     if (ImGui::Selectable("Dequeue")) {
                                         for (auto& g : state.VideoTaskGroups) {
-                                            if (g->Service == service) {
+                                            if (g->GetService() == service) {
                                                 g->Dequeue(item);
                                                 break;
                                             }
@@ -505,7 +505,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                 } else {
                                     if (ImGui::Selectable("Enqueue")) {
                                         for (auto& g : state.VideoTaskGroups) {
-                                            if (g->Service == service) {
+                                            if (g->GetService() == service) {
                                                 g->Enqueue(item);
                                                 break;
                                             }
@@ -514,7 +514,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                                 }
                                 if (ImGui::Selectable("Download now")) {
                                     for (auto& g : state.VideoTaskGroups) {
-                                        if (g->Service == service) {
+                                        if (g->GetService() == service) {
                                             g->Enqueue(item, true);
                                             break;
                                         }
@@ -536,7 +536,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                             if (item->JobStatus == VideoJobStatus::Running) {
                                 if (ImGui::Selectable("Stop")) {
                                     for (auto& g : state.VideoTaskGroups) {
-                                        if (g->Service == service) {
+                                        if (g->GetService() == service) {
                                             g->CancelJob(item);
                                             break;
                                         }

@@ -37,24 +37,6 @@ struct RunningVideoJob {
 };
 
 struct VideoTaskGroup {
-    StreamService Service = StreamService::Unknown;
-    std::vector<std::unique_ptr<WaitingVideoJob>> WaitingJobs;
-
-    // This mutex guards access to WaitingJobs and RunningTasks.
-    std::mutex JobQueueLock;
-
-    size_t MaxJobsRunningPerType = 0;
-    JobConfig* JobConf = nullptr;
-    TaskCancellation* CancellationToken = nullptr;
-
-    std::thread JobRunnerThread;
-    std::vector<std::unique_ptr<RunningVideoJob>> RunningTasks;
-
-    std::function<void()> RequestSaveJobs;
-    std::function<void()> RequestPowerEvent;
-
-    std::atomic<bool> AutoEnqueue = false;
-
     VideoTaskGroup(StreamService service,
                    std::function<void()> saveJobsDelegate,
                    std::function<void()> powerEventDelegate,
@@ -77,6 +59,10 @@ struct VideoTaskGroup {
         AutoEnqueue.store(autoEnqueue, std::memory_order_relaxed);
     }
 
+    StreamService GetService() const {
+        return Service;
+    }
+
 private:
     void RunJobRunnerThreadFunc();
     void ProcessFinishedTasks();
@@ -91,5 +77,22 @@ private:
     bool IsJobWaitingOrRunningNoLock(IVideoJob* job);
     bool DequeueNoLock(IVideoJob* job);
     void DequeueAllNoLock();
+
+    StreamService Service = StreamService::Unknown;
+    std::atomic<bool> AutoEnqueue = false;
+
+    // This mutex guards access to WaitingJobs and RunningTasks.
+    std::mutex JobQueueLock;
+    std::vector<std::unique_ptr<WaitingVideoJob>> WaitingJobs;
+    std::vector<std::unique_ptr<RunningVideoJob>> RunningTasks;
+
+    size_t MaxJobsRunningPerType = 0;
+    JobConfig* JobConf = nullptr;
+    TaskCancellation* CancellationToken = nullptr;
+
+    std::function<void()> RequestSaveJobs;
+    std::function<void()> RequestPowerEvent;
+
+    std::thread JobRunnerThread;
 };
 } // namespace VodArchiver
