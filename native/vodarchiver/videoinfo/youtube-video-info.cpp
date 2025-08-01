@@ -13,19 +13,19 @@ StreamService YoutubeVideoInfo::GetService() const {
     return StreamService::Youtube;
 }
 
-std::string YoutubeVideoInfo::GetUsername() const {
+std::string_view YoutubeVideoInfo::GetUsername(std::array<char, 256>& buffer) const {
     return this->Username;
 }
 
-std::string YoutubeVideoInfo::GetVideoId() const {
+std::string_view YoutubeVideoInfo::GetVideoId(std::array<char, 256>& buffer) const {
     return this->VideoId;
 }
 
-std::string YoutubeVideoInfo::GetVideoTitle() const {
+std::string_view YoutubeVideoInfo::GetVideoTitle(std::array<char, 256>& buffer) const {
     return this->VideoTitle;
 }
 
-std::string YoutubeVideoInfo::GetVideoGame() const {
+std::string_view YoutubeVideoInfo::GetVideoGame(std::array<char, 256>& buffer) const {
     return this->VideoGame;
 }
 

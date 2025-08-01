@@ -51,19 +51,26 @@ VideoFileType FFMpegReencodeJobVideoInfo::GetVideoType() const {
     return VideoFileType::Unknown;
 }
 
-std::string FFMpegReencodeJobVideoInfo::GetUsername() const {
+std::string_view FFMpegReencodeJobVideoInfo::GetUsername(std::array<char, 256>& buffer) const {
     return this->PostfixNew;
 }
 
-std::string FFMpegReencodeJobVideoInfo::GetVideoGame() const {
-    return std::format("{} MB; {} kbps, {} fps", Filesize / 1000000, Bitrate / 1000, Framerate);
+std::string_view FFMpegReencodeJobVideoInfo::GetVideoGame(std::array<char, 256>& buffer) const {
+    auto result = std::format_to_n(buffer.data(),
+                                   buffer.size() - 1,
+                                   "{} MB; {} kbps, {} fps",
+                                   Filesize / 1000000,
+                                   Bitrate / 1000,
+                                   Framerate);
+    *result.out = '\0';
+    return std::string_view(buffer.data(), result.out);
 }
 
-std::string FFMpegReencodeJobVideoInfo::GetVideoId() const {
+std::string_view FFMpegReencodeJobVideoInfo::GetVideoId(std::array<char, 256>& buffer) const {
     return this->VideoId;
 }
 
-std::string FFMpegReencodeJobVideoInfo::GetVideoTitle() const {
+std::string_view FFMpegReencodeJobVideoInfo::GetVideoTitle(std::array<char, 256>& buffer) const {
     return this->VideoTitle;
 }
 

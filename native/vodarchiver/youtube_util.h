@@ -3,6 +3,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "vodarchiver/videoinfo/i-video-info.h"
@@ -27,5 +28,5 @@ struct RetrieveVideoResultStruct {
     std::unique_ptr<IVideoInfo> info;
 };
 RetrieveVideoResultStruct
-    RetrieveVideo(const std::string& id, const std::string& usernameIfNotInJson, bool wantCookies);
+    RetrieveVideo(std::string_view id, std::string_view usernameIfNotInJson, bool wantCookies);
 } // namespace VodArchiver::Youtube

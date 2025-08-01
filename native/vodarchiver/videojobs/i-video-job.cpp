@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <format>
 #include <mutex>
 #include <optional>
 #include <string_view>
@@ -79,13 +80,18 @@ IUserInputRequest* IVideoJob::GetUserInputRequest() const {
 std::string IVideoJob::GetHumanReadableJobName() const {
     IVideoInfo* videoInfo = this->VideoInfo.get();
     if (videoInfo) {
-        std::string username = videoInfo->GetUsername();
+        std::array<char, 256> buffer1;
+        std::array<char, 256> buffer2;
+        std::string_view username = videoInfo->GetUsername(buffer1);
         if (!HyoutaUtils::TextUtils::Trim(username).empty()) {
-            return username + "/" + videoInfo->GetVideoId() + " ("
-                   + std::string(StreamServiceToString(videoInfo->GetService())) + ")";
+            return std::format("{}/{} ({})",
+                               username,
+                               videoInfo->GetVideoId(buffer2),
+                               StreamServiceToString(videoInfo->GetService()));
         } else {
-            return videoInfo->GetVideoId() + " ("
-                   + std::string(StreamServiceToString(videoInfo->GetService())) + ")";
+            return std::format("{} ({})",
+                               videoInfo->GetVideoId(buffer2),
+                               StreamServiceToString(videoInfo->GetService()));
         }
     } else {
         return "Unknown Video";

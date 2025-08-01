@@ -8,7 +8,9 @@ bool HitboxVideoJob::IsWaitingForUserInput() const {
 }
 
 static std::string GetFinalFilenameWithoutExtension(IVideoInfo& vi) {
-    return std::format("hitbox_{}_{}", vi.GetUsername(), vi.GetVideoId());
+    std::array<char, 256> buffer1;
+    std::array<char, 256> buffer2;
+    return std::format("hitbox_{}_{}", vi.GetUsername(buffer1), vi.GetVideoId(buffer2));
 }
 
 ResultType HitboxVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) {

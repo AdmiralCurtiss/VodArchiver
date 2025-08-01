@@ -88,7 +88,8 @@ static ResultType RunReencodeJob(FFMpegReencodeJob& job,
         return ResultType::Cancelled;
     }
 
-    std::string file = videoInfo->GetVideoId();
+    std::array<char, 256> buffer;
+    std::string file(videoInfo->GetVideoId(buffer));
     std::string_view path = HyoutaUtils::IO::GetDirectoryName(file);
     std::string_view name = HyoutaUtils::IO::GetFileNameWithoutExtension(file);
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -32,10 +33,10 @@ struct TwitchVideo {
 struct TwitchVideoInfo : public IVideoInfo {
     ~TwitchVideoInfo() override;
     StreamService GetService() const override;
-    std::string GetUsername() const override;
-    std::string GetVideoId() const override;
-    std::string GetVideoTitle() const override;
-    std::string GetVideoGame() const override;
+    std::string_view GetUsername(std::array<char, 256>& buffer) const override;
+    std::string_view GetVideoId(std::array<char, 256>& buffer) const override;
+    std::string_view GetVideoTitle(std::array<char, 256>& buffer) const override;
+    std::string_view GetVideoGame(std::array<char, 256>& buffer) const override;
     DateTime GetVideoTimestamp() const override;
     TimeSpan GetVideoLength() const override;
     RecordingState GetVideoRecordingState() const override;

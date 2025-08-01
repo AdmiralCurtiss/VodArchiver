@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "vodarchiver/videoinfo/generic-video-info.h"
@@ -22,9 +23,10 @@ bool CreateAndEnqueueJob(JobList& jobs,
         return false;
     }
 
-    auto service = info->GetService();
-    auto id = info->GetVideoId();
-    return CreateAndEnqueueJob(jobs, service, std::move(id), std::move(info), enqueueCallback);
+    std::array<char, 256> buffer;
+    StreamService service = info->GetService();
+    std::string_view id = info->GetVideoId(buffer);
+    return CreateAndEnqueueJob(jobs, service, std::string(id), std::move(info), enqueueCallback);
 }
 
 bool CreateAndEnqueueJob(JobList& jobs,
@@ -114,11 +116,13 @@ bool EnqueueJob(JobList& jobs,
         // Not sure if this is actually needed though, we'll see...
 
         // see if this job is already in the list, if yes we don't do anything
+        std::array<char, 256> buffer1;
+        std::array<char, 256> buffer2;
         for (size_t i = 0; i < jobs.JobsVector.size(); ++i) {
             auto& j = jobs.JobsVector[i];
             IVideoInfo* vi = j->VideoInfo.get();
             if (vi && vi->GetService() == newVideoInfo->GetService()
-                && vi->GetVideoId() == newVideoInfo->GetVideoId()) {
+                && vi->GetVideoId(buffer1) == newVideoInfo->GetVideoId(buffer2)) {
                 // already in list
                 return false;
             }

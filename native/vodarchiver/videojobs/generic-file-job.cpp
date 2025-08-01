@@ -31,9 +31,12 @@ static std::string GetTempFoldername() {
 
 static std::string GetTargetFilename(IVideoInfo& videoInfo) {
     // best guess...
-    std::string videoId = videoInfo.GetVideoId();
-    std::string rawUsername = videoInfo.GetUsername();
-    std::string rawTitle = videoInfo.GetVideoTitle();
+    std::array<char, 256> buffer1;
+    std::array<char, 256> buffer2;
+    std::array<char, 256> buffer3;
+    std::string_view videoId = videoInfo.GetVideoId(buffer1);
+    std::string_view rawUsername = videoInfo.GetUsername(buffer2);
+    std::string_view rawTitle = videoInfo.GetVideoTitle(buffer3);
     DateTime rawTimestamp = videoInfo.GetVideoTimestamp();
     std::string extension;
     {
@@ -155,7 +158,8 @@ static ResultType RunGenericFileJob(GenericFileJob& job,
                 return ResultType::Cancelled;
             }
 
-            std::string videoId = videoInfo->GetVideoId();
+            std::array<char, 256> buffer;
+            std::string videoId(videoInfo->GetVideoId(buffer));
             if (!HyoutaUtils::IO::WriteFileAtomic(urlFilepath, videoId.data(), videoId.size())) {
                 return ResultType::Failure;
             }

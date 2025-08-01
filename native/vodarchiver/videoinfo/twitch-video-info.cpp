@@ -39,16 +39,26 @@ StreamService TwitchVideoInfo::GetService() const {
     return this->Service;
 }
 
-std::string TwitchVideoInfo::GetUsername() const {
-    return this->Video.Username.value_or("");
+std::string_view TwitchVideoInfo::GetUsername(std::array<char, 256>& buffer) const {
+    if (this->Video.Username.has_value()) {
+        return *this->Video.Username;
+    }
+    buffer[0] = '\0';
+    return std::string_view(buffer.data(), 0);
 }
 
-std::string TwitchVideoInfo::GetVideoGame() const {
-    return this->Video.Game.value_or("");
+std::string_view TwitchVideoInfo::GetVideoGame(std::array<char, 256>& buffer) const {
+    if (this->Video.Game.has_value()) {
+        return *this->Video.Game;
+    }
+    buffer[0] = '\0';
+    return std::string_view(buffer.data(), 0);
 }
 
-std::string TwitchVideoInfo::GetVideoId() const {
-    return std::format("{}", this->Video.ID);
+std::string_view TwitchVideoInfo::GetVideoId(std::array<char, 256>& buffer) const {
+    auto result = std::format_to_n(buffer.data(), buffer.size() - 1, "{}", this->Video.ID);
+    *result.out = '\0';
+    return std::string_view(buffer.data(), result.out);
 }
 
 TimeSpan TwitchVideoInfo::GetVideoLength() const {
@@ -63,8 +73,12 @@ DateTime TwitchVideoInfo::GetVideoTimestamp() const {
     return this->Video.PublishedAt.value_or(DateTime::FromBinary(0));
 }
 
-std::string TwitchVideoInfo::GetVideoTitle() const {
-    return this->Video.Title.value_or("");
+std::string_view TwitchVideoInfo::GetVideoTitle(std::array<char, 256>& buffer) const {
+    if (this->Video.Title.has_value()) {
+        return *this->Video.Title;
+    }
+    buffer[0] = '\0';
+    return std::string_view(buffer.data(), 0);
 }
 
 VideoFileType TwitchVideoInfo::GetVideoType() const {

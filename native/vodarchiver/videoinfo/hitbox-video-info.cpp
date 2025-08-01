@@ -16,16 +16,18 @@ StreamService HitboxVideoInfo::GetService() const {
     return StreamService::Hitbox;
 }
 
-std::string HitboxVideoInfo::GetUsername() const {
+std::string_view HitboxVideoInfo::GetUsername(std::array<char, 256>& buffer) const {
     return this->VideoInfo.MediaUserName;
 }
 
-std::string HitboxVideoInfo::GetVideoGame() const {
+std::string_view HitboxVideoInfo::GetVideoGame(std::array<char, 256>& buffer) const {
     return this->VideoInfo.MediaGame;
 }
 
-std::string HitboxVideoInfo::GetVideoId() const {
-    return std::format("{}", this->VideoInfo.MediaId);
+std::string_view HitboxVideoInfo::GetVideoId(std::array<char, 256>& buffer) const {
+    auto result = std::format_to_n(buffer.data(), buffer.size() - 1, "{}", this->VideoInfo.MediaId);
+    *result.out = '\0';
+    return std::string_view(buffer.data(), result.out);
 }
 
 TimeSpan HitboxVideoInfo::GetVideoLength() const {
@@ -40,7 +42,7 @@ DateTime HitboxVideoInfo::GetVideoTimestamp() const {
     return this->VideoInfo.MediaDateAdded;
 }
 
-std::string HitboxVideoInfo::GetVideoTitle() const {
+std::string_view HitboxVideoInfo::GetVideoTitle(std::array<char, 256>& buffer) const {
     return this->VideoInfo.MediaTitle;
 }
 

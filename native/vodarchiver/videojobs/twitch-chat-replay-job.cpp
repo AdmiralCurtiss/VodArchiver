@@ -81,14 +81,19 @@ IUserInputRequest* TwitchChatReplayJob::GetUserInputRequest() const {
 }
 
 static std::string GetTempFilenameWithoutExtension(IVideoInfo& videoInfo) {
-    return std::format("twitch_{}_v{}_chat_gql", videoInfo.GetUsername(), videoInfo.GetVideoId());
+    std::array<char, 256> buffer1;
+    std::array<char, 256> buffer2;
+    return std::format(
+        "twitch_{}_v{}_chat_gql", videoInfo.GetUsername(buffer1), videoInfo.GetVideoId(buffer2));
 }
 
 static std::string GetTargetFilenameWithoutExtension(IVideoInfo& videoInfo) {
+    std::array<char, 256> buffer1;
+    std::array<char, 256> buffer2;
     return std::format("twitch_{}_{}_v{}_chat_gql",
-                       videoInfo.GetUsername(),
+                       videoInfo.GetUsername(buffer1),
                        DateTimeToStringForFilesystem(videoInfo.GetVideoTimestamp()),
-                       videoInfo.GetVideoId());
+                       videoInfo.GetVideoId(buffer2));
 }
 
 static std::string PathCombine(std::string_view lhs, std::string_view rhs) {
@@ -121,7 +126,8 @@ ResultType RunChatJob(TwitchChatReplayJob& job,
         return ResultType::Cancelled;
     }
 
-    auto videoId = HyoutaUtils::NumberUtils::ParseInt64(videoInfo->GetVideoId());
+    std::array<char, 256> buffer;
+    auto videoId = HyoutaUtils::NumberUtils::ParseInt64(videoInfo->GetVideoId(buffer));
     if (!videoId) {
         return ResultType::Failure;
     }
@@ -180,7 +186,7 @@ ResultType RunChatJob(TwitchChatReplayJob& job,
     args.push_back("--chat-connections");
     args.push_back("1");
     args.push_back("--id");
-    args.push_back(videoInfo->GetVideoId());
+    args.push_back(std::string(videoInfo->GetVideoId(buffer)));
     args.push_back("-o");
     args.push_back(tempname);
     if (RunProgram(

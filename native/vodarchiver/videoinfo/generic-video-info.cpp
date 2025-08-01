@@ -12,19 +12,19 @@ StreamService GenericVideoInfo::GetService() const {
     return this->Service;
 }
 
-std::string GenericVideoInfo::GetUsername() const {
+std::string_view GenericVideoInfo::GetUsername(std::array<char, 256>& buffer) const {
     return this->Username;
 }
 
-std::string GenericVideoInfo::GetVideoId() const {
+std::string_view GenericVideoInfo::GetVideoId(std::array<char, 256>& buffer) const {
     return this->VideoId;
 }
 
-std::string GenericVideoInfo::GetVideoTitle() const {
+std::string_view GenericVideoInfo::GetVideoTitle(std::array<char, 256>& buffer) const {
     return this->VideoTitle;
 }
 
-std::string GenericVideoInfo::GetVideoGame() const {
+std::string_view GenericVideoInfo::GetVideoGame(std::array<char, 256>& buffer) const {
     return this->VideoGame;
 }
 

@@ -122,17 +122,22 @@ IUserInputRequest* TwitchVideoJob::GetUserInputRequest() const {
 
 static std::string GetTempFilenameWithoutExtension(IVideoInfo& vi,
                                                    const std::string& videoQuality) {
-    return std::format("twitch_{}_v{}_{}", vi.GetUsername(), vi.GetVideoId(), videoQuality);
+    std::array<char, 256> buffer1;
+    std::array<char, 256> buffer2;
+    return std::format(
+        "twitch_{}_v{}_{}", vi.GetUsername(buffer1), vi.GetVideoId(buffer2), videoQuality);
 }
 
 static std::string GetFinalFilenameWithoutExtension(IVideoInfo& vi,
                                                     const std::string& videoQuality) {
-    std::string intercapsGame = MakeIntercapsFilename(vi.GetVideoGame());
-    std::string intercapsTitle = MakeIntercapsFilename(vi.GetVideoTitle());
+    std::array<char, 256> buffer1;
+    std::array<char, 256> buffer2;
+    std::string intercapsGame = MakeIntercapsFilename(vi.GetVideoGame(buffer1));
+    std::string intercapsTitle = MakeIntercapsFilename(vi.GetVideoTitle(buffer2));
     return std::format("twitch_{}_{}_v{}_{}_{}_{}",
-                       vi.GetUsername(),
+                       vi.GetUsername(buffer1),
                        DateTimeToStringForFilesystem(vi.GetVideoTimestamp()),
-                       vi.GetVideoId(),
+                       vi.GetVideoId(buffer2),
                        intercapsGame,
                        Crop(intercapsTitle, 80),
                        videoQuality);
@@ -510,7 +515,8 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
                                    const std::string& videoQuality) {
     downloadInfos.clear();
 
-    auto videoId = HyoutaUtils::NumberUtils::ParseInt64(videoInfo->GetVideoId());
+    std::array<char, 256> buffer;
+    auto videoId = HyoutaUtils::NumberUtils::ParseInt64(videoInfo->GetVideoId(buffer));
     if (!videoId) {
         return ResultType::Failure;
     }
@@ -545,13 +551,13 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
             if (!linesbaseurl) {
                 std::string d =
                     std::format("# get baseurl for m3u8 from https://www.twitch.tv/videos/{}",
-                                videoInfo->GetVideoId());
+                                videoInfo->GetVideoId(buffer));
                 HyoutaUtils::IO::WriteFileAtomic(tmp1, d.data(), d.size());
             }
             if (!linestsnames) {
                 std::string d =
                     std::format("# get actual m3u file from https://www.twitch.tv/videos/{}",
-                                videoInfo->GetVideoId());
+                                videoInfo->GetVideoId(buffer));
                 HyoutaUtils::IO::WriteFileAtomic(tmp2, d.data(), d.size());
             }
             if (!linesbaseurl || !linestsnames) {

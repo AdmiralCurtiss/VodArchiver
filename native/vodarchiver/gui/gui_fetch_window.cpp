@@ -314,14 +314,18 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoInfo* l = FetchedItems[lhs].get();
                                         IVideoInfo* r = FetchedItems[rhs].get();
-                                        return l->GetVideoId() < r->GetVideoId();
+                                        std::array<char, 256> buffer1;
+                                        std::array<char, 256> buffer2;
+                                        return l->GetVideoId(buffer1) < r->GetVideoId(buffer2);
                                     });
                             } else {
                                 std::stable_sort(
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoInfo* l = FetchedItems[lhs].get();
                                         IVideoInfo* r = FetchedItems[rhs].get();
-                                        return l->GetVideoId() > r->GetVideoId();
+                                        std::array<char, 256> buffer1;
+                                        std::array<char, 256> buffer2;
+                                        return l->GetVideoId(buffer1) > r->GetVideoId(buffer2);
                                     });
                             }
                             break;
@@ -332,14 +336,18 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoInfo* l = FetchedItems[lhs].get();
                                         IVideoInfo* r = FetchedItems[rhs].get();
-                                        return l->GetUsername() < r->GetUsername();
+                                        std::array<char, 256> buffer1;
+                                        std::array<char, 256> buffer2;
+                                        return l->GetUsername(buffer1) < r->GetUsername(buffer2);
                                     });
                             } else {
                                 std::stable_sort(
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoInfo* l = FetchedItems[lhs].get();
                                         IVideoInfo* r = FetchedItems[rhs].get();
-                                        return l->GetUsername() > r->GetUsername();
+                                        std::array<char, 256> buffer1;
+                                        std::array<char, 256> buffer2;
+                                        return l->GetUsername(buffer1) > r->GetUsername(buffer2);
                                     });
                             }
                             break;
@@ -350,14 +358,20 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoInfo* l = FetchedItems[lhs].get();
                                         IVideoInfo* r = FetchedItems[rhs].get();
-                                        return l->GetVideoTitle() < r->GetVideoTitle();
+                                        std::array<char, 256> buffer1;
+                                        std::array<char, 256> buffer2;
+                                        return l->GetVideoTitle(buffer1)
+                                               < r->GetVideoTitle(buffer2);
                                     });
                             } else {
                                 std::stable_sort(
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoInfo* l = FetchedItems[lhs].get();
                                         IVideoInfo* r = FetchedItems[rhs].get();
-                                        return l->GetVideoTitle() > r->GetVideoTitle();
+                                        std::array<char, 256> buffer1;
+                                        std::array<char, 256> buffer2;
+                                        return l->GetVideoTitle(buffer1)
+                                               > r->GetVideoTitle(buffer2);
                                     });
                             }
                             break;
@@ -368,14 +382,18 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoInfo* l = FetchedItems[lhs].get();
                                         IVideoInfo* r = FetchedItems[rhs].get();
-                                        return l->GetVideoGame() < r->GetVideoGame();
+                                        std::array<char, 256> buffer1;
+                                        std::array<char, 256> buffer2;
+                                        return l->GetVideoGame(buffer1) < r->GetVideoGame(buffer2);
                                     });
                             } else {
                                 std::stable_sort(
                                     items.begin(), items.end(), [&](int lhs, int rhs) -> bool {
                                         IVideoInfo* l = FetchedItems[lhs].get();
                                         IVideoInfo* r = FetchedItems[rhs].get();
-                                        return l->GetVideoGame() > r->GetVideoGame();
+                                        std::array<char, 256> buffer1;
+                                        std::array<char, 256> buffer2;
+                                        return l->GetVideoGame(buffer1) > r->GetVideoGame(buffer2);
                                     });
                             }
                             break;
@@ -480,19 +498,23 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                         ImGui::TextUnformatted(sv.data(), sv.data() + sv.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_VideoID)) {
-                        std::string s = item->GetVideoId();
+                        std::array<char, 256> buffer;
+                        std::string_view s = item->GetVideoId(buffer);
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Username)) {
-                        std::string s = item->GetUsername();
+                        std::array<char, 256> buffer;
+                        std::string_view s = item->GetUsername(buffer);
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Title)) {
-                        std::string s = item->GetVideoTitle();
+                        std::array<char, 256> buffer;
+                        std::string_view s = item->GetVideoTitle(buffer);
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Game)) {
-                        std::string s = item->GetVideoGame();
+                        std::array<char, 256> buffer;
+                        std::string_view s = item->GetVideoGame(buffer);
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Timestamp)) {

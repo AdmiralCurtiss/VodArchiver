@@ -27,11 +27,14 @@ static std::string PathCombine(std::string_view lhs, std::string_view rhs) {
 }
 
 static std::string GetTargetFilename(IVideoInfo& vi) {
+    std::array<char, 256> buffer1;
+    std::array<char, 256> buffer2;
+    std::array<char, 256> buffer3;
     return std::format("youtube_{}_{}_{}_{}.mkv",
-                       vi.GetUsername(),
+                       vi.GetUsername(buffer1),
                        DateToString(vi.GetVideoTimestamp()),
-                       vi.GetVideoId(),
-                       Crop(MakeIntercapsFilename(vi.GetVideoTitle()), 80));
+                       vi.GetVideoId(buffer2),
+                       Crop(MakeIntercapsFilename(vi.GetVideoTitle(buffer3)), 80));
 }
 
 static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
@@ -58,12 +61,15 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
         return ResultType::Cancelled;
     }
 
+    std::array<char, 256> buffer1;
+    std::array<char, 256> buffer2;
     if (dynamic_cast<YoutubeVideoInfo*>(vi.get()) == nullptr) {
         {
             std::lock_guard lock(jobConfig.Mutex);
             job.TextStatus = "Retrieving video info...";
         }
-        auto result = Youtube::RetrieveVideo(vi->GetVideoId(), vi->GetUsername(), wantCookies);
+        auto result =
+            Youtube::RetrieveVideo(vi->GetVideoId(buffer1), vi->GetUsername(buffer2), wantCookies);
 
         switch (result.result) {
             case Youtube::RetrieveVideoResult::Success:
@@ -81,9 +87,9 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
     }
 
     std::string filenameWithoutExtension = std::format("youtube_{}_{}_{}",
-                                                       vi->GetUsername(),
+                                                       vi->GetUsername(buffer1),
                                                        DateToString(vi->GetVideoTimestamp()),
-                                                       vi->GetVideoId());
+                                                       vi->GetVideoId(buffer2));
     std::string filename = filenameWithoutExtension + ".mkv";
     std::string tempFolder = PathCombine(tempFolderPath, filenameWithoutExtension);
     std::string tempFilepath = PathCombine(tempFolder, filename);
@@ -130,7 +136,9 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
                 args.push_back("--cookies");
                 args.push_back("d:\\cookies.txt");
             }
-            args.push_back("https://www.youtube.com/watch?v=" + vi->GetVideoId());
+            std::array<char, 256> buffer;
+            args.push_back(
+                std::format("https://www.youtube.com/watch?v={}", vi->GetVideoId(buffer)));
             std::string output;
             if (RunProgram(
                     "yt-dlp.exe",

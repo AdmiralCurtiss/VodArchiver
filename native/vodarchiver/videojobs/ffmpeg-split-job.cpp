@@ -82,7 +82,8 @@ static ResultType
         return ResultType::Cancelled;
     }
 
-    std::string originalpath = HyoutaUtils::IO::GetAbsolutePath(videoInfo->GetVideoId());
+    std::array<char, 256> buffer;
+    std::string originalpath = HyoutaUtils::IO::GetAbsolutePath(videoInfo->GetVideoId(buffer));
     std::string newdirpath(HyoutaUtils::IO::GetDirectoryName(originalpath));
     HyoutaUtils::IO::AppendPathElement(newdirpath, std::format("{}", DateTime::UtcNow().Data));
     if (HyoutaUtils::IO::Exists(std::string_view(newdirpath))) {
@@ -109,7 +110,7 @@ static ResultType
         return ResultType::Failure;
     }
 
-    std::string outname = GenerateOutputName(inname, videoInfo->GetVideoId());
+    std::string outname = GenerateOutputName(inname, videoInfo->GetVideoId(buffer));
 
     std::vector<std::string> args;
     args.push_back("-i");
@@ -200,7 +201,8 @@ ResultType FFMpegSplitJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
 }
 
 std::string FFMpegSplitJob::GenerateOutputFilename() {
-    std::string fullPath = VideoInfo->GetVideoId();
+    std::array<char, 256> buffer;
+    std::string_view fullPath = VideoInfo->GetVideoId(buffer);
     return GenerateOutputFilenameInternal(fullPath);
 }
 } // namespace VodArchiver

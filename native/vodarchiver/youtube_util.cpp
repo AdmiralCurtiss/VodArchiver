@@ -1,8 +1,10 @@
 #include "youtube_util.h"
 
+#include <format>
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "rapidjson/document.h"
@@ -47,11 +49,11 @@ static std::optional<double>
 
 static RetrieveVideoResultStruct
     ParseFromJsonFull(const rapidjson::GenericObject<true, rapidjson::Value>& json,
-                      const std::string& usernameIfNotInJson) {
+                      std::string_view usernameIfNotInJson) {
     auto y = std::make_unique<YoutubeVideoInfo>();
     y->Username = ReadString(json, "uploader_id").value_or("");
     if (HyoutaUtils::TextUtils::Trim(y->Username).empty()) {
-        y->Username = usernameIfNotInJson;
+        y->Username = std::string(usernameIfNotInJson);
         return RetrieveVideoResultStruct{.result = RetrieveVideoResult::ParseFailure,
                                          .info = std::move(y)};
     }
@@ -129,9 +131,9 @@ static RetrieveVideoResultStruct
 
 static RetrieveVideoResultStruct
     ParseFromJsonFlat(const rapidjson::GenericObject<true, rapidjson::Value>& json,
-                      const std::string& usernameIfNotInJson) {
+                      std::string_view usernameIfNotInJson) {
     auto y = std::make_unique<GenericVideoInfo>();
-    y->Username = usernameIfNotInJson;
+    y->Username = std::string(usernameIfNotInJson);
 
     auto videoId = ReadString(json, "id");
     if (!videoId) {
@@ -154,7 +156,7 @@ static RetrieveVideoResultStruct
 static RetrieveVideoResultStruct
     ParseFromJson(const rapidjson::GenericObject<true, rapidjson::Value>& json,
                   bool flat,
-                  const std::string& usernameIfNotInJson) {
+                  std::string_view usernameIfNotInJson) {
     if (flat) {
         return ParseFromJsonFlat(json, usernameIfNotInJson);
     } else {
@@ -163,12 +165,12 @@ static RetrieveVideoResultStruct
 }
 
 RetrieveVideoResultStruct
-    RetrieveVideo(const std::string& id, const std::string& usernameIfNotInJson, bool wantCookies) {
+    RetrieveVideo(std::string_view id, std::string_view usernameIfNotInJson, bool wantCookies) {
     std::string raw;
     {
         std::vector<std::string> args;
         args.push_back("-j");
-        args.push_back("https://www.youtube.com/watch?v=" + id);
+        args.push_back(std::format("https://www.youtube.com/watch?v={}", id));
         if (wantCookies) {
             args.push_back("--cookies");
             args.push_back("d:\\cookies.txt");
