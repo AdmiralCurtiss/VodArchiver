@@ -518,11 +518,14 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Timestamp)) {
-                        std::string s = DateTimeToStringForGui(item->GetVideoTimestamp());
+                        std::array<char, 24> buffer;
+                        std::string_view s =
+                            DateTimeToStringForGui(item->GetVideoTimestamp(), buffer);
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Duration)) {
-                        std::string s = std::format("{}", item->GetVideoLength().GetTotalSeconds());
+                        std::array<char, 24> buffer;
+                        std::string_view s = TimeSpanToStringForGui(item->GetVideoLength(), buffer);
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_RecordingState)) {

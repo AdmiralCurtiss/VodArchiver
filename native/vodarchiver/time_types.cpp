@@ -58,13 +58,19 @@ std::string DateTimeToStringForFilesystem(DateTime dt) {
     return std::format("{0:%Y}-{0:%m}-{0:%d}_{0:%H}-{0:%M}-{1:02}", target, seconds);
 }
 
-std::string DateTimeToStringForGui(DateTime dt) {
+std::string_view DateTimeToStringForGui(DateTime dt, std::array<char, 24>& buffer) {
     static constexpr int64_t EPOCH_DIFFERENCE_IN_TICKS = 617569056000000000;
     uint64_t seconds = (dt.Data / DateTime::TICKS_PER_SECOND) % 60;
     std::chrono::nanoseconds ns((dt.Data - EPOCH_DIFFERENCE_IN_TICKS) * 100);
     std::chrono::time_point<std::chrono::tai_clock> epoch;
     auto target = (epoch + ns);
-    return std::format("{0:%Y}-{0:%m}-{0:%d} {0:%H}:{0:%M}:{1:02}", target, seconds);
+    auto result = std::format_to_n(buffer.data(),
+                                   buffer.size() - 1,
+                                   "{0:%Y}-{0:%m}-{0:%d} {0:%H}:{0:%M}:{1:02}",
+                                   target,
+                                   seconds);
+    *result.out = '\0';
+    return std::string_view(buffer.data(), result.out);
 }
 
 std::string DateToString(DateTime dt) {
@@ -73,5 +79,36 @@ std::string DateToString(DateTime dt) {
     std::chrono::time_point<std::chrono::tai_clock> epoch;
     auto target = (epoch + ns);
     return std::format("{0:%Y}-{0:%m}-{0:%d}", target);
+}
+
+std::string_view TimeSpanToStringForGui(TimeSpan ts, std::array<char, 24>& buffer) {
+    bool isNegative = ts.Ticks < 0;
+    uint64_t absoluteTicks =
+        (isNegative ? -static_cast<uint64_t>(ts.Ticks) : static_cast<uint64_t>(ts.Ticks));
+    uint64_t seconds = (ts.Ticks / TimeSpan::TICKS_PER_SECOND);
+    uint64_t subsecondTicks = (ts.Ticks % TimeSpan::TICKS_PER_SECOND);
+    uint64_t minutes = (seconds / 60);
+    uint64_t hours = (minutes / 60);
+    auto result = std::format_to_n(buffer.data(),
+                                   buffer.size() - 1,
+                                   "{}{}:{:02}:{:02}",
+                                   isNegative ? "-" : "",
+                                   hours,
+                                   minutes % 60,
+                                   seconds % 60);
+    if (subsecondTicks != 0) {
+        result = std::format_to_n(result.out,
+                                  (buffer.size() - 1) - (result.out - buffer.data()),
+                                  ".{:07}",
+                                  subsecondTicks);
+        std::string_view sv(buffer.data(), result.out);
+        while (sv.ends_with('0')) {
+            sv = sv.substr(0, sv.size() - 1);
+        }
+        buffer[sv.size()] = '\0';
+        return sv;
+    }
+    *result.out = '\0';
+    return std::string_view(buffer.data(), result.out);
 }
 } // namespace VodArchiver

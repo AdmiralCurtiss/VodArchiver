@@ -1,9 +1,11 @@
 #pragma once
 
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace VodArchiver {
 // C# compatible types
@@ -71,6 +73,8 @@ struct TimeSpan {
 };
 
 std::string DateTimeToStringForFilesystem(DateTime dt);
-std::string DateTimeToStringForGui(DateTime dt);
+std::string_view DateTimeToStringForGui(DateTime dt, std::array<char, 24>& buffer);
 std::string DateToString(DateTime dt);
+
+std::string_view TimeSpanToStringForGui(TimeSpan ts, std::array<char, 24>& buffer);
 } // namespace VodArchiver

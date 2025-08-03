@@ -462,13 +462,15 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Timestamp)) {
-                        std::string s =
-                            DateTimeToStringForGui(item->VideoInfo->GetVideoTimestamp());
+                        std::array<char, 24> buffer;
+                        std::string_view s =
+                            DateTimeToStringForGui(item->VideoInfo->GetVideoTimestamp(), buffer);
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Duration)) {
-                        std::string s =
-                            std::format("{}", item->VideoInfo->GetVideoLength().GetTotalSeconds());
+                        std::array<char, 24> buffer;
+                        std::string_view s =
+                            TimeSpanToStringForGui(item->VideoInfo->GetVideoLength(), buffer);
                         ImGui::TextUnformatted(s.data(), s.data() + s.size());
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_RecordingState)) {
