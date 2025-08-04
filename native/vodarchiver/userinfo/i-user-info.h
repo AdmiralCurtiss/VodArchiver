@@ -13,7 +13,7 @@
 #include "vodarchiver/videoinfo/i-video-info.h"
 
 namespace VodArchiver {
-enum class ServiceVideoCategoryType : uint32_t {
+enum class ServiceVideoCategoryType : uint8_t {
     TwitchRecordings = 0,
     TwitchHighlights = 1,
     HitboxRecordings = 2,

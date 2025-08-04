@@ -22,7 +22,7 @@ std::optional<std::vector<std::unique_ptr<IVideoInfo>>>
 std::optional<std::vector<std::unique_ptr<IVideoInfo>>>
     RetrieveVideosFromUrl(const std::string& url, bool flat);
 
-enum class RetrieveVideoResult { Success, FetchFailure, ParseFailure };
+enum class RetrieveVideoResult : uint8_t { Success, FetchFailure, ParseFailure };
 struct RetrieveVideoResultStruct {
     RetrieveVideoResult result;
     std::unique_ptr<IVideoInfo> info;

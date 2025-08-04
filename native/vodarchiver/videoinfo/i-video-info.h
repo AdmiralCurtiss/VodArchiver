@@ -10,7 +10,7 @@
 #include "../time_types.h"
 
 namespace VodArchiver {
-enum class StreamService {
+enum class StreamService : uint8_t {
     Unknown = 0,
     Twitch,
     Hitbox,
@@ -23,7 +23,7 @@ enum class StreamService {
 std::string_view StreamServiceToString(StreamService service);
 std::optional<StreamService> StreamServiceFromString(std::string_view sv);
 
-enum class RecordingState {
+enum class RecordingState : uint8_t {
     Unknown,
     Live,
     Recorded,
@@ -31,7 +31,7 @@ enum class RecordingState {
 std::string_view RecordingStateToString(RecordingState state);
 std::optional<RecordingState> RecordingStateFromString(std::string_view sv);
 
-enum class VideoFileType { M3U, FLVs, Unknown };
+enum class VideoFileType : uint8_t { M3U, FLVs, Unknown };
 std::string_view VideoFileTypeToString(VideoFileType type);
 std::optional<VideoFileType> VideoFileTypeFromString(std::string_view sv);
 

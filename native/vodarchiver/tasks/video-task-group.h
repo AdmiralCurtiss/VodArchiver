@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -20,7 +21,7 @@ struct WaitingVideoJob {
     DateTime EarliestPossibleStartTime = DateTime{.Data = 0};
 };
 
-enum class TaskDoneEnum {
+enum class TaskDoneEnum : uint8_t {
     NotDone,
     FinishedNormally,
     FinishedWithError,

@@ -16,16 +16,17 @@
 #include "../time_types.h"
 
 namespace VodArchiver {
-enum class VideoJobStatus {
-    NotStarted,
+enum class VideoJobStatus : uint8_t {
+    NotStarted = 0,
     Running,
     Finished,
     Dead,
+    COUNT,
 };
 std::string_view VideoJobStatusToString(VideoJobStatus status);
 std::optional<VideoJobStatus> VideoJobStatusFromString(std::string_view sv);
 
-enum class ResultType {
+enum class ResultType : uint8_t {
     Failure,
     Success,
     Cancelled,

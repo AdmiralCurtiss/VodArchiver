@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <condition_variable>
 #include <format>
 #include <memory>
@@ -96,6 +97,52 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
         ImGui::EndMenuBar();
     }
 
+    if (ImGui::Button("Filter...##FilterSettingsPopupButton")) {
+        ImGui::OpenPopup("FilterSettingsPopup");
+    }
+    if (ImGui::BeginPopup("FilterSettingsPopup")) {
+        ImGui::PushID("StreamServiceFilterOptions");
+        for (uint32_t i = 0; i < static_cast<uint32_t>(StreamService::COUNT); ++i) {
+            ImGui::PushID(i);
+            std::string_view ss = StreamServiceToString(static_cast<StreamService>(i));
+            bool previousState = (FilterStreamService & (1u << i)) == 0;
+            bool newState = previousState;
+            ImGui::Selectable(ss.data(), &newState, ImGuiSelectableFlags_DontClosePopups);
+            if (previousState != newState) {
+                if (newState) {
+                    FilterStreamService &= ~static_cast<uint32_t>(1u << i);
+                } else {
+                    FilterStreamService |= static_cast<uint32_t>(1u << i);
+                }
+                ItemsNeedFilter = true;
+            }
+            ImGui::PopID();
+        }
+        ImGui::PopID();
+        ImGui::Separator();
+        ImGui::PushID("JobStatusFilterOptions");
+        for (uint32_t i = 0; i < static_cast<uint32_t>(VideoJobStatus::COUNT); ++i) {
+            ImGui::PushID(i);
+            std::string_view ss = VideoJobStatusToString(static_cast<VideoJobStatus>(i));
+            bool previousState = (FilterJobStatus & (1u << i)) == 0;
+            bool newState = previousState;
+            ImGui::Selectable(ss.data(), &newState, ImGuiSelectableFlags_DontClosePopups);
+            if (previousState != newState) {
+                if (newState) {
+                    FilterJobStatus &= ~static_cast<uint32_t>(1u << i);
+                } else {
+                    FilterJobStatus |= static_cast<uint32_t>(1u << i);
+                }
+                ItemsNeedFilter = true;
+            }
+            ImGui::PopID();
+        }
+        ImGui::PopID();
+
+        ImGui::EndPopup();
+    }
+
+    ImGui::SameLine();
     ImGuiUtils::TextUnformattedRightAlign("VodArchiver " VODARCHIVER_VERSION);
 
     ImGui::Spacing();
@@ -133,18 +180,6 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
             ColumnID_Actions,
             ColumnIDCount
         };
-        int items_count = static_cast<int>(state.Jobs.JobsVector.size());
-
-        // Update item list if we changed the number of items
-        ImVector<int>& items = this->Items;
-        ImVector<int>& selection = this->Selection;
-        bool& items_need_sort = this->ItemsNeedSort;
-        if (items.Size != items_count) {
-            items.resize(items_count);
-            for (int n = 0; n < items_count; ++n) {
-                items[n] = n;
-            }
-        }
 
         // Submit table
         if (ImGui::BeginTable("JobTable", ColumnIDCount, flags, ImVec2(0.0f, -28.0f), 0.0f)) {
@@ -176,11 +211,43 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
             ImGui::TableSetupColumn("Actions", columns_base_flags, 0.0f, ColumnID_Actions);
             ImGui::TableSetupScrollFreeze(0, 1);
 
+            // Update item list if we changed the number of items.
+            // We also need to rebuild from scratch if the filter changed, since the list may now
+            // include items that were previously filtered out.
+            size_t items_count = state.Jobs.JobsVector.size();
+            std::vector<uint32_t>& items = ItemIndices;
+            if (ItemCountLastSeen != items_count || ItemsNeedFilter) {
+                items.resize(items_count);
+                for (size_t n = 0; n < items_count; ++n) {
+                    items[n] = static_cast<uint32_t>(n);
+                }
+                ItemCountLastSeen = items_count;
+                ItemsNeedSort = true;
+                ItemsNeedFilter = true;
+            }
+
+            if (ItemsNeedFilter) {
+                // filtering happens in-place, this is safe because out_idx is always <= i
+                size_t out_idx = 0;
+                for (size_t i = 0; i < items.size(); ++i) {
+                    const uint32_t ID = items[i];
+                    IVideoJob* item = state.Jobs.JobsVector[ID].get();
+                    if (PassFilter(item)) {
+                        items[out_idx] = ID;
+                        ++out_idx;
+                    }
+                }
+                items.resize(out_idx);
+
+                ItemsNeedFilter = false;
+            }
+
             // Sort our data if sort specs have been changed!
             ImGuiTableSortSpecs* sort_specs = ImGui::TableGetSortSpecs();
-            if (sort_specs && sort_specs->SpecsDirty)
-                items_need_sort = true;
-            if (sort_specs && items_need_sort && items.Size > 1) {
+            if (sort_specs && sort_specs->SpecsDirty) {
+                ItemsNeedSort = true;
+            }
+            if (sort_specs && ItemsNeedSort && items.size() > 1) {
                 for (int spec = (sort_specs->SpecsCount - 1); spec >= 0; --spec) {
                     switch (sort_specs->Specs[spec].ColumnUserID) {
                         case ColumnID_Index:
@@ -413,21 +480,18 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
                     }
                 }
                 sort_specs->SpecsDirty = false;
+                ItemsNeedSort = false;
             }
-            items_need_sort = false;
 
             ImGui::TableHeadersRow();
 
             ImGuiListClipper clipper;
-            clipper.Begin(items.Size);
+            clipper.Begin(items.size());
             while (clipper.Step()) {
                 for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; ++row_n) {
-                    const int ID = items[row_n];
+                    const uint32_t ID = items[row_n];
                     IVideoJob* item = state.Jobs.JobsVector[ID].get();
-                    // if (!filter.PassFilter(item->Name))
-                    //     continue;
 
-                    const bool item_is_selected = selection.contains(ID);
                     ImGui::PushID(ID);
                     ImGui::TableNextRow(ImGuiTableRowFlags_None, 0.0f);
 
@@ -644,7 +708,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
             }
             if (ImGui::BeginMenu("Enqueue only...")) {
                 ImGui::PushID("EnqueueOnlyOptions");
-                for (int i = 0; i < static_cast<int>(StreamService::COUNT); ++i) {
+                for (uint32_t i = 0; i < static_cast<uint32_t>(StreamService::COUNT); ++i) {
                     ImGui::PushID(i);
                     std::string_view ss = StreamServiceToString(static_cast<StreamService>(i));
                     if (ImGui::Selectable(ss.data(), false, ImGuiSelectableFlags_DontClosePopups)) {
@@ -668,7 +732,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
             }
             if (ImGui::BeginMenu("Dequeue only...")) {
                 ImGui::PushID("DequeueOnlyOptions");
-                for (int i = 0; i < static_cast<int>(StreamService::COUNT); ++i) {
+                for (uint32_t i = 0; i < static_cast<uint32_t>(StreamService::COUNT); ++i) {
                     ImGui::PushID(i);
                     std::string_view ss = StreamServiceToString(static_cast<StreamService>(i));
                     if (ImGui::Selectable(ss.data(), false, ImGuiSelectableFlags_DontClosePopups)) {
@@ -681,7 +745,7 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
             }
             if (ImGui::BeginMenu("Auto-enqueue...")) {
                 ImGui::PushID("AutoEnqueueOptions");
-                for (int i = 0; i < static_cast<int>(StreamService::COUNT); ++i) {
+                for (uint32_t i = 0; i < static_cast<uint32_t>(StreamService::COUNT); ++i) {
                     ImGui::PushID(i);
                     std::string_view ss = StreamServiceToString(static_cast<StreamService>(i));
                     bool previousAutoEnqueue = state.VideoTaskGroups[i]->IsAutoEnqueue();
@@ -717,4 +781,28 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
 
     return true;
 }
+
+bool VodArchiverMainWindow::PassFilter(IVideoJob* item) const {
+    assert(item != nullptr);
+    assert(item->VideoInfo != nullptr);
+
+    if (FilterStreamService != 0) {
+        StreamService service = item->VideoInfo->GetService();
+        if (service < StreamService::COUNT
+            && (FilterStreamService & (1u << static_cast<uint32_t>(service))) != 0) {
+            return false;
+        }
+    }
+
+    if (FilterJobStatus != 0) {
+        VideoJobStatus status = item->JobStatus;
+        if (status < VideoJobStatus::COUNT
+            && (FilterJobStatus & (1u << static_cast<uint32_t>(status))) != 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 } // namespace VodArchiver::GUI
