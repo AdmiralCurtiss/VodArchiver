@@ -25,13 +25,19 @@
 #include "util/hash/sha1.h"
 #include "util/scope.h"
 #include "util/system.h"
+#include "util/text.h"
 #include "vodarchiver/common_paths.h"
 #include "vodarchiver/videojobs/i-video-job.h"
 #include "vodarchiver_imgui_utils.h"
 #include "vodarchiver_version.h"
 
 namespace VodArchiver::GUI {
-VodArchiverMainWindow::VodArchiverMainWindow() = default;
+VodArchiverMainWindow::VodArchiverMainWindow() {
+    // turn off finished/dead by default
+    FilterJobStatus |= static_cast<uint32_t>(1u << static_cast<uint32_t>(VideoJobStatus::Finished));
+    FilterJobStatus |= static_cast<uint32_t>(1u << static_cast<uint32_t>(VideoJobStatus::Dead));
+}
+
 VodArchiverMainWindow::~VodArchiverMainWindow() = default;
 
 void VodArchiverMainWindow::Cleanup(GuiState& state) {}
@@ -143,7 +149,10 @@ bool VodArchiverMainWindow::RenderContents(GuiState& state) {
     }
 
     ImGui::SameLine();
-    ImGuiUtils::TextUnformattedRightAlign("VodArchiver " VODARCHIVER_VERSION);
+
+    if (ImGui::InputText("##FilterString", FilterTextfield.data(), FilterTextfield.size())) {
+        ItemsNeedFilter = true;
+    }
 
     ImGui::Spacing();
 
@@ -798,6 +807,22 @@ bool VodArchiverMainWindow::PassFilter(IVideoJob* item) const {
         VideoJobStatus status = item->JobStatus;
         if (status < VideoJobStatus::COUNT
             && (FilterJobStatus & (1u << static_cast<uint32_t>(status))) != 0) {
+            return false;
+        }
+    }
+
+    std::string_view textFilter = HyoutaUtils::TextUtils::StripToNull(FilterTextfield);
+    if (!textFilter.empty()) {
+        std::array<char, 256> buffer;
+        bool containsAny = HyoutaUtils::TextUtils::CaseInsensitiveContains(
+                               item->VideoInfo->GetUsername(buffer), textFilter)
+                           || HyoutaUtils::TextUtils::CaseInsensitiveContains(
+                               item->VideoInfo->GetVideoId(buffer), textFilter)
+                           || HyoutaUtils::TextUtils::CaseInsensitiveContains(
+                               item->VideoInfo->GetVideoTitle(buffer), textFilter)
+                           || HyoutaUtils::TextUtils::CaseInsensitiveContains(
+                               item->VideoInfo->GetVideoGame(buffer), textFilter);
+        if (!containsAny) {
             return false;
         }
     }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -39,5 +40,7 @@ private:
     // bit index == enum index, 0 means visible, 1 means not visible
     uint32_t FilterStreamService = 0;
     uint32_t FilterJobStatus = 0;
+
+    std::array<char, 1024> FilterTextfield{};
 };
 } // namespace VodArchiver::GUI
