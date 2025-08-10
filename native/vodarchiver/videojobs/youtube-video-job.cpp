@@ -95,7 +95,8 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
     std::string tempFilepath = PathCombine(tempFolder, filename);
 
     {
-        if (!HyoutaUtils::IO::FileExists(std::string_view(tempFilepath))) {
+        if (HyoutaUtils::IO::FileExists(std::string_view(tempFilepath))
+            != HyoutaUtils::IO::ExistsResult::DoesExist) {
             if (cancellationToken.IsCancellationRequested()) {
                 return ResultType::Cancelled;
             }
@@ -166,7 +167,8 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
 
         std::string finalFilename = GetTargetFilename(*vi);
         std::string finalFilepath = PathCombine(targetFolderPath, finalFilename);
-        if (HyoutaUtils::IO::Exists(std::string_view(finalFilepath))) {
+        if (HyoutaUtils::IO::Exists(std::string_view(finalFilepath))
+            == HyoutaUtils::IO::ExistsResult::DoesExist) {
             std::lock_guard lock(*jobConfig.JobsLock);
             job.TextStatus = ("File exists: " + finalFilepath);
             return ResultType::Failure;

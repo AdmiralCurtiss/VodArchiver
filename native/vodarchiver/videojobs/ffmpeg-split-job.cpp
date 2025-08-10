@@ -86,7 +86,8 @@ static ResultType
     std::string originalpath = HyoutaUtils::IO::GetAbsolutePath(videoInfo->GetVideoId(buffer));
     std::string newdirpath(HyoutaUtils::IO::GetDirectoryName(originalpath));
     HyoutaUtils::IO::AppendPathElement(newdirpath, std::format("{}", DateTime::UtcNow().Data));
-    if (HyoutaUtils::IO::Exists(std::string_view(newdirpath))) {
+    if (HyoutaUtils::IO::Exists(std::string_view(newdirpath))
+        == HyoutaUtils::IO::ExistsResult::DoesExist) {
         std::lock_guard lock(*jobConfig.JobsLock);
         job.TextStatus =
             std::format("File or directory at {} already exists, cancelling.", newdirpath);
@@ -99,7 +100,8 @@ static ResultType
     }
     std::string inname = newdirpath;
     HyoutaUtils::IO::AppendPathElement(inname, HyoutaUtils::IO::GetFileName(originalpath));
-    if (HyoutaUtils::IO::Exists(std::string_view(inname))) {
+    if (HyoutaUtils::IO::Exists(std::string_view(inname))
+        == HyoutaUtils::IO::ExistsResult::DoesExist) {
         std::lock_guard lock(*jobConfig.JobsLock);
         job.TextStatus = std::format("File or directory at {} already exists, cancelling.", inname);
         return ResultType::Failure;
@@ -128,7 +130,8 @@ static ResultType
     args.push_back("1");
 
     std::string exampleOutname = HyoutaUtils::TextUtils::Replace(outname, "%d", "0");
-    bool existedBefore = HyoutaUtils::IO::Exists(std::string_view(exampleOutname));
+    bool existedBefore = HyoutaUtils::IO::Exists(std::string_view(exampleOutname))
+                         == HyoutaUtils::IO::ExistsResult::DoesExist;
 
     {
         auto diskLock = jobConfig.ExpensiveDiskIO.WaitForFreeSlot(cancellationToken);
@@ -159,7 +162,9 @@ static ResultType
     }
 
 
-    if (!existedBefore && HyoutaUtils::IO::FileExists(std::string_view(exampleOutname))) {
+    if (!existedBefore
+        && HyoutaUtils::IO::FileExists(std::string_view(exampleOutname))
+               == HyoutaUtils::IO::ExistsResult::DoesExist) {
         // output generated with indices starting at 0 instead of 1, rename
         struct Pair {
             std::string input;
@@ -172,7 +177,8 @@ static ResultType
                 HyoutaUtils::TextUtils::Replace(outname, "%d", std::format("{}", digit));
             std::string output =
                 HyoutaUtils::TextUtils::Replace(outname, "%d", std::format("{}", (digit + 1)));
-            if (HyoutaUtils::IO::FileExists(std::string_view(input))) {
+            if (HyoutaUtils::IO::FileExists(std::string_view(input))
+                == HyoutaUtils::IO::ExistsResult::DoesExist) {
                 l.push_back(Pair{.input = std::move(input), .output = std::move(output)});
             } else {
                 break;
@@ -182,7 +188,8 @@ static ResultType
 
         for (size_t i = l.size(); i > 0; --i) {
             auto& pair = l[i - 1];
-            if (!HyoutaUtils::IO::Exists(std::string_view(pair.output))) {
+            if (HyoutaUtils::IO::Exists(std::string_view(pair.output))
+                != HyoutaUtils::IO::ExistsResult::DoesExist) {
                 HyoutaUtils::IO::Move(pair.input, pair.output, false);
             }
         }

@@ -59,7 +59,8 @@ static std::optional<std::vector<std::unique_ptr<IVideoInfo>>>
                         newfile,
                         std::format(
                             "{}{}{}", name.substr(0, name.size() - chunked.size()), postfix, ext));
-                    if (!HyoutaUtils::IO::FileExists(std::string_view(newfile))) {
+                    if (HyoutaUtils::IO::FileExists(std::string_view(newfile))
+                        != HyoutaUtils::IO::ExistsResult::DoesExist) {
                         reencodeFiles.emplace_back(std::move(file));
                     }
                 }

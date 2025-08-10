@@ -174,16 +174,15 @@ static ResultType Download(TwitchVideoJob& job,
             const DownloadInfo& downloadInfo = downloadInfos[i];
             std::string outpath = PathCombine(targetFolder, downloadInfo.FilesystemId + ".ts");
             std::string outpath_temp = outpath + ".tmp";
-            if (HyoutaUtils::IO::FileExists(std::string_view(outpath_temp))) {
-                HyoutaUtils::IO::DeleteFile(std::string_view(outpath_temp));
-            }
+            HyoutaUtils::IO::DeleteFile(std::string_view(outpath_temp));
 
             if (outpath.ends_with("--2d--muted--2e--ts__.ts")) {
                 std::string alt_outpath =
                     outpath.substr(
                         0, outpath.size() - std::string_view("--2d--muted--2e--ts__.ts").size())
                     + "--2e--ts__.ts";
-                if (HyoutaUtils::IO::FileExists(std::string_view(alt_outpath))) {
+                if (HyoutaUtils::IO::FileExists(std::string_view(alt_outpath))
+                    == HyoutaUtils::IO::ExistsResult::DoesExist) {
                     if (i % 100 == 99) {
                         std::lock_guard lock(*jobConfig.JobsLock);
                         job.TextStatus =
@@ -194,7 +193,8 @@ static ResultType Download(TwitchVideoJob& job,
                 }
             }
 
-            if (HyoutaUtils::IO::FileExists(std::string_view(outpath))) {
+            if (HyoutaUtils::IO::FileExists(std::string_view(outpath))
+                == HyoutaUtils::IO::ExistsResult::DoesExist) {
                 if (i % 100 == 99) {
                     std::lock_guard lock(*jobConfig.JobsLock);
                     job.TextStatus =
@@ -676,8 +676,10 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
         PathCombine(tempFolderPath, tempFilenameWithoutExtension + "_tsnames.txt");
     std::string tempFolderForParts = PathCombine(tempFolderPath, tempFilenameWithoutExtension);
 
-    if (!HyoutaUtils::IO::FileExists(std::string_view(targetFilename))) {
-        if (!HyoutaUtils::IO::FileExists(std::string_view(combinedFilename))) {
+    if (HyoutaUtils::IO::FileExists(std::string_view(targetFilename))
+        != HyoutaUtils::IO::ExistsResult::DoesExist) {
+        if (HyoutaUtils::IO::FileExists(std::string_view(combinedFilename))
+            != HyoutaUtils::IO::ExistsResult::DoesExist) {
             if (cancellationToken.IsCancellationRequested()) {
                 return ResultType::Cancelled;
             }
@@ -728,9 +730,7 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                             return ResultType::Cancelled;
                         }
                     }
-                    if (HyoutaUtils::IO::FileExists(std::string_view(tsnamesfilepath))) {
-                        HyoutaUtils::IO::DeleteFile(std::string_view(tsnamesfilepath));
-                    }
+                    HyoutaUtils::IO::DeleteFile(std::string_view(tsnamesfilepath));
                     getFileUrlsResult = GetFileUrlsOfVod(job,
                                                          jobConfig,
                                                          videoInfo,
@@ -765,9 +765,7 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                     std::lock_guard lock(*jobConfig.JobsLock);
                     job.TextStatus = "Combining downloaded video parts...";
                 }
-                if (HyoutaUtils::IO::FileExists(std::string_view(combinedTempname))) {
-                    HyoutaUtils::IO::DeleteFile(std::string_view(combinedTempname));
-                }
+                HyoutaUtils::IO::DeleteFile(std::string_view(combinedTempname));
                 StallWrite(jobConfig,
                            combinedFilename,
                            expectedTargetFilesize,
@@ -835,9 +833,7 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                 std::lock_guard lock(*jobConfig.JobsLock);
                 job.TextStatus = "Remuxing to MP4...";
             }
-            if (HyoutaUtils::IO::FileExists(std::string_view(remuxedTempname))) {
-                HyoutaUtils::IO::DeleteFile(std::string_view(remuxedTempname));
-            }
+            HyoutaUtils::IO::DeleteFile(std::string_view(remuxedTempname));
             StallWrite(jobConfig,
                        remuxedFilename,
                        HyoutaUtils::IO::GetFilesize(std::string_view(combinedFilename)).value_or(0),
@@ -887,12 +883,8 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
         }
     }
 
-    if (HyoutaUtils::IO::FileExists(std::string_view(tsnamesfilepath))) {
-        HyoutaUtils::IO::DeleteFile(std::string_view(tsnamesfilepath));
-    }
-    if (HyoutaUtils::IO::FileExists(std::string_view(baseurlfilepath))) {
-        HyoutaUtils::IO::DeleteFile(std::string_view(baseurlfilepath));
-    }
+    HyoutaUtils::IO::DeleteFile(std::string_view(tsnamesfilepath));
+    HyoutaUtils::IO::DeleteFile(std::string_view(baseurlfilepath));
     {
         std::lock_guard lock(*jobConfig.JobsLock);
         job.TextStatus = "Done!";

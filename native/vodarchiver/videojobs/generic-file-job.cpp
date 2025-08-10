@@ -144,9 +144,12 @@ static ResultType RunGenericFileJob(GenericFileJob& job,
     std::string targetFilename = GetTargetFilename(*videoInfo);
     std::string targetFilepath = PathCombine(targetFolderPath, targetFilename);
 
-    if (!HyoutaUtils::IO::Exists(std::string_view(targetFilepath))) {
-        if (!HyoutaUtils::IO::Exists(std::string_view(movedFilepath))) {
-            if (HyoutaUtils::IO::DirectoryExists(std::string_view(tempFoldername))) {
+    if (HyoutaUtils::IO::Exists(std::string_view(targetFilepath))
+        != HyoutaUtils::IO::ExistsResult::DoesExist) {
+        if (HyoutaUtils::IO::Exists(std::string_view(movedFilepath))
+            != HyoutaUtils::IO::ExistsResult::DoesExist) {
+            if (HyoutaUtils::IO::DirectoryExists(std::string_view(tempFoldername))
+                == HyoutaUtils::IO::ExistsResult::DoesExist) {
                 if (!DeleteDirectoryRecursive(std::string_view(tempFoldername))) {
                     return ResultType::Failure;
                 }

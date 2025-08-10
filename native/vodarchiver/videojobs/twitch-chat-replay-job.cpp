@@ -165,7 +165,8 @@ ResultType RunChatJob(TwitchChatReplayJob& job,
     std::string filename =
         PathCombine(targetFolderPath, GetTargetFilenameWithoutExtension(*videoInfo) + ".json");
 
-    if (HyoutaUtils::IO::DirectoryExists(std::string_view(tempfolder))) {
+    if (HyoutaUtils::IO::DirectoryExists(std::string_view(tempfolder))
+        == HyoutaUtils::IO::ExistsResult::DoesExist) {
         if (!DeleteDirectoryRecursive(std::string_view(tempfolder))) {
             return ResultType::Failure;
         }

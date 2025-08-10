@@ -137,10 +137,12 @@ static ResultType RunReencodeJob(FFMpegReencodeJob& job,
 
     std::optional<FFProbeResult> probe;
     std::optional<std::string> encodeinput;
-    if (HyoutaUtils::IO::FileExists(std::string_view(file))) {
+    if (HyoutaUtils::IO::FileExists(std::string_view(file))
+        == HyoutaUtils::IO::ExistsResult::DoesExist) {
         probe = FFMpegProbe(file);
         encodeinput = file;
-    } else if (HyoutaUtils::IO::FileExists(std::string_view(oldfileinchunked))) {
+    } else if (HyoutaUtils::IO::FileExists(std::string_view(oldfileinchunked))
+               == HyoutaUtils::IO::ExistsResult::DoesExist) {
         probe = FFMpegProbe(oldfileinchunked);
         encodeinput = oldfileinchunked;
     }
@@ -157,8 +159,10 @@ static ResultType RunReencodeJob(FFMpegReencodeJob& job,
     // if the input file doesn't exist we might still be in a state where we can set this to
     // finished if the output file already exists, so continue anyway
 
-    bool newfileexists = HyoutaUtils::IO::FileExists(std::string_view(newfile));
-    bool newfilelocalexists = HyoutaUtils::IO::FileExists(std::string_view(newfileinlocal));
+    bool newfileexists = HyoutaUtils::IO::FileExists(std::string_view(newfile))
+                         == HyoutaUtils::IO::ExistsResult::DoesExist;
+    bool newfilelocalexists = HyoutaUtils::IO::FileExists(std::string_view(newfileinlocal))
+                              == HyoutaUtils::IO::ExistsResult::DoesExist;
     if (!newfileexists && !newfilelocalexists) {
         if (!encodeinput.has_value()) {
             // neither input nor output exist, bail
@@ -167,7 +171,8 @@ static ResultType RunReencodeJob(FFMpegReencodeJob& job,
             return ResultType::Failure;
         }
 
-        if (HyoutaUtils::IO::FileExists(std::string_view(tempfile))) {
+        if (HyoutaUtils::IO::FileExists(std::string_view(tempfile))
+            == HyoutaUtils::IO::ExistsResult::DoesExist) {
             if (!HyoutaUtils::IO::DeleteFile(std::string_view(tempfile))) {
                 std::lock_guard lock(*jobConfig.JobsLock);
                 job.TextStatus = "Internal error.";
@@ -229,7 +234,9 @@ static ResultType RunReencodeJob(FFMpegReencodeJob& job,
     }
 
     if (HyoutaUtils::IO::FileExists(std::string_view(file))
-        && !HyoutaUtils::IO::FileExists(std::string_view(oldfileinchunked))) {
+            == HyoutaUtils::IO::ExistsResult::DoesExist
+        && HyoutaUtils::IO::FileExists(std::string_view(oldfileinchunked))
+               != HyoutaUtils::IO::ExistsResult::DoesExist) {
         if (!HyoutaUtils::IO::CreateDirectory(std::string_view(chunkeddir))) {
             std::lock_guard lock(*jobConfig.JobsLock);
             job.TextStatus = "Internal error.";
