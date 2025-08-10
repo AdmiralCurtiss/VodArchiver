@@ -44,14 +44,15 @@ static std::string GetTargetFilename(IVideoInfo& videoInfo) {
         if (!slash.empty()) {
             auto que = HyoutaUtils::TextUtils::Split(slash.back(), "?");
             if (!que.empty()) {
-                auto underscore = HyoutaUtils::TextUtils::Split(que.front(), "_");
+                auto underscore = HyoutaUtils::TextUtils::Split(
+                    MakeStringFileSystemSafeBaseName(que.front()), "_");
                 if (!underscore.empty()) {
-                    extension = std::string(underscore.back());
+                    extension = std::string(HyoutaUtils::TextUtils::Trim(underscore.back()));
                 }
             }
         }
     }
-    if (HyoutaUtils::TextUtils::Trim(extension).empty()) {
+    if (extension.empty()) {
         extension = "bin";
     }
 
