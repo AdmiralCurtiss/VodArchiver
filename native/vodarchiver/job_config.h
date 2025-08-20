@@ -14,6 +14,8 @@ struct JobConfig {
     std::string TempFolderPath;
     std::string TwitchClientId;
     std::string TwitchClientSecret;
+    std::string VodXmlPath;
+    std::string UserInfoXmlPath;
     uint64_t MinimumFreeSpaceBytes = 0;
     uint64_t AbsoluteMinimumFreeSpaceBytes = 0;
 

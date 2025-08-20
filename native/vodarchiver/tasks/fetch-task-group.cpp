@@ -28,8 +28,9 @@ FetchTaskGroup::FetchTaskGroup(
     std::vector<std::unique_ptr<IUserInfo>>* userInfos,
     JobConfig* jobConfig,
     TaskCancellation* cancellationToken,
-    std::function<void(std::unique_ptr<IVideoInfo> info)> enqueueJobCallback,
+    std::function<bool(std::unique_ptr<IVideoInfo> info)> enqueueJobCallback,
     std::function<void(std::string_view msg)> addStatusMessageCallback,
+    std::function<void()> saveVodsCallback,
     std::function<void()> saveUserInfosCallback,
     uint32_t rngSeed)
   : RNG(rngSeed)
@@ -40,6 +41,7 @@ FetchTaskGroup::FetchTaskGroup(
   , CancellationToken(cancellationToken)
   , EnqueueJobCallback(std::move(enqueueJobCallback))
   , AddStatusMessageCallback(std::move(addStatusMessageCallback))
+  , SaveVodsCallback(std::move(saveVodsCallback))
   , SaveUserInfosCallback(std::move(saveUserInfosCallback)) {
     FetchRunnerThread = std::thread(std::bind(&FetchTaskGroup::RunFetchRunnerThreadFunc, this));
 }
@@ -157,9 +159,16 @@ void FetchTaskGroup::DoFetch(IUserInfo* userInfo) {
     }
     AddStatusMessage(std::format("Fetched {} items from {}.", videos.size(), userInfo->ToString()));
 
+    bool createdAny = false;
     for (auto& videoInfo : videos) {
         // Console.WriteLine("Enqueueing " + videoInfo.Username + "/" + videoInfo.VideoId);
-        EnqueueJobCallback(std::move(videoInfo));
+        if (EnqueueJobCallback(std::move(videoInfo))) {
+            createdAny = true;
+        }
+    }
+
+    if (createdAny) {
+        SaveVodsCallback();
     }
 }
 

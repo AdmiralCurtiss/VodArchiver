@@ -84,6 +84,8 @@ int RunGui(int argc, char** argvUtf8) {
         state.JobConf.TempFolderPath = GetTempFolderPath(state.GuiSettings);
         state.JobConf.TwitchClientId = state.GuiSettings.TwitchClientId;
         state.JobConf.TwitchClientSecret = state.GuiSettings.TwitchClientSecret;
+        state.JobConf.VodXmlPath = GetVodXmlPath(state.GuiSettings);
+        state.JobConf.UserInfoXmlPath = GetUserInfoXmlPath(state.GuiSettings);
         state.JobConf.MinimumFreeSpaceBytes = state.GuiSettings.MinimumFreeSpaceBytes;
         state.JobConf.AbsoluteMinimumFreeSpaceBytes =
             state.GuiSettings.AbsoluteMinimumFreeSpaceBytes;
@@ -96,7 +98,17 @@ int RunGui(int argc, char** argvUtf8) {
          ++s) {
         state.VideoTaskGroups.emplace_back(std::make_unique<VideoTaskGroup>(
             static_cast<StreamService>(s),
-            []() {},
+            [&]() {
+                std::string path;
+                {
+                    std::lock_guard lock(state.JobConf.Mutex);
+                    path = state.JobConf.VodXmlPath;
+                }
+                {
+                    std::lock_guard lock(state.Jobs.JobsLock);
+                    WriteJobsToFile(state.Jobs.JobsVector, path);
+                }
+            },
             []() {},
             &state.JobConf,
             &state.CancellationToken));
@@ -113,7 +125,7 @@ int RunGui(int argc, char** argvUtf8) {
                 &state.JobConf,
                 &state.CancellationToken,
                 [&](std::unique_ptr<IVideoInfo> info) {
-                    CreateAndEnqueueJob(state.Jobs, std::move(info), [&](IVideoJob* newJob) {
+                    return CreateAndEnqueueJob(state.Jobs, std::move(info), [&](IVideoJob* newJob) {
                         AddJobToTaskGroupIfAutoenqueue(state.VideoTaskGroups, newJob);
                     });
                 },
@@ -125,7 +137,26 @@ int RunGui(int argc, char** argvUtf8) {
                     state.FetchTaskStatusMessages += msg;
                 },
                 [&]() {
-                    // TODO: invoke a save of UserInfos here
+                    std::string path;
+                    {
+                        std::lock_guard lock(state.JobConf.Mutex);
+                        path = state.JobConf.VodXmlPath;
+                    }
+                    {
+                        std::lock_guard lock(state.Jobs.JobsLock);
+                        WriteJobsToFile(state.Jobs.JobsVector, path);
+                    }
+                },
+                [&]() {
+                    std::string path;
+                    {
+                        std::lock_guard lock(state.JobConf.Mutex);
+                        path = state.JobConf.UserInfoXmlPath;
+                    }
+                    {
+                        std::lock_guard lock(state.UserInfosLock);
+                        WriteUserInfosToFile(state.UserInfos, path);
+                    }
                 },
                 rngSeed));
             rngSeed = std::rotr(rngSeed, 3);
@@ -199,6 +230,35 @@ int RunGui(int argc, char** argvUtf8) {
                               load_imgui_ini,
                               save_imgui_ini);
 #endif
+
+    // Stop everything that's still running.
+    state.CancellationToken.CancelTask();
+    for (size_t i = state.FetchTaskGroups.size(); i > 0; --i) {
+        auto& g = state.FetchTaskGroups[i - 1];
+        g.reset();
+    }
+    for (size_t i = state.VideoTaskGroups.size(); i > 0; --i) {
+        auto& g = state.VideoTaskGroups[i - 1];
+        g.reset();
+    }
+
+    // If any windows haven't cleaned up yet do that.
+    for (size_t i = state.Windows.size(); i > 0; --i) {
+        auto& w = state.Windows[i - 1];
+        if (w) {
+            w->Cleanup(state);
+            w.reset();
+        }
+    }
+
+    {
+        std::lock_guard lock(state.UserInfosLock);
+        WriteUserInfosToFile(state.UserInfos, GetUserInfoXmlPath(state.GuiSettings));
+    }
+    {
+        std::lock_guard lock(state.Jobs.JobsLock);
+        WriteJobsToFile(state.Jobs.JobsVector, GetVodXmlPath(state.GuiSettings));
+    }
     if (guiSettingsFolder) {
         HyoutaUtils::IO::CreateDirectory(std::string_view(*guiSettingsFolder));
         VodArchiver::WriteUserSettingsToIni(state.GuiSettings, userIniPath);

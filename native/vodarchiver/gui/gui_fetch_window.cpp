@@ -18,11 +18,13 @@
 #include "vodarchiver/userinfo/ffmpeg-job-user-info.h"
 #include "vodarchiver/userinfo/hitbox-user-info.h"
 #include "vodarchiver/userinfo/rss-feed-user-info.h"
+#include "vodarchiver/userinfo/serialization.h"
 #include "vodarchiver/userinfo/twitch-user-info.h"
 #include "vodarchiver/userinfo/youtube-channel-user-info.h"
 #include "vodarchiver/userinfo/youtube-playlist-user-info.h"
 #include "vodarchiver/userinfo/youtube-url-user-info.h"
 #include "vodarchiver/userinfo/youtube-user-user-info.h"
+#include "vodarchiver/videojobs/serialization.h"
 #include "vodarchiver_imgui_utils.h"
 
 namespace VodArchiver::GUI {
@@ -217,6 +219,18 @@ bool FetchWindow::RenderFrame(GuiState& state) {
             state.UserInfos.push_back(FetchTaskActiveUserInfo->Clone());
             SelectedPreset = (state.UserInfos.size() - 1);
             FetchIsNewUser = false;
+        }
+
+        if (rv.Success && FetchTaskActiveUserInfo && FetchTaskActiveUserInfo->Persistable) {
+            std::string path;
+            {
+                std::lock_guard lock(state.JobConf.Mutex);
+                path = state.JobConf.UserInfoXmlPath;
+            }
+            {
+                std::lock_guard lock(state.UserInfosLock);
+                WriteUserInfosToFile(state.UserInfos, path);
+            }
         }
     }
 
@@ -538,9 +552,21 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                     }
                     if (ImGui::TableSetColumnIndex(ColumnID_Actions)) {
                         if (ImGui::SmallButton("Download")) {
-                            CreateAndEnqueueJob(state.Jobs, item->Clone(), [&](IVideoJob* newJob) {
-                                AddJobToTaskGroupIfAutoenqueue(state.VideoTaskGroups, newJob);
-                            });
+                            bool newJob = CreateAndEnqueueJob(
+                                state.Jobs, item->Clone(), [&](IVideoJob* newJob) {
+                                    AddJobToTaskGroupIfAutoenqueue(state.VideoTaskGroups, newJob);
+                                });
+                            if (newJob) {
+                                std::string path;
+                                {
+                                    std::lock_guard lock(state.JobConf.Mutex);
+                                    path = state.JobConf.VodXmlPath;
+                                }
+                                {
+                                    std::lock_guard lock(state.Jobs.JobsLock);
+                                    WriteJobsToFile(state.Jobs.JobsVector, path);
+                                }
+                            }
                         }
                     }
 
@@ -553,26 +579,53 @@ bool FetchWindow::RenderFrame(GuiState& state) {
     }
 
     {
-        std::lock_guard lock(state.UserInfosLock);
-        bool autoDownloadFakeFlag = false;
-        bool* autoDownloadFlagPtr = &autoDownloadFakeFlag;
-        auto autoDownloadDisabledScope =
-            HyoutaUtils::MakeDisposableScopeGuard([&]() { ImGui::EndDisabled(); });
-        if (SelectedPreset < state.UserInfos.size()) {
-            autoDownloadDisabledScope.Dispose();
-            autoDownloadFlagPtr = &(state.UserInfos[SelectedPreset]->AutoDownload);
-        } else {
-            ImGui::BeginDisabled();
+        bool autoDownloadChanged;
+        {
+            std::lock_guard lock(state.UserInfosLock);
+            bool autoDownloadFakeFlag = false;
+            bool* autoDownloadFlagPtr = &autoDownloadFakeFlag;
+            auto autoDownloadDisabledScope =
+                HyoutaUtils::MakeDisposableScopeGuard([&]() { ImGui::EndDisabled(); });
+            if (SelectedPreset < state.UserInfos.size()) {
+                autoDownloadDisabledScope.Dispose();
+                autoDownloadFlagPtr = &(state.UserInfos[SelectedPreset]->AutoDownload);
+            } else {
+                ImGui::BeginDisabled();
+            }
+            bool autoDownloadPrevious = *autoDownloadFlagPtr;
+            ImGui::Checkbox("Auto Download this Preset", autoDownloadFlagPtr);
+            autoDownloadChanged = (autoDownloadPrevious != *autoDownloadFlagPtr);
         }
-        ImGui::Checkbox("Auto Download this Preset", autoDownloadFlagPtr);
+        if (autoDownloadChanged) {
+            std::string path;
+            {
+                std::lock_guard lock(state.JobConf.Mutex);
+                path = state.JobConf.UserInfoXmlPath;
+            }
+            {
+                std::lock_guard lock(state.UserInfosLock);
+                WriteUserInfosToFile(state.UserInfos, path);
+            }
+        }
     }
 
     ImGui::SameLine();
     if (ImGuiUtils::ButtonRightAlign("Download Fetched")) {
         for (auto& f : FetchedItems) {
-            CreateAndEnqueueJob(state.Jobs, f->Clone(), [&](IVideoJob* newJob) {
+            bool newJob = CreateAndEnqueueJob(state.Jobs, f->Clone(), [&](IVideoJob* newJob) {
                 AddJobToTaskGroupIfAutoenqueue(state.VideoTaskGroups, newJob);
             });
+            if (newJob) {
+                std::string path;
+                {
+                    std::lock_guard lock(state.JobConf.Mutex);
+                    path = state.JobConf.VodXmlPath;
+                }
+                {
+                    std::lock_guard lock(state.Jobs.JobsLock);
+                    WriteJobsToFile(state.Jobs.JobsVector, path);
+                }
+            }
         }
     }
 

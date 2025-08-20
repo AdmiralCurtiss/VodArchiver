@@ -221,6 +221,8 @@ bool SettingsWindow::RenderFrame(GuiState& state) {
             state.JobConf.TempFolderPath = GetTempFolderPath(state.GuiSettings);
             state.JobConf.TwitchClientId = state.GuiSettings.TwitchClientId;
             state.JobConf.TwitchClientSecret = state.GuiSettings.TwitchClientSecret;
+            state.JobConf.VodXmlPath = GetVodXmlPath(state.GuiSettings);
+            state.JobConf.UserInfoXmlPath = GetUserInfoXmlPath(state.GuiSettings);
             state.JobConf.MinimumFreeSpaceBytes = state.GuiSettings.MinimumFreeSpaceBytes;
             state.JobConf.AbsoluteMinimumFreeSpaceBytes =
                 state.GuiSettings.AbsoluteMinimumFreeSpaceBytes;
