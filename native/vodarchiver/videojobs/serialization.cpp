@@ -19,6 +19,7 @@
 #include "util/file.h"
 #include "util/hash/crc32.h"
 #include "util/number.h"
+#include "util/scope.h"
 #include "util/text.h"
 
 #include "../videoinfo/ffmpeg-reencode-job-video-info.h"
@@ -103,6 +104,64 @@ static std::optional<std::vector<char>> InflateFromFileUnknownSize(HyoutaUtils::
         return std::nullopt;
     }
     return outputVector;
+}
+
+static bool DeflateToFile(const char* buffer,
+                          size_t length,
+                          HyoutaUtils::IO::File& outfile,
+                          int level = 9) {
+    // adapted from https://zlib.net/zpipe.c which is public domain
+    static constexpr size_t CHUNK = 16384;
+
+    int ret;
+    int flush;
+    unsigned have;
+    z_stream strm;
+    unsigned char out[CHUNK];
+
+    /* allocate deflate state */
+    strm.zalloc = Z_NULL;
+    strm.zfree = Z_NULL;
+    strm.opaque = Z_NULL;
+    ret = deflateInit2(&strm, level, Z_DEFLATED, -15, 9, Z_DEFAULT_STRATEGY);
+    if (ret != Z_OK) {
+        return false;
+    }
+
+    /* compress until end of file */
+    const char* next = buffer;
+    size_t rest = length;
+    do {
+        uint32_t blockSize = rest > 0xffff'0000u ? 0xffff'0000u : static_cast<uint32_t>(rest);
+        strm.avail_in = blockSize;
+        flush = (blockSize == rest) ? Z_FINISH : Z_NO_FLUSH;
+        strm.next_in = const_cast<z_const Bytef*>(reinterpret_cast<const Bytef*>(next));
+
+        /* run deflate() on input until output buffer not full, finish
+           compression if all of source has been read in */
+        do {
+            strm.avail_out = CHUNK;
+            strm.next_out = out;
+            ret = deflate(&strm, flush);   /* no bad return value */
+            assert(ret != Z_STREAM_ERROR); /* state not clobbered */
+            have = CHUNK - strm.avail_out;
+            if (outfile.Write(out, have) != have) {
+                (void)deflateEnd(&strm);
+                return false;
+            }
+        } while (strm.avail_out == 0);
+        assert(strm.avail_in == 0); /* all input will be used */
+
+        next += blockSize;
+        rest -= blockSize;
+
+        /* done when last data in file processed */
+    } while (flush != Z_FINISH);
+    assert(ret == Z_STREAM_END); /* stream will be complete */
+
+    /* clean up and return */
+    (void)deflateEnd(&strm);
+    return true;
 }
 
 static TimeSpan TimeSpanFromSecondsAndSubsecondTicks(int64_t seconds, int64_t subseconds) {
@@ -1102,8 +1161,8 @@ static bool SerializeJob(rapidxml::xml_document<char>& xml,
     return false;
 }
 
-bool WriteJobsToFile(const std::vector<std::unique_ptr<IVideoJob>>& jobs,
-                     std::string_view filename) {
+static std::optional<std::string>
+    WriteJobsToString(const std::vector<std::unique_ptr<IVideoJob>>& jobs) {
     rapidxml::xml_document<char> xml;
     {
         auto* declaration = xml.allocate_node(rapidxml::node_type::node_declaration);
@@ -1116,7 +1175,7 @@ bool WriteJobsToFile(const std::vector<std::unique_ptr<IVideoJob>>& jobs,
         for (auto& job : jobs) {
             auto* xmlJob = xml.allocate_node(rapidxml::node_type::node_element, "Job");
             if (!SerializeJob(xml, *xmlJob, *job)) {
-                return false;
+                return std::nullopt;
             }
             root->append_node(xmlJob);
         }
@@ -1125,7 +1184,55 @@ bool WriteJobsToFile(const std::vector<std::unique_ptr<IVideoJob>>& jobs,
 
     std::string str;
     rapidxml::print(std::back_inserter(str), xml, rapidxml::print_no_indenting);
+    return str;
+}
 
-    return HyoutaUtils::IO::WriteFileAtomic(filename, str.data(), str.size());
+bool WriteJobsToFile(const std::vector<std::unique_ptr<IVideoJob>>& jobs,
+                     std::string_view filename) {
+    auto str = WriteJobsToString(jobs);
+    if (!str) {
+        return false;
+    }
+    HyoutaUtils::IO::File outfile;
+    if (!outfile.OpenWithTempFilename(filename, HyoutaUtils::IO::OpenMode::Write)) {
+        return false;
+    }
+    auto outfileScope = HyoutaUtils::MakeDisposableScopeGuard([&]() { outfile.Delete(); });
+
+    std::array<char, 10> gzheader{};
+    gzheader[0] = '\x1f';
+    gzheader[1] = '\x8b';
+    gzheader[2] = 8;
+    gzheader[8] = 2;
+    gzheader[9] = '\xff';
+    if (outfile.Write(gzheader.data(), gzheader.size()) != gzheader.size()) {
+        return false;
+    }
+
+    if (!DeflateToFile(str->data(), str->size(), outfile, 9)) {
+        return false;
+    }
+
+    std::array<char, 8> gzfooter{};
+    auto crc = crc_init();
+    crc = crc_update(crc, str->data(), str->size());
+    crc = crc_finalize(crc);
+    gzfooter[0] = static_cast<char>(static_cast<uint8_t>(crc & 0xff));
+    gzfooter[1] = static_cast<char>(static_cast<uint8_t>((crc >> 8) & 0xff));
+    gzfooter[2] = static_cast<char>(static_cast<uint8_t>((crc >> 16) & 0xff));
+    gzfooter[3] = static_cast<char>(static_cast<uint8_t>((crc >> 24) & 0xff));
+    gzfooter[4] = static_cast<char>(static_cast<uint8_t>(str->size() & 0xff));
+    gzfooter[5] = static_cast<char>(static_cast<uint8_t>((str->size() >> 8) & 0xff));
+    gzfooter[6] = static_cast<char>(static_cast<uint8_t>((str->size() >> 16) & 0xff));
+    gzfooter[7] = static_cast<char>(static_cast<uint8_t>((str->size() >> 24) & 0xff));
+    if (outfile.Write(gzfooter.data(), gzfooter.size()) != gzfooter.size()) {
+        return false;
+    }
+
+    if (!outfile.Rename(filename)) {
+        return false;
+    }
+    outfileScope.Dispose();
+    return true;
 }
 } // namespace VodArchiver
