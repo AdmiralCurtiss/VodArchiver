@@ -222,15 +222,7 @@ bool FetchWindow::RenderFrame(GuiState& state) {
         }
 
         if (rv.Success && FetchTaskActiveUserInfo && FetchTaskActiveUserInfo->Persistable) {
-            std::string path;
-            {
-                std::lock_guard lock(state.JobConf.Mutex);
-                path = state.JobConf.UserInfoXmlPath;
-            }
-            {
-                std::lock_guard lock(state.UserInfosLock);
-                WriteUserInfosToFile(state.UserInfos, path);
-            }
+            state.SaveThread->RequestSaveUsers();
         }
     }
 
@@ -557,15 +549,7 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                                     AddJobToTaskGroupIfAutoenqueue(state.VideoTaskGroups, newJob);
                                 });
                             if (newJob) {
-                                std::string path;
-                                {
-                                    std::lock_guard lock(state.JobConf.Mutex);
-                                    path = state.JobConf.VodXmlPath;
-                                }
-                                {
-                                    std::lock_guard lock(state.Jobs.JobsLock);
-                                    WriteJobsToFile(state.Jobs.JobsVector, path);
-                                }
+                                state.SaveThread->RequestSaveJobs();
                             }
                         }
                     }
@@ -597,15 +581,7 @@ bool FetchWindow::RenderFrame(GuiState& state) {
             autoDownloadChanged = (autoDownloadPrevious != *autoDownloadFlagPtr);
         }
         if (autoDownloadChanged) {
-            std::string path;
-            {
-                std::lock_guard lock(state.JobConf.Mutex);
-                path = state.JobConf.UserInfoXmlPath;
-            }
-            {
-                std::lock_guard lock(state.UserInfosLock);
-                WriteUserInfosToFile(state.UserInfos, path);
-            }
+            state.SaveThread->RequestSaveUsers();
         }
     }
 
@@ -616,15 +592,7 @@ bool FetchWindow::RenderFrame(GuiState& state) {
                 AddJobToTaskGroupIfAutoenqueue(state.VideoTaskGroups, newJob);
             });
             if (newJob) {
-                std::string path;
-                {
-                    std::lock_guard lock(state.JobConf.Mutex);
-                    path = state.JobConf.VodXmlPath;
-                }
-                {
-                    std::lock_guard lock(state.Jobs.JobsLock);
-                    WriteJobsToFile(state.Jobs.JobsVector, path);
-                }
+                state.SaveThread->RequestSaveJobs();
             }
         }
     }

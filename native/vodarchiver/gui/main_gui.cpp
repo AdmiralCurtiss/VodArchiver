@@ -93,22 +93,14 @@ int RunGui(int argc, char** argvUtf8) {
         state.JobConf.JobsLock = &state.Jobs.JobsLock;
     }
 
+    state.SaveThread = std::make_unique<VodArchiver::GUI::BackgroundSaveThread>(state);
+
     for (int s = static_cast<int>(StreamService::Unknown);
          s < static_cast<int>(StreamService::COUNT);
          ++s) {
         state.VideoTaskGroups.emplace_back(std::make_unique<VideoTaskGroup>(
             static_cast<StreamService>(s),
-            [&]() {
-                std::string path;
-                {
-                    std::lock_guard lock(state.JobConf.Mutex);
-                    path = state.JobConf.VodXmlPath;
-                }
-                {
-                    std::lock_guard lock(state.Jobs.JobsLock);
-                    WriteJobsToFile(state.Jobs.JobsVector, path);
-                }
-            },
+            [&]() { state.SaveThread->RequestSaveJobs(); },
             []() {},
             &state.JobConf,
             &state.CancellationToken));
@@ -136,28 +128,8 @@ int RunGui(int argc, char** argvUtf8) {
                     state.FetchTaskStatusMessages.push_back('\n');
                     state.FetchTaskStatusMessages += msg;
                 },
-                [&]() {
-                    std::string path;
-                    {
-                        std::lock_guard lock(state.JobConf.Mutex);
-                        path = state.JobConf.VodXmlPath;
-                    }
-                    {
-                        std::lock_guard lock(state.Jobs.JobsLock);
-                        WriteJobsToFile(state.Jobs.JobsVector, path);
-                    }
-                },
-                [&]() {
-                    std::string path;
-                    {
-                        std::lock_guard lock(state.JobConf.Mutex);
-                        path = state.JobConf.UserInfoXmlPath;
-                    }
-                    {
-                        std::lock_guard lock(state.UserInfosLock);
-                        WriteUserInfosToFile(state.UserInfos, path);
-                    }
-                },
+                [&]() { state.SaveThread->RequestSaveJobs(); },
+                [&]() { state.SaveThread->RequestSaveUsers(); },
                 rngSeed));
             rngSeed = std::rotr(rngSeed, 3);
             ++rngSeed;
@@ -250,6 +222,8 @@ int RunGui(int argc, char** argvUtf8) {
             w.reset();
         }
     }
+
+    state.SaveThread.reset();
 
     {
         std::lock_guard lock(state.UserInfosLock);

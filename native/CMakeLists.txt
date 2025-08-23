@@ -380,6 +380,8 @@ target_include_directories(vodarchiver
 target_link_libraries(vodarchiver PUBLIC zlibstatic libcurl)
 
 target_sources(vodarchiver PRIVATE
+	vodarchiver/gui/background_save_thread.cpp
+	vodarchiver/gui/background_save_thread.h
 	vodarchiver/gui/gui_background_task.h
 	vodarchiver/gui/gui_fetch_window.cpp
 	vodarchiver/gui/gui_fetch_window.h

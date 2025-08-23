@@ -12,6 +12,7 @@
 #include "../task_cancellation.h"
 #include "../tasks/fetch-task-group.h"
 #include "../tasks/video-task-group.h"
+#include "background_save_thread.h"
 #include "gui_user_settings.h"
 #include "window_id_management.h"
 
@@ -52,6 +53,8 @@ struct GuiState {
 
     std::recursive_mutex FetchTaskStatusMessageLock;
     std::string FetchTaskStatusMessages;
+
+    std::unique_ptr<VodArchiver::GUI::BackgroundSaveThread> SaveThread;
 
     ~GuiState();
 };
