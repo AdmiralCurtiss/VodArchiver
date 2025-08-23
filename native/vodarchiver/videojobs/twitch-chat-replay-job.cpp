@@ -220,4 +220,17 @@ ResultType TwitchChatReplayJob::Run(JobConfig& jobConfig, TaskCancellation& canc
 std::string TwitchChatReplayJob::GenerateOutputFilename() {
     return GetTargetFilenameWithoutExtension(*this->VideoInfo) + ".json";
 }
+
+std::unique_ptr<IVideoJob> TwitchChatReplayJob::Clone() const {
+    auto clone = std::make_unique<TwitchChatReplayJob>();
+    clone->TextStatus = this->TextStatus;
+    clone->JobStatus = this->JobStatus;
+    clone->HasBeenValidated = this->HasBeenValidated;
+    clone->VideoInfo = this->VideoInfo ? this->VideoInfo->Clone() : nullptr;
+    clone->JobStartTimestamp = this->JobStartTimestamp;
+    clone->JobFinishTimestamp = this->JobFinishTimestamp;
+    clone->Notes = this->Notes;
+    clone->AssumeFinished = this->AssumeFinished;
+    return clone;
+}
 } // namespace VodArchiver

@@ -63,6 +63,7 @@ struct IVideoJob {
     virtual IUserInputRequest* GetUserInputRequest() const;
     virtual ResultType Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) = 0;
     virtual std::string GenerateOutputFilename() = 0;
+    virtual std::unique_ptr<IVideoJob> Clone() const = 0; // may not clone user input requests!
 
     std::string TextStatus;
     VideoJobStatus JobStatus = VideoJobStatus::NotStarted;

@@ -898,4 +898,20 @@ ResultType TwitchVideoJob::Run(JobConfig& jobConfig, TaskCancellation& cancellat
 std::string TwitchVideoJob::GenerateOutputFilename() {
     return GetFinalFilenameWithoutExtension(*this->VideoInfo, this->VideoQuality) + ".mp4";
 }
+
+std::unique_ptr<IVideoJob> TwitchVideoJob::Clone() const {
+    auto clone = std::make_unique<TwitchVideoJob>();
+    clone->TextStatus = this->TextStatus;
+    clone->JobStatus = this->JobStatus;
+    clone->HasBeenValidated = this->HasBeenValidated;
+    clone->VideoInfo = this->VideoInfo ? this->VideoInfo->Clone() : nullptr;
+    clone->JobStartTimestamp = this->JobStartTimestamp;
+    clone->JobFinishTimestamp = this->JobFinishTimestamp;
+    clone->Notes = this->Notes;
+    clone->AssumeFinished = this->AssumeFinished;
+    clone->IgnoreTimeDifferenceCombined = this->IgnoreTimeDifferenceCombined;
+    clone->IgnoreTimeDifferenceRemuxed = this->IgnoreTimeDifferenceRemuxed;
+    clone->VideoQuality = this->VideoQuality;
+    return clone;
+}
 } // namespace VodArchiver

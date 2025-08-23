@@ -264,4 +264,16 @@ ResultType FFMpegReencodeJob::Run(JobConfig& jobConfig, TaskCancellation& cancel
 std::string FFMpegReencodeJob::GenerateOutputFilename() {
     return "not implemented";
 }
+
+std::unique_ptr<IVideoJob> FFMpegReencodeJob::Clone() const {
+    auto clone = std::make_unique<FFMpegReencodeJob>();
+    clone->TextStatus = this->TextStatus;
+    clone->JobStatus = this->JobStatus;
+    clone->HasBeenValidated = this->HasBeenValidated;
+    clone->VideoInfo = this->VideoInfo ? this->VideoInfo->Clone() : nullptr;
+    clone->JobStartTimestamp = this->JobStartTimestamp;
+    clone->JobFinishTimestamp = this->JobFinishTimestamp;
+    clone->Notes = this->Notes;
+    return clone;
+}
 } // namespace VodArchiver

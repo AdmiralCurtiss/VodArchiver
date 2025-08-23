@@ -212,4 +212,17 @@ std::string FFMpegSplitJob::GenerateOutputFilename() {
     std::string_view fullPath = VideoInfo->GetVideoId(buffer);
     return GenerateOutputFilenameInternal(fullPath);
 }
+
+std::unique_ptr<IVideoJob> FFMpegSplitJob::Clone() const {
+    auto clone = std::make_unique<FFMpegSplitJob>();
+    clone->TextStatus = this->TextStatus;
+    clone->JobStatus = this->JobStatus;
+    clone->HasBeenValidated = this->HasBeenValidated;
+    clone->VideoInfo = this->VideoInfo ? this->VideoInfo->Clone() : nullptr;
+    clone->JobStartTimestamp = this->JobStartTimestamp;
+    clone->JobFinishTimestamp = this->JobFinishTimestamp;
+    clone->Notes = this->Notes;
+    clone->SplitTimes = this->SplitTimes;
+    return clone;
+}
 } // namespace VodArchiver

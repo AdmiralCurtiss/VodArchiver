@@ -7,5 +7,6 @@ struct GenericFileJob : public IVideoJob {
     bool IsWaitingForUserInput() const override;
     ResultType Run(JobConfig& jobConfig, TaskCancellation& cancellationToken) override;
     std::string GenerateOutputFilename() override;
+    std::unique_ptr<IVideoJob> Clone() const override;
 };
 } // namespace VodArchiver

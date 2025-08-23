@@ -56,6 +56,7 @@ void BackgroundSaveThread::ThreadFunc() {
 
         if (saveJobsRequested) {
             std::string path;
+            std::vector<std::unique_ptr<IVideoJob>> jobs;
             {
                 std::lock_guard lock(State.JobConf.Mutex);
                 path = State.JobConf.VodXmlPath;
@@ -65,9 +66,15 @@ void BackgroundSaveThread::ThreadFunc() {
                 SaveJobsRequested = false;
             }
             {
+                // the XML writing is kinda slow so we clone the vector first to not hold the lock
+                // for too long
                 std::lock_guard lock(State.Jobs.JobsLock);
-                WriteJobsToFile(State.Jobs.JobsVector, path);
+                jobs.reserve(State.Jobs.JobsVector.size());
+                for (auto& job : State.Jobs.JobsVector) {
+                    jobs.push_back(job->Clone());
+                }
             }
+            WriteJobsToFile(jobs, path);
         }
 
         if (saveUsersRequested) {
