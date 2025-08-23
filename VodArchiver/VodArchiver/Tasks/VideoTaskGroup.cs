@@ -60,6 +60,7 @@ namespace VodArchiver.Tasks {
 				case StreamService.Youtube:
 					return 1;
 				case StreamService.RawUrl:
+					return 1;
 				case StreamService.FFMpegJob:
 					return 1;
 				case StreamService.Twitch:

@@ -65,7 +65,7 @@ namespace VodArchiver.VideoJobs {
 
 			Status = "Downloading chat data...";
 			var result = await ExternalProgramExecution.RunProgram(@"TwitchDownloaderCLI\TwitchDownloaderCLI.exe", new string[] {
-				"chatdownload", "-E", "--chat-connections", "1", "--id", VideoInfo.VideoId, "-o", tempname
+				"chatdownload", "-E", "--stv", "false", "--chat-connections", "1", "--id", VideoInfo.VideoId, "-o", tempname
 			});
 
 			Util.MoveFileOverwrite(tempname, filename);

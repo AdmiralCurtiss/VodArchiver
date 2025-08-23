@@ -53,7 +53,14 @@ namespace VodArchiver {
 			v.Description = "?";
 			v.CreatedAt = Util.DateTimeFromUnixTime(ulong.Parse((string)json["timestamp"], Util.SerializationFormatProvider));
 			v.PublishedAt = v.CreatedAt;
-			v.Duration = long.Parse((string)json["duration"]);
+
+			long duration;
+			if (long.TryParse((string)json["duration"], out duration)) {
+				v.Duration = duration;
+			} else {
+				v.Duration = 0;
+			}
+
 			v.ViewCount = long.Parse((string)json["view_count"]);
 			bool is_live = (bool)json["is_live"];
 			bool was_live = (bool)json["was_live"];

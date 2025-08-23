@@ -59,19 +59,19 @@ namespace VodArchiver {
 
 		public static bool ShowDownloadFetched {
 			get {
-				return Properties.Settings.Default.ShowDownloadFetched;
+				return true;
 			}
 		}
 
 		public static bool ShowAnySpecialButton {
 			get {
-				return ShowDownloadFetched;
+				return true;
 			}
 		}
 
 		public static bool AllowTimedAutoFetch {
 			get {
-				return ShowDownloadFetched;
+				return true;
 			}
 		}
 
