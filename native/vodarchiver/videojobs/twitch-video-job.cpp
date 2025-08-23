@@ -237,9 +237,6 @@ static ResultType Download(TwitchVideoJob& job,
                         std::string_view(outpath_temp), data->Data.data(), data->Data.size())) {
                     return ResultType::Failure;
                 }
-                if (cancellationToken.IsCancellationRequested()) {
-                    return ResultType::Cancelled;
-                }
                 success = true;
             }
 
@@ -253,11 +250,12 @@ static ResultType Download(TwitchVideoJob& job,
                                std::lock_guard lock(*jobConfig.JobsLock);
                                job.TextStatus = std::move(status);
                            });
-                if (cancellationToken.IsCancellationRequested()) {
-                    return ResultType::Cancelled;
-                }
                 HyoutaUtils::IO::Move(outpath_temp, outpath, false);
                 files.push_back(std::move(outpath));
+            }
+
+            if (cancellationToken.IsCancellationRequested()) {
+                return ResultType::Cancelled;
             }
 
             if (delayPerDownload > 0) {
