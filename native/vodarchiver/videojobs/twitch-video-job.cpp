@@ -395,7 +395,7 @@ static std::optional<std::string> GetM3U8PathFromM3U(const std::string& m3u,
         }
 
         return std::format(
-            "{}/{}/{}", line.substr(0, secondToLastSlash), videoType, line.substr(lastSlash));
+            "{}/{}/{}", line.substr(0, secondToLastSlash), videoType, line.substr(lastSlash + 1));
     }
     return std::nullopt;
 }
