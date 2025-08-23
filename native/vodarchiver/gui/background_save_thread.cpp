@@ -72,6 +72,7 @@ void BackgroundSaveThread::ThreadFunc() {
 
         if (saveUsersRequested) {
             std::string path;
+            std::vector<std::unique_ptr<IUserInfo>> userInfos;
             {
                 std::lock_guard lock(State.JobConf.Mutex);
                 path = State.JobConf.UserInfoXmlPath;
@@ -81,9 +82,15 @@ void BackgroundSaveThread::ThreadFunc() {
                 SaveUsersRequested = false;
             }
             {
+                // the XML writing is kinda slow so we clone the vector first to not hold the lock
+                // for too long
                 std::lock_guard lock(State.UserInfosLock);
-                WriteUserInfosToFile(State.UserInfos, path);
+                userInfos.reserve(State.UserInfos.size());
+                for (auto& ui : State.UserInfos) {
+                    userInfos.push_back(ui->Clone());
+                }
             }
+            WriteUserInfosToFile(userInfos, path);
         }
     }
 }
