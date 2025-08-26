@@ -15,12 +15,46 @@
 #endif
 
 namespace VodArchiver {
-DateTime DateTime::UtcNow() {
-    std::chrono::nanoseconds ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::tai_clock::now().time_since_epoch());
-    int64_t ticks = ns.count() / 100;
+static std::chrono::time_point<std::chrono::tai_clock,
+                               std::chrono::duration<int64_t, std::ratio<1, 10000000>>>
+    DateTimeToTaiTimePoint(const DateTime& dt) {
+    static constexpr int64_t EPOCH_DIFFERENCE_IN_TICKS = 617569056000000000;
+    std::chrono::duration<int64_t, std::ratio<1, 10000000>> chrono_ticks(
+        dt.Data - EPOCH_DIFFERENCE_IN_TICKS);
+    std::chrono::time_point<std::chrono::tai_clock> epoch;
+    auto target = (epoch + chrono_ticks);
+    return target;
+}
+
+static DateTime DateTimeFromTaiTimePoint(
+    const std::chrono::time_point<std::chrono::tai_clock,
+                                  std::chrono::duration<int64_t, std::ratio<1, 10000000>>>& tp) {
+    int64_t ticks = tp.time_since_epoch().count();
     static constexpr int64_t EPOCH_DIFFERENCE_IN_TICKS = 617569056000000000;
     return DateTime{.Data = static_cast<uint64_t>(ticks + EPOCH_DIFFERENCE_IN_TICKS)};
+}
+
+DateTime DateTime::FromBinary(int64_t data) {
+    uint64_t raw = static_cast<uint64_t>(data) & static_cast<uint64_t>(0x3fff'ffff'ffff'ffffu);
+    // So I tried messing around with this but it seems the best result is just to ignore this
+    // completely and assume everything is already UTC. Whatever, doesn't really matter much anyway
+    // if some past timestamps are a few hours off...
+    // switch (static_cast<uint64_t>(data) & static_cast<uint64_t>(0xc000'0000'0000'0000u)) {
+    //     case static_cast<uint64_t>(0x0000'0000'0000'0000):
+    //         // "Unspecified" kind.
+    //         break;
+    //     case static_cast<uint64_t>(0x4000'0000'0000'0000):
+    //         // "UTC" kind.
+    //         break;
+    //     default:
+    //         // "Local" kind.
+    //         break;
+    // }
+    return DateTime{.Data = raw};
+}
+
+DateTime DateTime::UtcNow() {
+    return DateTimeFromTaiTimePoint(std::chrono::tai_clock::now());
 }
 
 DateTime DateTime::FromDate(uint64_t year,
@@ -189,20 +223,14 @@ std::optional<TimeSpan> TimeSpan::ParseFromSeconds(std::string_view value) {
 }
 
 std::string DateTimeToStringForFilesystem(DateTime dt) {
-    static constexpr int64_t EPOCH_DIFFERENCE_IN_TICKS = 617569056000000000;
+    auto target = DateTimeToTaiTimePoint(dt);
     uint64_t seconds = (dt.Data / DateTime::TICKS_PER_SECOND) % 60;
-    std::chrono::nanoseconds ns((dt.Data - EPOCH_DIFFERENCE_IN_TICKS) * 100);
-    std::chrono::time_point<std::chrono::tai_clock> epoch;
-    auto target = (epoch + ns);
     return std::format("{0:%Y}-{0:%m}-{0:%d}_{0:%H}-{0:%M}-{1:02}", target, seconds);
 }
 
 std::string_view DateTimeToStringForGui(DateTime dt, std::array<char, 24>& buffer) {
-    static constexpr int64_t EPOCH_DIFFERENCE_IN_TICKS = 617569056000000000;
+    auto target = DateTimeToTaiTimePoint(dt);
     uint64_t seconds = (dt.Data / DateTime::TICKS_PER_SECOND) % 60;
-    std::chrono::nanoseconds ns((dt.Data - EPOCH_DIFFERENCE_IN_TICKS) * 100);
-    std::chrono::time_point<std::chrono::tai_clock> epoch;
-    auto target = (epoch + ns);
     auto result = std::format_to_n(buffer.data(),
                                    buffer.size() - 1,
                                    "{0:%Y}-{0:%m}-{0:%d} {0:%H}:{0:%M}:{1:02}",
@@ -213,10 +241,7 @@ std::string_view DateTimeToStringForGui(DateTime dt, std::array<char, 24>& buffe
 }
 
 std::string DateToString(DateTime dt) {
-    static constexpr int64_t EPOCH_DIFFERENCE_IN_TICKS = 617569056000000000;
-    std::chrono::nanoseconds ns((dt.Data - EPOCH_DIFFERENCE_IN_TICKS) * 100);
-    std::chrono::time_point<std::chrono::tai_clock> epoch;
-    auto target = (epoch + ns);
+    auto target = DateTimeToTaiTimePoint(dt);
     return std::format("{0:%Y}-{0:%m}-{0:%d}", target);
 }
 

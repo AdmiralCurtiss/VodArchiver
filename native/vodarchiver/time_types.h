@@ -17,13 +17,7 @@ struct DateTime {
 
     uint64_t Data = 0;
 
-    static DateTime FromBinary(int64_t data) {
-        if (data < 0) {
-            // this means local time instead of UTC so it should do some conversion here, but
-            // we'll just ignore this for now, I don't think it actually matters...
-        }
-        return DateTime{.Data = static_cast<uint64_t>(data)};
-    }
+    static DateTime FromBinary(int64_t data);
 
     static DateTime FromUnixTime(int64_t timestamp) {
         return FromBinary(621355968000000000).AddSeconds(timestamp);
