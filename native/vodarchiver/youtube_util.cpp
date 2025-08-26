@@ -110,7 +110,7 @@ static RetrieveVideoResultStruct
                                          .info = std::move(y)};
     }
 
-    y->VideoLength = TimeSpan::FromSeconds(*durationdouble);
+    y->VideoLength = TimeSpan::FromDoubleSeconds(*durationdouble);
     y->VideoRecordingState = RecordingState::Recorded;
     y->VideoType = VideoFileType::Unknown;
 

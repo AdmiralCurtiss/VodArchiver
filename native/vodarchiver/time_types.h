@@ -51,15 +51,8 @@ struct TimeSpan {
 
     int64_t Ticks = 0; // unit is 1e-7 seconds, ie 100 nanoseconds
 
-    static TimeSpan FromSeconds(double seconds) {
-        int64_t integer_seconds = static_cast<int64_t>(seconds);
-        int64_t sub_integer_ticks = static_cast<int64_t>(
-            std::llround(std::fmod(std::abs(seconds) * static_cast<double>(TICKS_PER_SECOND),
-                                   static_cast<double>(TICKS_PER_SECOND))));
-        return TimeSpan{.Ticks = integer_seconds * static_cast<int64_t>(TICKS_PER_SECOND)
-                                 + sub_integer_ticks};
-    }
-    static TimeSpan FromSecondsAndSubsecondTicks(int64_t seconds, int64_t subseconds);
+    static TimeSpan FromIntegerSeconds(int64_t seconds);
+    static TimeSpan FromDoubleSeconds(double seconds);
     static std::optional<TimeSpan> ParseFromSeconds(std::string_view value);
     double GetTotalSeconds() const {
         return static_cast<double>(Ticks) * 1e-7;

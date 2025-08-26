@@ -135,7 +135,7 @@ std::optional<FFProbeResult> FFMpegProbe(const std::string& filename) {
     if (!durationDouble.has_value()) {
         return std::nullopt;
     }
-    TimeSpan duration = TimeSpan::FromSeconds(*durationDouble);
+    TimeSpan duration = TimeSpan::FromDoubleSeconds(*durationDouble);
     std::vector<FFProbeStream> streams;
 
     const auto streamsIt = jo.FindMember("streams");
@@ -166,8 +166,9 @@ std::optional<FFProbeResult> FFMpegProbe(const std::string& filename) {
             .Index = *index,
             .CodecTag = *codecTag,
             .CodecType = std::move(*codecType),
-            .Duration = duration.has_value() ? std::make_optional(TimeSpan::FromSeconds(*duration))
-                                             : std::nullopt,
+            .Duration = duration.has_value()
+                            ? std::make_optional(TimeSpan::FromDoubleSeconds(*duration))
+                            : std::nullopt,
             .Framerate = framerate.has_value() ? ParseFramerate(*framerate) : 0.0f});
     }
 

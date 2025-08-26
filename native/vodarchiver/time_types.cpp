@@ -60,35 +60,61 @@ DateTime DateTime::AddHours(int hours) const {
     return DateTime{.Data = this->Data + static_cast<uint64_t>(ticks)};
 }
 
-TimeSpan TimeSpan::FromSecondsAndSubsecondTicks(int64_t seconds, int64_t subseconds) {
+static bool UnsignedMultiplyOverflows(uint64_t a, uint64_t b, uint64_t* low) {
 #ifdef _MSC_VER
-    int64_t high;
-    int64_t ticks = _mul128(seconds, static_cast<int64_t>(TimeSpan::TICKS_PER_SECOND), &high);
+    uint64_t high;
+    *low = _umul128(a, b, &high);
     bool overflow = (high != 0);
 #else
-    int64_t ticks;
-    bool overflow =
-        __builtin_mul_overflow(seconds, static_cast<int64_t>(TimeSpan::TICKS_PER_SECOND), &ticks);
+    bool overflow = __builtin_mul_overflow(a, b, low);
 #endif
+    return overflow;
+}
+
+static TimeSpan
+    FromUnsignedSecondsAndSubsecondTicks(uint64_t seconds, uint32_t subseconds, bool isNegative) {
+    uint64_t ticks;
+    bool overflow = UnsignedMultiplyOverflows(
+        seconds, static_cast<uint64_t>(TimeSpan::TICKS_PER_SECOND), &ticks);
     if (overflow) {
         // overflow in the multiply, return max value
-        if (seconds < 0) {
+        if (isNegative) {
             return TimeSpan{.Ticks = std::numeric_limits<int64_t>::min()};
         } else {
             return TimeSpan{.Ticks = std::numeric_limits<int64_t>::max()};
         }
     }
-    if (ticks < 0) {
-        if (ticks < std::numeric_limits<int64_t>::min() + subseconds) {
+    if (isNegative) {
+        static constexpr uint64_t max = static_cast<uint64_t>(std::numeric_limits<int64_t>::max());
+        if (ticks > (max - subseconds)) {
+            // this includes the case where it's exactly the minimum int64
             return TimeSpan{.Ticks = std::numeric_limits<int64_t>::min()};
         }
-        return TimeSpan{.Ticks = ticks - subseconds};
+        return TimeSpan{.Ticks = -static_cast<int64_t>(ticks + subseconds)};
     } else {
-        if (ticks > std::numeric_limits<int64_t>::max() - subseconds) {
+        static constexpr uint64_t max = static_cast<uint64_t>(std::numeric_limits<int64_t>::max());
+        if (ticks > (max - subseconds)) {
             return TimeSpan{.Ticks = std::numeric_limits<int64_t>::max()};
         }
-        return TimeSpan{.Ticks = ticks + subseconds};
+        return TimeSpan{.Ticks = static_cast<int64_t>(ticks + subseconds)};
     }
+}
+
+TimeSpan TimeSpan::FromIntegerSeconds(int64_t seconds) {
+    if (seconds < 0) {
+        return FromUnsignedSecondsAndSubsecondTicks(static_cast<uint64_t>(~seconds) + 1u, 0, true);
+    } else {
+        return FromUnsignedSecondsAndSubsecondTicks(static_cast<uint64_t>(seconds), 0, false);
+    }
+}
+
+TimeSpan TimeSpan::FromDoubleSeconds(double seconds) {
+    int64_t integer_seconds = static_cast<int64_t>(seconds);
+    int64_t sub_integer_ticks = static_cast<int64_t>(
+        std::llround(std::fmod(std::abs(seconds) * static_cast<double>(TICKS_PER_SECOND),
+                               static_cast<double>(TICKS_PER_SECOND))));
+    return TimeSpan{.Ticks = integer_seconds * static_cast<int64_t>(TICKS_PER_SECOND)
+                             + sub_integer_ticks};
 }
 
 std::optional<TimeSpan> TimeSpan::ParseFromSeconds(std::string_view value) {
@@ -97,26 +123,67 @@ std::optional<TimeSpan> TimeSpan::ParseFromSeconds(std::string_view value) {
         // double conversion
         std::string_view left = value.substr(0, dotpos);
         std::string_view right = value.substr(dotpos + 1);
-        if (right.size() == 0) {
-            if (auto sec = HyoutaUtils::NumberUtils::ParseInt64(left)) {
-                return TimeSpan::FromSecondsAndSubsecondTicks(*sec, 0);
+        std::optional<uint64_t> sec;
+        bool isNegative;
+        if (left.empty()) {
+            sec = 0;
+            isNegative = false;
+        } else if (left[0] == '-') {
+            if (left.size() == 1) {
+                sec = 0;
+            } else {
+                sec = HyoutaUtils::NumberUtils::ParseUInt64(left.substr(1));
             }
-        } else if (right.size() > 0 && right.size() <= 7) {
-            if (auto sec = HyoutaUtils::NumberUtils::ParseInt64(left)) {
-                if (auto subsec = HyoutaUtils::NumberUtils::ParseUInt64(right)) {
-                    for (size_t i = 0; i < (7 - right.size()); ++i) {
-                        *subsec *= 10;
+            isNegative = true;
+        } else {
+            sec = HyoutaUtils::NumberUtils::ParseUInt64(left);
+            isNegative = false;
+        }
+        if (sec) {
+            if (right.size() == 0) {
+                return FromUnsignedSecondsAndSubsecondTicks(*sec, 0, isNegative);
+            } else {
+                if (right.size() <= 7) {
+                    if (auto subsec = HyoutaUtils::NumberUtils::ParseUInt32(right)) {
+                        // pad to 7 digits
+                        for (size_t i = 0; i < (7 - right.size()); ++i) {
+                            *subsec *= 10;
+                        }
+                        return FromUnsignedSecondsAndSubsecondTicks(*sec, *subsec, isNegative);
                     }
-                    return TimeSpan::FromSecondsAndSubsecondTicks(*sec, *subsec);
+                } else {
+                    // 8 or more digits. we truncate this to 8 digits and then round the last
+                    // digit.
+                    std::string_view truncated = right.substr(0, 8);
+
+                    // the truncated-away digits must still be digits though
+                    bool valid = true;
+                    for (char c : right.substr(8)) {
+                        if (!(c >= '0' && c <= '9')) {
+                            valid = false;
+                            break;
+                        }
+                    }
+
+                    if (valid) {
+                        if (auto subsec = HyoutaUtils::NumberUtils::ParseUInt32(truncated)) {
+                            uint32_t rounded = *subsec / 10u;
+                            uint32_t rest = *subsec % 10u;
+                            if (rest >= 5) {
+                                ++rounded;
+                            }
+                            return FromUnsignedSecondsAndSubsecondTicks(*sec, rounded, isNegative);
+                        }
+                    }
                 }
             }
         }
     }
     if (auto l = HyoutaUtils::NumberUtils::ParseInt64(value)) {
-        return TimeSpan::FromSecondsAndSubsecondTicks(*l, 0);
+        return TimeSpan::FromIntegerSeconds(*l);
     }
     if (auto l = HyoutaUtils::NumberUtils::ParseDouble(value)) {
-        return TimeSpan::FromSeconds(*l);
+        return TimeSpan::FromDoubleSeconds(*l);
     }
     return std::nullopt;
 }

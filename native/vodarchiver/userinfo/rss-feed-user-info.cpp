@@ -80,7 +80,7 @@ static std::optional<std::vector<std::unique_ptr<IVideoInfo>>>
                     std::string_view durationstring(subitem->value(), subitem->value_size());
                     auto durationvalue = HyoutaUtils::NumberUtils::ParseDouble(durationstring);
                     if (durationvalue) {
-                        duration = TimeSpan::FromSeconds(*durationvalue);
+                        duration = TimeSpan::FromDoubleSeconds(*durationvalue);
                         durationRead = true;
                     }
                 } else if (!descriptionRead && subname == "description") {

@@ -31,7 +31,7 @@ std::string_view HitboxVideoInfo::GetVideoId(std::array<char, 256>& buffer) cons
 }
 
 TimeSpan HitboxVideoInfo::GetVideoLength() const {
-    return TimeSpan::FromSeconds(this->VideoInfo.MediaDuration);
+    return TimeSpan::FromDoubleSeconds(this->VideoInfo.MediaDuration);
 }
 
 RecordingState HitboxVideoInfo::GetVideoRecordingState() const {

@@ -62,7 +62,7 @@ std::string_view TwitchVideoInfo::GetVideoId(std::array<char, 256>& buffer) cons
 }
 
 TimeSpan TwitchVideoInfo::GetVideoLength() const {
-    return TimeSpan::FromSeconds(this->Video.Duration);
+    return TimeSpan::FromIntegerSeconds(this->Video.Duration);
 }
 
 RecordingState TwitchVideoInfo::GetVideoRecordingState() const {
