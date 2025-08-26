@@ -1,7 +1,18 @@
 #include "time_types.h"
 
 #include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
 #include <format>
+#include <limits>
+
+#include "util/number.h"
+
+#ifdef _MSC_VER
+#include <intrin.h>
+#pragma intrinsic(_mul128)
+#endif
 
 namespace VodArchiver {
 DateTime DateTime::UtcNow() {
@@ -49,6 +60,67 @@ DateTime DateTime::AddHours(int hours) const {
     return DateTime{.Data = this->Data + static_cast<uint64_t>(ticks)};
 }
 
+TimeSpan TimeSpan::FromSecondsAndSubsecondTicks(int64_t seconds, int64_t subseconds) {
+#ifdef _MSC_VER
+    int64_t high;
+    int64_t ticks = _mul128(seconds, static_cast<int64_t>(TimeSpan::TICKS_PER_SECOND), &high);
+    bool overflow = (high != 0);
+#else
+    int64_t ticks;
+    bool overflow =
+        __builtin_mul_overflow(seconds, static_cast<int64_t>(TimeSpan::TICKS_PER_SECOND), &ticks);
+#endif
+    if (overflow) {
+        // overflow in the multiply, return max value
+        if (seconds < 0) {
+            return TimeSpan{.Ticks = std::numeric_limits<int64_t>::min()};
+        } else {
+            return TimeSpan{.Ticks = std::numeric_limits<int64_t>::max()};
+        }
+    }
+    if (ticks < 0) {
+        if (ticks < std::numeric_limits<int64_t>::min() + subseconds) {
+            return TimeSpan{.Ticks = std::numeric_limits<int64_t>::min()};
+        }
+        return TimeSpan{.Ticks = ticks - subseconds};
+    } else {
+        if (ticks > std::numeric_limits<int64_t>::max() - subseconds) {
+            return TimeSpan{.Ticks = std::numeric_limits<int64_t>::max()};
+        }
+        return TimeSpan{.Ticks = ticks + subseconds};
+    }
+}
+
+std::optional<TimeSpan> TimeSpan::ParseFromSeconds(std::string_view value) {
+    if (auto dotpos = value.find('.'); dotpos != std::string_view::npos) {
+        // try to parse the seconds and subsections separately so we don't lose information from the
+        // double conversion
+        std::string_view left = value.substr(0, dotpos);
+        std::string_view right = value.substr(dotpos + 1);
+        if (right.size() == 0) {
+            if (auto sec = HyoutaUtils::NumberUtils::ParseInt64(left)) {
+                return TimeSpan::FromSecondsAndSubsecondTicks(*sec, 0);
+            }
+        } else if (right.size() > 0 && right.size() <= 7) {
+            if (auto sec = HyoutaUtils::NumberUtils::ParseInt64(left)) {
+                if (auto subsec = HyoutaUtils::NumberUtils::ParseUInt64(right)) {
+                    for (size_t i = 0; i < (7 - right.size()); ++i) {
+                        *subsec *= 10;
+                    }
+                    return TimeSpan::FromSecondsAndSubsecondTicks(*sec, *subsec);
+                }
+            }
+        }
+    }
+    if (auto l = HyoutaUtils::NumberUtils::ParseInt64(value)) {
+        return TimeSpan::FromSecondsAndSubsecondTicks(*l, 0);
+    }
+    if (auto l = HyoutaUtils::NumberUtils::ParseDouble(value)) {
+        return TimeSpan::FromSeconds(*l);
+    }
+    return std::nullopt;
+}
+
 std::string DateTimeToStringForFilesystem(DateTime dt) {
     static constexpr int64_t EPOCH_DIFFERENCE_IN_TICKS = 617569056000000000;
     uint64_t seconds = (dt.Data / DateTime::TICKS_PER_SECOND) % 60;
@@ -81,6 +153,10 @@ std::string DateToString(DateTime dt) {
     return std::format("{0:%Y}-{0:%m}-{0:%d}", target);
 }
 
+std::string DateTimeToBinaryString(const DateTime& dt) {
+    return std::format("{}", static_cast<int64_t>(dt.Data));
+}
+
 std::string_view TimeSpanToStringForGui(TimeSpan ts, std::array<char, 24>& buffer) {
     bool isNegative = ts.Ticks < 0;
     uint64_t absoluteTicks =
@@ -110,5 +186,31 @@ std::string_view TimeSpanToStringForGui(TimeSpan ts, std::array<char, 24>& buffe
     }
     *result.out = '\0';
     return std::string_view(buffer.data(), result.out);
+}
+
+std::string TimeSpanToTotalSecondsString(const TimeSpan& timeSpan) {
+    int64_t ticks = timeSpan.Ticks;
+    uint64_t t;
+    bool neg;
+    if (ticks >= 0) {
+        t = static_cast<uint64_t>(ticks);
+        neg = false;
+    } else if (ticks == std::numeric_limits<int64_t>::min()) {
+        t = static_cast<uint64_t>(std::numeric_limits<int64_t>::max()) + static_cast<uint64_t>(1);
+        neg = true;
+    } else {
+        t = static_cast<uint64_t>(std::abs(ticks));
+        neg = true;
+    }
+    uint64_t subseconds = t % static_cast<uint64_t>(TimeSpan::TICKS_PER_SECOND);
+    uint64_t seconds = t / static_cast<uint64_t>(TimeSpan::TICKS_PER_SECOND);
+    std::string r = std::format("{}{}.{:07}", neg ? "-" : "", seconds, subseconds);
+    while (r.ends_with('0')) {
+        r.pop_back();
+    }
+    if (r.ends_with('.')) {
+        r.pop_back();
+    }
+    return r;
 }
 } // namespace VodArchiver

@@ -38,11 +38,6 @@
 #include "twitch-video-job.h"
 #include "youtube-video-job.h"
 
-#ifdef _MSC_VER
-#include <intrin.h>
-#pragma intrinsic(_mul128)
-#endif
-
 namespace VodArchiver {
 static std::optional<std::vector<char>> InflateFromFileUnknownSize(HyoutaUtils::IO::File& inputFile,
                                                                    size_t sizehint = 0) {
@@ -164,66 +159,6 @@ static bool DeflateToFile(const char* buffer,
     return true;
 }
 
-static TimeSpan TimeSpanFromSecondsAndSubsecondTicks(int64_t seconds, int64_t subseconds) {
-#ifdef _MSC_VER
-    int64_t high;
-    int64_t ticks = _mul128(seconds, static_cast<int64_t>(TimeSpan::TICKS_PER_SECOND), &high);
-    bool overflow = (high != 0);
-#else
-    int64_t ticks;
-    bool overflow =
-        __builtin_mul_overflow(seconds, static_cast<int64_t>(TimeSpan::TICKS_PER_SECOND), &ticks);
-#endif
-    if (overflow) {
-        // overflow in the multiply, return max value
-        if (seconds < 0) {
-            return TimeSpan{.Ticks = std::numeric_limits<int64_t>::min()};
-        } else {
-            return TimeSpan{.Ticks = std::numeric_limits<int64_t>::max()};
-        }
-    }
-    if (ticks < 0) {
-        if (ticks < std::numeric_limits<int64_t>::min() + subseconds) {
-            return TimeSpan{.Ticks = std::numeric_limits<int64_t>::min()};
-        }
-        return TimeSpan{.Ticks = ticks - subseconds};
-    } else {
-        if (ticks > std::numeric_limits<int64_t>::max() - subseconds) {
-            return TimeSpan{.Ticks = std::numeric_limits<int64_t>::max()};
-        }
-        return TimeSpan{.Ticks = ticks + subseconds};
-    }
-}
-
-static std::optional<TimeSpan> ParseTimeSpanFromSeconds(std::string_view value) {
-    if (auto dotpos = value.find('.'); dotpos != std::string_view::npos) {
-        // try to parse the seconds and subsections separately so we don't lose information from the
-        // double conversion
-        std::string_view left = value.substr(0, dotpos);
-        std::string_view right = value.substr(dotpos + 1);
-        if (right.size() == 0) {
-            if (auto sec = HyoutaUtils::NumberUtils::ParseInt64(left)) {
-                return TimeSpanFromSecondsAndSubsecondTicks(*sec, 0);
-            }
-        } else if (right.size() > 0 && right.size() <= 7) {
-            if (auto sec = HyoutaUtils::NumberUtils::ParseInt64(left)) {
-                if (auto subsec = HyoutaUtils::NumberUtils::ParseUInt64(right)) {
-                    for (size_t i = 0; i < (7 - right.size()); ++i) {
-                        *subsec *= 10;
-                    }
-                    return TimeSpanFromSecondsAndSubsecondTicks(*sec, *subsec);
-                }
-            }
-        }
-    }
-    if (auto l = HyoutaUtils::NumberUtils::ParseInt64(value)) {
-        return TimeSpanFromSecondsAndSubsecondTicks(*l, 0);
-    }
-    if (auto l = HyoutaUtils::NumberUtils::ParseDouble(value)) {
-        return TimeSpan::FromSeconds(*l);
-    }
-    return std::nullopt;
-}
 
 static std::unique_ptr<IVideoInfo> DeserializeIVideoInfo(rapidxml::xml_node<char>* infoXml) {
     if (auto* typeXml = infoXml->first_attribute("_type")) {
@@ -266,7 +201,7 @@ static std::unique_ptr<IVideoInfo> DeserializeIVideoInfo(rapidxml::xml_node<char
                         videoTimestampRead = true;
                     }
                 } else if (!videoLengthRead && name == "videoLength") {
-                    if (auto l = ParseTimeSpanFromSeconds(value)) {
+                    if (auto l = TimeSpan::ParseFromSeconds(value)) {
                         info->VideoLength = *l;
                         videoLengthRead = true;
                     }
@@ -509,7 +444,7 @@ static std::unique_ptr<IVideoInfo> DeserializeIVideoInfo(rapidxml::xml_node<char
                         videoTimestampRead = true;
                     }
                 } else if (!videoLengthRead && name == "videoLength") {
-                    if (auto l = ParseTimeSpanFromSeconds(value)) {
+                    if (auto l = TimeSpan::ParseFromSeconds(value)) {
                         info->VideoLength = *l;
                         videoLengthRead = true;
                     }
@@ -580,7 +515,7 @@ static std::unique_ptr<IVideoInfo> DeserializeIVideoInfo(rapidxml::xml_node<char
                         videoTimestampRead = true;
                     }
                 } else if (!videoLengthRead && name == "videoLength") {
-                    if (auto l = ParseTimeSpanFromSeconds(value)) {
+                    if (auto l = TimeSpan::ParseFromSeconds(value)) {
                         info->VideoLength = *l;
                         videoLengthRead = true;
                     }
@@ -933,36 +868,6 @@ std::optional<std::vector<std::unique_ptr<IVideoJob>>>
     return result;
 }
 
-static std::string GetTotalSecondsString(const TimeSpan& timeSpan) {
-    int64_t ticks = timeSpan.Ticks;
-    uint64_t t;
-    bool neg;
-    if (ticks >= 0) {
-        t = static_cast<uint64_t>(ticks);
-        neg = false;
-    } else if (ticks == std::numeric_limits<int64_t>::min()) {
-        t = static_cast<uint64_t>(std::numeric_limits<int64_t>::max()) + static_cast<uint64_t>(1);
-        neg = true;
-    } else {
-        t = static_cast<uint64_t>(std::abs(ticks));
-        neg = true;
-    }
-    uint64_t subseconds = t % static_cast<uint64_t>(TimeSpan::TICKS_PER_SECOND);
-    uint64_t seconds = t / static_cast<uint64_t>(TimeSpan::TICKS_PER_SECOND);
-    std::string r = std::format("{}{}.{:07}", neg ? "-" : "", seconds, subseconds);
-    while (r.ends_with('0')) {
-        r.pop_back();
-    }
-    if (r.ends_with('.')) {
-        r.pop_back();
-    }
-    return r;
-}
-
-static std::string GetDateTimeBinaryString(const DateTime& dt) {
-    return std::format("{}", static_cast<int64_t>(dt.Data));
-}
-
 static rapidxml::xml_attribute<char>* AllocateAttribute(rapidxml::xml_document<char>& xml,
                                                         std::string_view name,
                                                         std::string_view value) {
@@ -982,9 +887,9 @@ static bool SerializeVideoInfo(rapidxml::xml_document<char>& xml,
         node.append_attribute(AllocateAttribute(xml, "videoTitle", c->VideoTitle));
         node.append_attribute(AllocateAttribute(xml, "videoTags", c->VideoGame));
         node.append_attribute(
-            AllocateAttribute(xml, "videoTimestamp", GetDateTimeBinaryString(c->VideoTimestamp)));
+            AllocateAttribute(xml, "videoTimestamp", DateTimeToBinaryString(c->VideoTimestamp)));
         node.append_attribute(
-            AllocateAttribute(xml, "videoLength", GetTotalSecondsString(c->VideoLength)));
+            AllocateAttribute(xml, "videoLength", TimeSpanToTotalSecondsString(c->VideoLength)));
         node.append_attribute(AllocateAttribute(
             xml, "videoRecordingState", RecordingStateToString(c->VideoRecordingState)));
         node.append_attribute(
@@ -1043,11 +948,11 @@ static bool SerializeVideoInfo(rapidxml::xml_document<char>& xml,
         }
         if (c->Video.CreatedAt.has_value()) {
             subnode->append_attribute(
-                AllocateAttribute(xml, "created_at", GetDateTimeBinaryString(*c->Video.CreatedAt)));
+                AllocateAttribute(xml, "created_at", DateTimeToBinaryString(*c->Video.CreatedAt)));
         }
         if (c->Video.PublishedAt.has_value()) {
             subnode->append_attribute(AllocateAttribute(
-                xml, "published_at", GetDateTimeBinaryString(*c->Video.PublishedAt)));
+                xml, "published_at", DateTimeToBinaryString(*c->Video.PublishedAt)));
         }
         subnode->append_attribute(
             AllocateAttribute(xml, "duration", std::format("{}", c->Video.Duration)));
@@ -1067,9 +972,9 @@ static bool SerializeVideoInfo(rapidxml::xml_document<char>& xml,
         node.append_attribute(AllocateAttribute(xml, "videoTitle", c->VideoTitle));
         node.append_attribute(AllocateAttribute(xml, "videoTags", c->VideoGame));
         node.append_attribute(
-            AllocateAttribute(xml, "videoTimestamp", GetDateTimeBinaryString(c->VideoTimestamp)));
+            AllocateAttribute(xml, "videoTimestamp", DateTimeToBinaryString(c->VideoTimestamp)));
         node.append_attribute(
-            AllocateAttribute(xml, "videoLength", GetTotalSecondsString(c->VideoLength)));
+            AllocateAttribute(xml, "videoLength", TimeSpanToTotalSecondsString(c->VideoLength)));
         node.append_attribute(AllocateAttribute(
             xml, "videoRecordingState", RecordingStateToString(c->VideoRecordingState)));
         node.append_attribute(
@@ -1085,9 +990,9 @@ static bool SerializeVideoInfo(rapidxml::xml_document<char>& xml,
         node.append_attribute(AllocateAttribute(xml, "bitrate", std::format("{}", c->Bitrate)));
         node.append_attribute(AllocateAttribute(xml, "framerate", std::format("{}", c->Framerate)));
         node.append_attribute(
-            AllocateAttribute(xml, "videoTimestamp", GetDateTimeBinaryString(c->VideoTimestamp)));
+            AllocateAttribute(xml, "videoTimestamp", DateTimeToBinaryString(c->VideoTimestamp)));
         node.append_attribute(
-            AllocateAttribute(xml, "videoLength", GetTotalSecondsString(c->VideoLength)));
+            AllocateAttribute(xml, "videoLength", TimeSpanToTotalSecondsString(c->VideoLength)));
         node.append_attribute(AllocateAttribute(xml, "postfixOld", c->PostfixOld));
         node.append_attribute(AllocateAttribute(xml, "postfixNew", c->PostfixNew));
         node.append_attribute(AllocateAttribute(xml, "outputFormat", c->OutputFormat));
@@ -1118,10 +1023,10 @@ static bool SerializeBaseIVideoJob(rapidxml::xml_document<char>& xml,
     node.append_attribute(
         AllocateAttribute(xml, "hasBeenValidated", job.HasBeenValidated ? "True" : "False"));
     node.append_attribute(AllocateAttribute(xml, "notes", job.Notes));
+    node.append_attribute(
+        AllocateAttribute(xml, "jobStartTimestamp", DateTimeToBinaryString(job.JobStartTimestamp)));
     node.append_attribute(AllocateAttribute(
-        xml, "jobStartTimestamp", GetDateTimeBinaryString(job.JobStartTimestamp)));
-    node.append_attribute(AllocateAttribute(
-        xml, "jobFinishTimestamp", GetDateTimeBinaryString(job.JobFinishTimestamp)));
+        xml, "jobFinishTimestamp", DateTimeToBinaryString(job.JobFinishTimestamp)));
     return true;
 }
 

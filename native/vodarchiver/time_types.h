@@ -3,6 +3,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -26,6 +27,9 @@ struct DateTime {
 
     static DateTime FromUnixTime(int64_t timestamp) {
         return FromBinary(621355968000000000).AddSeconds(timestamp);
+    }
+    int64_t ToUnixTime() const {
+        return static_cast<int64_t>(Data - 621355968000000000u) / DateTime::TICKS_PER_SECOND;
     }
 
     static DateTime FromDate(uint64_t year,
@@ -57,6 +61,8 @@ struct TimeSpan {
         return TimeSpan{.Ticks = integer_seconds * static_cast<int64_t>(TICKS_PER_SECOND)
                                  + sub_integer_ticks};
     }
+    static TimeSpan FromSecondsAndSubsecondTicks(int64_t seconds, int64_t subseconds);
+    static std::optional<TimeSpan> ParseFromSeconds(std::string_view value);
     double GetTotalSeconds() const {
         return static_cast<double>(Ticks) * 1e-7;
     }
@@ -75,6 +81,8 @@ struct TimeSpan {
 std::string DateTimeToStringForFilesystem(DateTime dt);
 std::string_view DateTimeToStringForGui(DateTime dt, std::array<char, 24>& buffer);
 std::string DateToString(DateTime dt);
+std::string DateTimeToBinaryString(const DateTime& dt);
 
 std::string_view TimeSpanToStringForGui(TimeSpan ts, std::array<char, 24>& buffer);
+std::string TimeSpanToTotalSecondsString(const TimeSpan& timeSpan);
 } // namespace VodArchiver

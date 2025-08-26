@@ -474,10 +474,6 @@ std::optional<std::vector<std::unique_ptr<IUserInfo>>>
     return result;
 }
 
-static int64_t DateTimeToUnixTime(const DateTime& dt) {
-    return static_cast<int64_t>(dt.Data - 621355968000000000u) / DateTime::TICKS_PER_SECOND;
-}
-
 static rapidxml::xml_attribute<char>* AllocateAttribute(rapidxml::xml_document<char>& xml,
                                                         std::string_view name,
                                                         std::string_view value) {
@@ -500,7 +496,7 @@ static bool SerializeUserInfo(rapidxml::xml_document<char>& xml,
             node.append_attribute(AllocateAttribute(xml, "userID", "?"));
         }
         node.append_attribute(AllocateAttribute(
-            xml, "lastRefreshedOn", std::format("{}", DateTimeToUnixTime(c->LastRefreshedOn))));
+            xml, "lastRefreshedOn", std::format("{}", c->LastRefreshedOn.ToUnixTime())));
         node.append_attribute(AllocateAttribute(xml, "username", c->Username));
         return true;
     } else if (auto* c = dynamic_cast<HitboxUserInfo*>(&userInfo)) {
@@ -509,7 +505,7 @@ static bool SerializeUserInfo(rapidxml::xml_document<char>& xml,
         node.append_attribute(
             AllocateAttribute(xml, "autoDownload", c->AutoDownload ? "true" : "false"));
         node.append_attribute(AllocateAttribute(
-            xml, "lastRefreshedOn", std::format("{}", DateTimeToUnixTime(c->LastRefreshedOn))));
+            xml, "lastRefreshedOn", std::format("{}", c->LastRefreshedOn.ToUnixTime())));
         node.append_attribute(AllocateAttribute(xml, "username", c->Username));
         return true;
     } else if (auto* c = dynamic_cast<YoutubeUserUserInfo*>(&userInfo)) {
@@ -518,7 +514,7 @@ static bool SerializeUserInfo(rapidxml::xml_document<char>& xml,
         node.append_attribute(
             AllocateAttribute(xml, "autoDownload", c->AutoDownload ? "true" : "false"));
         node.append_attribute(AllocateAttribute(
-            xml, "lastRefreshedOn", std::format("{}", DateTimeToUnixTime(c->LastRefreshedOn))));
+            xml, "lastRefreshedOn", std::format("{}", c->LastRefreshedOn.ToUnixTime())));
         node.append_attribute(AllocateAttribute(xml, "username", c->Username));
         return true;
     } else if (auto* c = dynamic_cast<YoutubeChannelUserInfo*>(&userInfo)) {
@@ -527,7 +523,7 @@ static bool SerializeUserInfo(rapidxml::xml_document<char>& xml,
         node.append_attribute(
             AllocateAttribute(xml, "autoDownload", c->AutoDownload ? "true" : "false"));
         node.append_attribute(AllocateAttribute(
-            xml, "lastRefreshedOn", std::format("{}", DateTimeToUnixTime(c->LastRefreshedOn))));
+            xml, "lastRefreshedOn", std::format("{}", c->LastRefreshedOn.ToUnixTime())));
         node.append_attribute(AllocateAttribute(xml, "channel", c->Channel));
         if (!c->Comment.empty()) {
             node.append_attribute(AllocateAttribute(xml, "comment", c->Comment));
@@ -539,7 +535,7 @@ static bool SerializeUserInfo(rapidxml::xml_document<char>& xml,
         node.append_attribute(
             AllocateAttribute(xml, "autoDownload", c->AutoDownload ? "true" : "false"));
         node.append_attribute(AllocateAttribute(
-            xml, "lastRefreshedOn", std::format("{}", DateTimeToUnixTime(c->LastRefreshedOn))));
+            xml, "lastRefreshedOn", std::format("{}", c->LastRefreshedOn.ToUnixTime())));
         node.append_attribute(AllocateAttribute(xml, "playlist", c->Playlist));
         if (!c->Comment.empty()) {
             node.append_attribute(AllocateAttribute(xml, "comment", c->Comment));
@@ -551,7 +547,7 @@ static bool SerializeUserInfo(rapidxml::xml_document<char>& xml,
         node.append_attribute(
             AllocateAttribute(xml, "autoDownload", c->AutoDownload ? "true" : "false"));
         node.append_attribute(AllocateAttribute(
-            xml, "lastRefreshedOn", std::format("{}", DateTimeToUnixTime(c->LastRefreshedOn))));
+            xml, "lastRefreshedOn", std::format("{}", c->LastRefreshedOn.ToUnixTime())));
         node.append_attribute(AllocateAttribute(xml, "url", c->Url));
         return true;
     } else if (auto* c = dynamic_cast<FFMpegJobUserInfo*>(&userInfo)) {
@@ -560,7 +556,7 @@ static bool SerializeUserInfo(rapidxml::xml_document<char>& xml,
         node.append_attribute(
             AllocateAttribute(xml, "autoDownload", c->AutoDownload ? "true" : "false"));
         node.append_attribute(AllocateAttribute(
-            xml, "lastRefreshedOn", std::format("{}", DateTimeToUnixTime(c->LastRefreshedOn))));
+            xml, "lastRefreshedOn", std::format("{}", c->LastRefreshedOn.ToUnixTime())));
         node.append_attribute(AllocateAttribute(xml, "path", c->Path));
         node.append_attribute(AllocateAttribute(xml, "preset", c->Preset));
         return true;
@@ -570,7 +566,7 @@ static bool SerializeUserInfo(rapidxml::xml_document<char>& xml,
         node.append_attribute(
             AllocateAttribute(xml, "autoDownload", c->AutoDownload ? "true" : "false"));
         node.append_attribute(AllocateAttribute(
-            xml, "lastRefreshedOn", std::format("{}", DateTimeToUnixTime(c->LastRefreshedOn))));
+            xml, "lastRefreshedOn", std::format("{}", c->LastRefreshedOn.ToUnixTime())));
         node.append_attribute(AllocateAttribute(xml, "identifier", c->Identifier));
         return true;
     } else if (auto* c = dynamic_cast<YoutubeUrlUserInfo*>(&userInfo)) {
@@ -579,7 +575,7 @@ static bool SerializeUserInfo(rapidxml::xml_document<char>& xml,
         node.append_attribute(
             AllocateAttribute(xml, "autoDownload", c->AutoDownload ? "true" : "false"));
         node.append_attribute(AllocateAttribute(
-            xml, "lastRefreshedOn", std::format("{}", DateTimeToUnixTime(c->LastRefreshedOn))));
+            xml, "lastRefreshedOn", std::format("{}", c->LastRefreshedOn.ToUnixTime())));
         node.append_attribute(AllocateAttribute(xml, "url", c->Url));
         return true;
     } else if (auto* c = dynamic_cast<GenericUserInfo*>(&userInfo)) {
@@ -595,7 +591,7 @@ static bool SerializeUserInfo(rapidxml::xml_document<char>& xml,
             node.append_attribute(AllocateAttribute(xml, "userID", "?"));
         }
         node.append_attribute(AllocateAttribute(
-            xml, "lastRefreshedOn", std::format("{}", DateTimeToUnixTime(c->LastRefreshedOn))));
+            xml, "lastRefreshedOn", std::format("{}", c->LastRefreshedOn.ToUnixTime())));
         node.append_attribute(AllocateAttribute(xml, "preset", c->AdditionalOptions));
         node.append_attribute(AllocateAttribute(xml, "username", c->Username));
         node.append_attribute(AllocateAttribute(xml, "channel", c->Username));
