@@ -463,6 +463,10 @@ if (VODARCHIVER_BUILD_GTESTS)
 	add_executable(tests)
 	target_sources(tests PRIVATE
 		test/text_case_test.cpp
+		test/timespan_test.cpp
+
+		vodarchiver/time_types.cpp
+		vodarchiver/time_types.h
 
 		${SOURCES_UTIL}
 	)

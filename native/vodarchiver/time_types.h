@@ -44,9 +44,7 @@ struct DateTime {
     DateTime AddMinutes(int minutes) const;
     DateTime AddHours(int hours) const;
 
-    auto operator<=>(const DateTime& other) const {
-        return this->Data <=> other.Data;
-    }
+    constexpr auto operator<=>(const DateTime& other) const = default;
 };
 struct TimeSpan {
     static constexpr uint32_t TICKS_PER_SECOND = CSHARP_TICKS_PER_SECOND;
@@ -73,9 +71,7 @@ struct TimeSpan {
     constexpr TimeSpan operator-(const TimeSpan& other) const {
         return TimeSpan{.Ticks = this->Ticks - other.Ticks};
     }
-    auto operator<=>(const TimeSpan& other) const {
-        return this->Ticks <=> other.Ticks;
-    }
+    constexpr auto operator<=>(const TimeSpan& other) const = default;
 };
 
 std::string DateTimeToStringForFilesystem(DateTime dt);
