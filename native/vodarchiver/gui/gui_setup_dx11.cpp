@@ -135,6 +135,11 @@ int VodArchiver::RunGuiDX11(
     const std::function<bool(ImGuiIO& io, GuiState& state)>& renderFrameCallback,
     const std::function<void(ImGuiIO& io, GuiState& state)>& loadIniCallback,
     const std::function<void(ImGuiIO& io, GuiState& state)>& saveIniCallback) {
+    // Make process DPI aware and obtain main monitor scale
+    ImGui_ImplWin32_EnableDpiAwareness();
+    float main_scale = ImGui_ImplWin32_GetDpiScaleForMonitor(
+        ::MonitorFromPoint(POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY));
+
     // Create application window
     ImGui_ImplWin32_EnableDpiAwareness();
     WNDCLASSEXW wc = {sizeof(wc),
@@ -155,8 +160,8 @@ int VodArchiver::RunGuiDX11(
                                 WS_OVERLAPPEDWINDOW,
                                 100,
                                 100,
-                                1280,
-                                800,
+                                (int)(1280 * main_scale),
+                                (int)(800 * main_scale),
                                 nullptr,
                                 nullptr,
                                 wc.hInstance,
@@ -207,6 +212,8 @@ int VodArchiver::RunGuiDX11(
 
 
     ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
+
+    loadFontsCallback(io, state);
 
     HMODULE user32_dll = LoadLibraryW(L"USER32.dll");
     auto user32_dll_scope = HyoutaUtils::MakeScopeGuard([&] {
@@ -284,10 +291,10 @@ int VodArchiver::RunGuiDX11(
                 auto& style = ImGui::GetStyle();
                 style = ImGuiStyle();
                 ImGui::StyleColorsDark(&style);
+                style.FontScaleDpi = newDpi;
                 if (newDpi != 1.0f) {
                     style.ScaleAllSizes(newDpi);
                 }
-                loadFontsCallback(io, state);
             }
         }
 
