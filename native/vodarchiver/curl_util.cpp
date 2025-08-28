@@ -92,6 +92,8 @@ std::optional<HttpResult> GetFromUrlToMemory(const std::string& url,
     curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, WriteToVectorCallback);
     curl_easy_setopt(handle, CURLOPT_WRITEDATA, &buffer);
     curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, CURLFOLLOW_ALL);
+    curl_easy_setopt(handle, CURLOPT_LOW_SPEED_TIME, 60L);
+    curl_easy_setopt(handle, CURLOPT_LOW_SPEED_LIMIT, 1L);
 
     struct curl_slist* headerList = nullptr;
     auto headerListScope = HyoutaUtils::MakeScopeGuard([&]() {
@@ -147,6 +149,8 @@ std::optional<HttpResult> PostFormFromUrlToMemory(const std::string& url, std::s
     curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, WriteToVectorCallback);
     curl_easy_setopt(handle, CURLOPT_WRITEDATA, &buffer);
     curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, CURLFOLLOW_ALL);
+    curl_easy_setopt(handle, CURLOPT_LOW_SPEED_TIME, 60L);
+    curl_easy_setopt(handle, CURLOPT_LOW_SPEED_LIMIT, 1L);
     CURLcode ec = curl_easy_perform(handle);
     if (ec != CURLE_OK) {
         return std::nullopt;
