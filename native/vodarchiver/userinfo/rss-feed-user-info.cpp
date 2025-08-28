@@ -39,7 +39,11 @@ static std::optional<std::vector<std::unique_ptr<IVideoInfo>>>
     response->Data.push_back('\0'); // make sure it's nullterminated
 
     rapidxml::xml_document<char> xml;
-    xml.parse<rapidxml::parse_default>(response->Data.data());
+    try {
+        xml.parse<rapidxml::parse_default>(response->Data.data());
+    } catch (...) {
+        return std::nullopt;
+    }
     auto rss = xml.first_node("rss");
     if (!rss) {
         return std::nullopt;
