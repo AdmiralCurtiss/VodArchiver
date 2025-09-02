@@ -85,7 +85,8 @@ static ResultType
     std::array<char, 256> buffer;
     std::string originalpath = HyoutaUtils::IO::GetAbsolutePath(videoInfo->GetVideoId(buffer));
     std::string newdirpath(HyoutaUtils::IO::GetDirectoryName(originalpath));
-    HyoutaUtils::IO::AppendPathElement(newdirpath, std::format("{}", DateTime::UtcNow().Data));
+    HyoutaUtils::IO::AppendPathElement(newdirpath,
+                                       std::format("{}", DateTime::UtcNow().GetTicks()));
     if (HyoutaUtils::IO::Exists(std::string_view(newdirpath))
         == HyoutaUtils::IO::ExistsResult::DoesExist) {
         std::lock_guard lock(*jobConfig.JobsLock);

@@ -237,7 +237,7 @@ static std::optional<DateTime> ParseTwitchDateTime(std::string_view str) {
                     (static_cast<int64_t>(ns) % static_cast<int64_t>(1'000'000'000))
                     / (static_cast<int64_t>(1'000'000'000)
                        / static_cast<int64_t>(DateTime::TICKS_PER_SECOND));
-                dt.Data += extraTicks;
+                dt = dt.AddTicks(extraTicks);
             }
         }
     }

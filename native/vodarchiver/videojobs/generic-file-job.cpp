@@ -62,7 +62,8 @@ static std::string GetTargetFilename(IVideoInfo& videoInfo) {
                                  ? fallbackTitle
                                  : HyoutaUtils::TextUtils::Trim(rawTitle);
     std::string datetime;
-    if (!(rawTimestamp.Data == 0 || rawTimestamp.Data == DateTime::FromUnixTime(0).Data)) {
+    if (!(rawTimestamp.GetTicks() == 0
+          || rawTimestamp.GetTicks() == DateTime::FromUnixTime(0).GetTicks())) {
         datetime = DateTimeToStringForFilesystem(rawTimestamp);
     }
     std::string prefix = HyoutaUtils::TextUtils::Trim(username).empty() ? datetime

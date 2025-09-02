@@ -107,8 +107,8 @@ int RunGui(int argc, char** argvUtf8) {
     }
 
     {
-        uint32_t rngSeed =
-            static_cast<uint32_t>(DateTime::UtcNow().Data / (DateTime::TICKS_PER_SECOND / 1000));
+        uint32_t rngSeed = static_cast<uint32_t>(DateTime::UtcNow().GetTicks()
+                                                 / (DateTime::TICKS_PER_SECOND / 1000));
         auto make_fetch_task_group = [&](std::vector<ServiceVideoCategoryType> services) {
             state.FetchTaskGroups.emplace_back(std::make_unique<FetchTaskGroup>(
                 std::move(services),

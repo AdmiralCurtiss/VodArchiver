@@ -69,8 +69,8 @@ struct IVideoJob {
     VideoJobStatus JobStatus = VideoJobStatus::NotStarted;
     bool HasBeenValidated = false;
     std::unique_ptr<IVideoInfo> VideoInfo;
-    DateTime JobStartTimestamp{.Data = 0};
-    DateTime JobFinishTimestamp{.Data = 0};
+    DateTime JobStartTimestamp{.Internal = 0};
+    DateTime JobFinishTimestamp{.Internal = 0};
     std::string Notes;
 };
 

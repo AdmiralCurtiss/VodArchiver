@@ -868,6 +868,10 @@ std::optional<std::vector<std::unique_ptr<IVideoJob>>>
     return result;
 }
 
+static std::string DateTimeToBinaryString(const DateTime& dt) {
+    return std::format("{}", dt.ToBinary());
+}
+
 static rapidxml::xml_attribute<char>* AllocateAttribute(rapidxml::xml_document<char>& xml,
                                                         std::string_view name,
                                                         std::string_view value) {
@@ -916,7 +920,7 @@ static bool SerializeVideoInfo(rapidxml::xml_document<char>& xml,
             subnode->append_node(xmlProfile);
         }
         subnode->append_attribute(AllocateAttribute(
-            xml, "mediaDateAdded", std::format("{}", c->VideoInfo.MediaDateAdded.Data)));
+            xml, "mediaDateAdded", DateTimeToBinaryString(c->VideoInfo.MediaDateAdded)));
         subnode->append_attribute(AllocateAttribute(xml, "mediaTitle", c->VideoInfo.MediaTitle));
         subnode->append_attribute(
             AllocateAttribute(xml, "mediaDescription", c->VideoInfo.MediaDescription));

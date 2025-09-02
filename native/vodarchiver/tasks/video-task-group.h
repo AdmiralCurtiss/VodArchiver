@@ -18,7 +18,7 @@ namespace VodArchiver {
 struct WaitingVideoJob {
     IVideoJob* Job = nullptr;
     bool StartImmediately = false;
-    DateTime EarliestPossibleStartTime = DateTime{.Data = 0};
+    DateTime EarliestPossibleStartTime = DateTime{.Internal = 0};
 };
 
 enum class TaskDoneEnum : uint8_t {
