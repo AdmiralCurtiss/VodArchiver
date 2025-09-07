@@ -220,7 +220,7 @@ static ResultType Download(TwitchVideoJob& job,
                 }
                 auto data = VodArchiver::curl::GetFromUrlToMemory(
                     downloadInfo.Url, std::vector<std::string>(), ranges);
-                if (!data || data->ResponseCode >= 400) {
+                if (!data || data->ResponseCode != 200) {
                     continue;
                 }
 
@@ -604,6 +604,9 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
                     job.VideoInfo = std::move(newVideoInfo);
                 }
                 continue;
+            }
+            if (result->ResponseCode != 200) {
+                return ResultType::Failure;
             }
             std::string m3u8(result->Data.data(), result->Data.size());
             GetFilenamesFromM3U8(downloadInfos, folderpath, m3u8);

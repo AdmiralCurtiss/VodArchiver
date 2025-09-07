@@ -35,7 +35,7 @@ static std::optional<std::vector<std::unique_ptr<IVideoInfo>>>
     std::string url = std::format("https://archive.org/download/{0}/{0}_files.xml", identifier);
 
     auto response = VodArchiver::curl::GetFromUrlToMemory(url);
-    if (!response || response->ResponseCode >= 400) {
+    if (!response || response->ResponseCode != 200) {
         return std::nullopt;
     }
     response->Data.push_back('\0'); // make sure it's nullterminated

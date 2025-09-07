@@ -170,7 +170,7 @@ static ResultType RunGenericFileJob(GenericFileJob& job,
             }
 
             auto response = VodArchiver::curl::GetFromUrlToMemory(videoId);
-            if (!response || response->ResponseCode >= 400) {
+            if (!response || response->ResponseCode != 200) {
                 return ResultType::Failure;
             }
             if (!HyoutaUtils::IO::WriteFileAtomic(

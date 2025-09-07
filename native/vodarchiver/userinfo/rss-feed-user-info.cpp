@@ -33,7 +33,7 @@ std::string RssFeedUserInfo::GetUserIdentifier() {
 static std::optional<std::vector<std::unique_ptr<IVideoInfo>>>
     GetMediaFromFeed(const std::string& url) {
     auto response = VodArchiver::curl::GetFromUrlToMemory(url);
-    if (!response || response->ResponseCode >= 400) {
+    if (!response || response->ResponseCode != 200) {
         return std::nullopt;
     }
     response->Data.push_back('\0'); // make sure it's nullterminated

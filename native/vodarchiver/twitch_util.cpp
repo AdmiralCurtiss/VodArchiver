@@ -107,7 +107,7 @@ static std::optional<std::string>
     headers.push_back(std::format("Authorization: Bearer {}", token));
     headers.push_back(std::format("Client-ID: {}", clientId));
     auto response = VodArchiver::curl::GetFromUrlToMemory(url, headers);
-    if (!response || response->ResponseCode >= 400) {
+    if (!response || response->ResponseCode != 200) {
         return std::nullopt;
     }
     return std::string(response->Data.data(), response->Data.size());
