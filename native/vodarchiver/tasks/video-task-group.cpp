@@ -163,12 +163,15 @@ void VideoTaskGroup::RunJobRunnerThreadFunc() {
         try {
             if (!CancellationToken->IsCancellationRequested()) {
                 // find jobs we can start
-                IVideoJob* job = nullptr;
-                while ((job = DequeueVideoJobForTask()) != nullptr) {
+                std::unique_ptr<WaitingVideoJob> wvj = nullptr;
+                while ((wvj = DequeueVideoJobForTask()) != nullptr) {
                     // and run them
                     auto rvj = std::make_unique<RunningVideoJob>();
-                    rvj->Job = job;
+                    rvj->Job = wvj->Job;
                     rvj->JobConf = this->JobConf;
+                    rvj->LastSeenResult = wvj->LastSeenResult;
+                    rvj->NumberOfTimesFinishedAsLastSeenResult =
+                        wvj->NumberOfTimesFinishedAsLastSeenResult;
                     rvj->Task = std::thread(RunJobThreadFunc, rvj.get());
 
                     {
@@ -211,14 +214,42 @@ void VideoTaskGroup::ProcessFinishedTasks() {
                 task->Task.join();
                 if (task->Done.load() == TaskDoneEnum::FinishedNormally) {
                     ResultType result = task->Result.load();
-                    if (result == ResultType::TemporarilyUnavailable) {
+                    const bool matchesLastResult = (result == task->LastSeenResult);
+                    const uint32_t numberOfTimesFinishedAsLastResult =
+                        matchesLastResult ? (task->NumberOfTimesFinishedAsLastSeenResult + 1) : 1;
+                    const auto reenqueue_at = [&](DateTime when) {
                         // re-enqueue with a future start time
                         auto wvj = std::make_unique<WaitingVideoJob>();
                         wvj->Job = task->Job;
-                        wvj->EarliestPossibleStartTime = DateTime::UtcNow().AddMinutes(30);
+                        wvj->LastSeenResult = result;
+                        wvj->NumberOfTimesFinishedAsLastSeenResult =
+                            numberOfTimesFinishedAsLastResult;
+                        wvj->EarliestPossibleStartTime = when;
 
                         std::lock_guard lock2(JobQueueLock);
                         EnqueueNoLock(std::move(wvj));
+                    };
+
+                    if (result == ResultType::TemporarilyUnavailable) {
+                        // try again in half an hour
+                        reenqueue_at(DateTime::UtcNow().AddMinutes(30));
+                    } else if (result == ResultType::NetworkError) {
+                        // likely temporary, server down or local internet down or something like
+                        // that. try again in a few minutes, making the pause longer the more often
+                        // we see this error, up to a total of 15 tries
+                        if (numberOfTimesFinishedAsLastResult <= 15) {
+                            reenqueue_at(DateTime::UtcNow().AddMinutes(
+                                numberOfTimesFinishedAsLastResult * 3));
+                        }
+                    } else if (result == ResultType::DubiousCombine) {
+                        // twitch videos that just ended can end up in an inconsistent state where
+                        // the metadata shows it as done (with the correct final time) but the vod
+                        // server is still missing the last couple video files. so if we see this
+                        // the first time, wait a few minutes and try again. if it then happens a
+                        // second time something else is likely wrong
+                        if (numberOfTimesFinishedAsLastResult == 1) {
+                            reenqueue_at(DateTime::UtcNow().AddMinutes(6));
+                        }
                     }
                 } else {
                     std::lock_guard lock2(*JobConf->JobsLock);
@@ -245,7 +276,7 @@ void VideoTaskGroup::ProcessFinishedTasks() {
     }
 }
 
-IVideoJob* VideoTaskGroup::DequeueVideoJobForTask() {
+std::unique_ptr<WaitingVideoJob> VideoTaskGroup::DequeueVideoJobForTask() {
     // JobsLock must be locked first to avoid deadlock!
     std::lock_guard lock2(*JobConf->JobsLock);
     {
@@ -269,9 +300,9 @@ IVideoJob* VideoTaskGroup::DequeueVideoJobForTask() {
         }
 
         if (found) {
-            IVideoJob* job = WaitingJobs[waitingJobIndex]->Job;
+            std::unique_ptr<WaitingVideoJob> wvj = std::move(WaitingJobs[waitingJobIndex]);
             WaitingJobs.erase(WaitingJobs.begin() + waitingJobIndex);
-            return job;
+            return wvj;
         }
     }
 

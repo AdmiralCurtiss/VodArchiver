@@ -16,9 +16,20 @@
 
 namespace VodArchiver {
 struct WaitingVideoJob {
+    // pointer to job that should be run
     IVideoJob* Job = nullptr;
-    bool StartImmediately = false;
+
+    // job may not start unless we're on or past this timestamp
     DateTime EarliestPossibleStartTime = DateTime{.Internal = 0};
+
+    // if a job is automatically re-enqueued after it finishes with a non-success state,
+    // keep track of both that state and how many times it has finished in that state without
+    // changing to a different state. we use this to determine if and how often to re-enqueue it
+    uint16_t NumberOfTimesFinishedAsLastSeenResult = 0;
+    ResultType LastSeenResult = ResultType::Success;
+
+    // force-start this task ASAP, ignoring all other logic
+    bool StartImmediately = false;
 };
 
 enum class TaskDoneEnum : uint8_t {
@@ -34,6 +45,11 @@ struct RunningVideoJob {
     std::thread Task;
     std::atomic<TaskDoneEnum> Done = TaskDoneEnum::NotDone;
     std::atomic<ResultType> Result = ResultType::Failure;
+
+    // see WaitingVideoJob
+    std::atomic<ResultType> LastSeenResult = ResultType::Success;
+    std::atomic<uint16_t> NumberOfTimesFinishedAsLastSeenResult = 0;
+
     std::string ErrorString;
 };
 
@@ -67,7 +83,7 @@ struct VideoTaskGroup {
 private:
     void RunJobRunnerThreadFunc();
     void ProcessFinishedTasks();
-    IVideoJob* DequeueVideoJobForTask();
+    std::unique_ptr<WaitingVideoJob> DequeueVideoJobForTask();
 
     void EnqueueNoLock(IVideoJob* job, bool startImmediately);
     void EnqueueNoLock(std::unique_ptr<WaitingVideoJob> wj);
