@@ -102,9 +102,9 @@ static std::string PathCombine(std::string_view lhs, std::string_view rhs) {
     return result;
 }
 
-ResultType RunChatJob(TwitchChatReplayJob& job,
-                      JobConfig& jobConfig,
-                      TaskCancellation& cancellationToken) {
+static ResultType RunChatJob(TwitchChatReplayJob& job,
+                             JobConfig& jobConfig,
+                             TaskCancellation& cancellationToken) {
     std::unique_ptr<IVideoInfo> videoInfo;
     bool assumeFinished = false;
     {
@@ -127,8 +127,11 @@ ResultType RunChatJob(TwitchChatReplayJob& job,
     }
 
     std::array<char, 256> buffer;
-    auto videoId = HyoutaUtils::NumberUtils::ParseInt64(videoInfo->GetVideoId(buffer));
+    std::string_view videoIdString = videoInfo->GetVideoId(buffer);
+    auto videoId = HyoutaUtils::NumberUtils::ParseInt64(videoIdString);
     if (!videoId) {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = std::format("Failed to parse '{}' as integer", videoIdString);
         return ResultType::Failure;
     }
 
@@ -139,9 +142,16 @@ ResultType RunChatJob(TwitchChatReplayJob& job,
     }
     auto video_json = TwitchYTDL::GetVideoJson(*videoId);
     if (!video_json) {
-        return ResultType::Failure;
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Failed to retrieve video information";
+        return ResultType::NetworkError;
     }
     auto twitchVideoData = TwitchYTDL::VideoFromJson(*video_json);
+    if (!twitchVideoData) {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Failed to parse video information";
+        return ResultType::NetworkError;
+    }
 
     {
         auto newVideoInfo = std::make_unique<TwitchVideoInfo>();
@@ -156,6 +166,7 @@ ResultType RunChatJob(TwitchChatReplayJob& job,
     if (!assumeFinished && videoInfo->GetVideoRecordingState() == RecordingState::Live) {
         std::lock_guard lock(*jobConfig.JobsLock);
         job.UserInputRequest = std::make_unique<UserInputRequestStreamLiveTwitchChatReplay>(&job);
+        job.TextStatus = "Still live, retrying later";
         return ResultType::TemporarilyUnavailable;
     }
 
@@ -168,11 +179,15 @@ ResultType RunChatJob(TwitchChatReplayJob& job,
     if (HyoutaUtils::IO::DirectoryExists(std::string_view(tempfolder))
         == HyoutaUtils::IO::ExistsResult::DoesExist) {
         if (!DeleteDirectoryRecursive(std::string_view(tempfolder))) {
-            return ResultType::Failure;
+            std::lock_guard lock(*jobConfig.JobsLock);
+            job.TextStatus = "Failed to delete temp folder";
+            return ResultType::IOError;
         }
     }
     if (!HyoutaUtils::IO::CreateDirectory(std::string_view(tempfolder))) {
-        return ResultType::Failure;
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Failed to create temp folder";
+        return ResultType::IOError;
     }
 
     {
@@ -196,11 +211,21 @@ ResultType RunChatJob(TwitchChatReplayJob& job,
             [&](std::string_view) {},
             [&](std::string_view) {})
         != 0) {
-        return ResultType::Failure;
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Failed to download chat json";
+        return ResultType::NetworkError;
+    }
+    if (HyoutaUtils::IO::FileExists(std::string_view(tempname))
+        != HyoutaUtils::IO::ExistsResult::DoesExist) {
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Chat json does not exist after download";
+        return ResultType::NetworkError;
     }
 
     if (!HyoutaUtils::IO::Move(std::string_view(tempname), std::string_view(filename), true)) {
-        return ResultType::Failure;
+        std::lock_guard lock(*jobConfig.JobsLock);
+        job.TextStatus = "Failed to move chat json";
+        return ResultType::IOError;
     }
 
     DeleteDirectoryRecursive(std::string_view(tempfolder));

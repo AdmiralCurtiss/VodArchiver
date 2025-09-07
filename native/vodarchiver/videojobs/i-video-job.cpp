@@ -41,9 +41,13 @@ std::string_view ResultTypeToString(ResultType type) {
         case ResultType::Failure: return "Failure";
         case ResultType::Success: return "Success";
         case ResultType::Cancelled: return "Cancelled";
+        case ResultType::IOError: return "IOError";
+        case ResultType::NetworkError: return "NetworkError";
         case ResultType::Dead: return "Dead";
         case ResultType::UserInputRequired: return "UserInputRequired";
         case ResultType::TemporarilyUnavailable: return "TemporarilyUnavailable";
+        case ResultType::DubiousCombine: return "DubiousCombine";
+        case ResultType::DubiousRemux: return "DubiousRemux";
         default: return "Unknown";
     }
 }
@@ -55,12 +59,20 @@ std::optional<ResultType> ResultTypeFromString(std::string_view sv) {
         return ResultType::Success;
     } else if (sv == "Cancelled") {
         return ResultType::Cancelled;
+    } else if (sv == "IOError") {
+        return ResultType::IOError;
+    } else if (sv == "NetworkError") {
+        return ResultType::NetworkError;
     } else if (sv == "Dead") {
         return ResultType::Dead;
     } else if (sv == "UserInputRequired") {
         return ResultType::UserInputRequired;
     } else if (sv == "TemporarilyUnavailable") {
         return ResultType::TemporarilyUnavailable;
+    } else if (sv == "DubiousCombine") {
+        return ResultType::DubiousCombine;
+    } else if (sv == "DubiousRemux") {
+        return ResultType::DubiousRemux;
     }
     return std::nullopt;
 }

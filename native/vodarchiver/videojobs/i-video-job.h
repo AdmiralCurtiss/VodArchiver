@@ -27,12 +27,16 @@ std::string_view VideoJobStatusToString(VideoJobStatus status);
 std::optional<VideoJobStatus> VideoJobStatusFromString(std::string_view sv);
 
 enum class ResultType : uint8_t {
-    Failure,
-    Success,
-    Cancelled,
-    Dead,
-    UserInputRequired,
-    TemporarilyUnavailable,
+    Failure,                // generic failure for unknown reason
+    Success,                // generic success
+    Cancelled,              // task was cancelled via the cancellation token
+    IOError,                // error on local disk read/write
+    NetworkError,           // error when accessing the internet
+    Dead,                   // task was determined to be dead any will never work
+    UserInputRequired,      // task needs user input before it can continue
+    TemporarilyUnavailable, // task is currently unavailable but may work if retried later
+    DubiousCombine,         // combined video doesn't match what was expected
+    DubiousRemux,           // remuxed video doesn't match what was expected
 };
 std::string_view ResultTypeToString(ResultType type);
 std::optional<ResultType> ResultTypeFromString(std::string_view sv);

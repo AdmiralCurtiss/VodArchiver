@@ -235,7 +235,9 @@ static ResultType Download(TwitchVideoJob& job,
                            });
                 if (!HyoutaUtils::IO::WriteFileAtomic(
                         std::string_view(outpath_temp), data->Data.data(), data->Data.size())) {
-                    return ResultType::Failure;
+                    std::lock_guard lock(*jobConfig.JobsLock);
+                    job.TextStatus = std::format("Failed to write {}", outpath_temp);
+                    return ResultType::IOError;
                 }
                 success = true;
             }
@@ -283,7 +285,7 @@ static ResultType Combine(TaskCancellation& cancellationToken,
     std::string tempname = combinedFilename + ".tmp";
     HyoutaUtils::IO::File fs(std::string_view(tempname), HyoutaUtils::IO::OpenMode::Write);
     if (!fs.IsOpen()) {
-        return ResultType::Failure;
+        return ResultType::IOError;
     }
     for (auto& file : files) {
         if (cancellationToken.IsCancellationRequested()) {
@@ -292,18 +294,18 @@ static ResultType Combine(TaskCancellation& cancellationToken,
         }
         HyoutaUtils::IO::File part(std::string_view(file), HyoutaUtils::IO::OpenMode::Read);
         if (!part.IsOpen()) {
-            return ResultType::Failure;
+            return ResultType::IOError;
         }
         auto len = part.GetLength();
         if (!len) {
-            return ResultType::Failure;
+            return ResultType::IOError;
         }
         if (fs.Write(part, *len) != *len) {
-            return ResultType::Failure;
+            return ResultType::IOError;
         }
     }
     if (!fs.Rename(std::string_view(combinedFilename))) {
-        return ResultType::Failure;
+        return ResultType::IOError;
     }
     return ResultType::Success;
 }
@@ -520,11 +522,11 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
     }
     auto video_json = VodArchiver::TwitchYTDL::GetVideoJson(*videoId);
     if (!video_json) {
-        return ResultType::Failure;
+        return ResultType::NetworkError;
     }
     auto twitchVideoFromJson = VodArchiver::TwitchYTDL::VideoFromJson(*video_json);
     if (!twitchVideoFromJson) {
-        return ResultType::Failure;
+        return ResultType::NetworkError;
     }
     {
         auto newVideoInfo = std::make_unique<TwitchVideoInfo>();
@@ -576,7 +578,7 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
             folderpath = GetFolder(*m3u8path);
             auto result = VodArchiver::curl::GetFromUrlToMemory(*m3u8path);
             if (!result) {
-                return ResultType::Failure;
+                return ResultType::NetworkError;
             }
             if (result->ResponseCode == 404
                 && videoInfo->GetVideoRecordingState() == RecordingState::Live) {
@@ -587,11 +589,11 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
                 }
                 video_json = VodArchiver::TwitchYTDL::GetVideoJson(*videoId);
                 if (!video_json) {
-                    return ResultType::Failure;
+                    return ResultType::NetworkError;
                 }
                 twitchVideoFromJson = VodArchiver::TwitchYTDL::VideoFromJson(*video_json);
                 if (!twitchVideoFromJson) {
-                    return ResultType::Failure;
+                    return ResultType::NetworkError;
                 }
 
                 {
@@ -606,7 +608,7 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
                 continue;
             }
             if (result->ResponseCode != 200) {
-                return ResultType::Failure;
+                return ResultType::NetworkError;
             }
             std::string m3u8(result->Data.data(), result->Data.size());
             GetFilenamesFromM3U8(downloadInfos, folderpath, m3u8);
@@ -653,7 +655,7 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
     if (getFileUrlsResult != ResultType::Success) {
         std::lock_guard lock(*jobConfig.JobsLock);
         job.TextStatus = "Failed retrieving file URLs.";
-        return ResultType::Failure;
+        return getFileUrlsResult;
     }
 
     std::string finalFilenameWithoutExtension =
@@ -742,7 +744,7 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                     if (getFileUrlsResult != ResultType::Success) {
                         std::lock_guard lock(*jobConfig.JobsLock);
                         job.TextStatus = "Failed retrieving file URLs.";
-                        return ResultType::Failure;
+                        return getFileUrlsResult;
                     }
                 }
             }
@@ -781,6 +783,8 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                 }
                 ResultType combineResult = Combine(cancellationToken, combinedTempname, files);
                 if (combineResult != ResultType::Success) {
+                    std::lock_guard lock(*jobConfig.JobsLock);
+                    job.TextStatus = "Combining failed.";
                     return combineResult;
                 }
 
@@ -791,7 +795,9 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                 }
                 auto probe = FFMpegProbe(combinedTempname);
                 if (!probe) {
-                    return ResultType::Failure;
+                    std::lock_guard lock(*jobConfig.JobsLock);
+                    job.TextStatus = "Probing combined video failed.";
+                    return ResultType::DubiousCombine;
                 }
                 TimeSpan actualVideoLength = probe->Duration;
                 TimeSpan expectedVideoLength = videoInfo->GetVideoLength();
@@ -809,7 +815,7 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                         job.UserInputRequest =
                             std::make_unique<UserInputRequestTimeMismatchCombined>(&job);
                         job.WaitingForUserInput = true;
-                        return ResultType::UserInputRequired;
+                        return ResultType::DubiousCombine;
                     }
                 }
 
@@ -848,6 +854,8 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                 return ResultType::Cancelled;
             }
             if (!Remux(remuxedFilename, combinedFilename, remuxedTempname)) {
+                std::lock_guard lock(*jobConfig.JobsLock);
+                job.TextStatus = "Remuxing failed.";
                 return ResultType::Failure;
             }
 
@@ -858,7 +866,9 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
             }
             auto probe = FFMpegProbe(remuxedFilename);
             if (!probe) {
-                return ResultType::Failure;
+                std::lock_guard lock(*jobConfig.JobsLock);
+                job.TextStatus = "Probe on remuxed video failed.";
+                return ResultType::DubiousRemux;
             }
             TimeSpan actualVideoLength = probe->Duration;
             TimeSpan expectedVideoLength = videoInfo->GetVideoLength();
@@ -875,7 +885,7 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                     job.UserInputRequest =
                         std::make_unique<UserInputRequestTimeMismatchRemuxed>(&job);
                     job.WaitingForUserInput = true;
-                    return ResultType::UserInputRequired;
+                    return ResultType::DubiousRemux;
                 }
             }
 

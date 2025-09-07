@@ -65,7 +65,7 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
     std::array<char, 256> buffer2;
     if (dynamic_cast<YoutubeVideoInfo*>(vi.get()) == nullptr) {
         {
-            std::lock_guard lock(jobConfig.Mutex);
+            std::lock_guard lock(*jobConfig.JobsLock);
             job.TextStatus = "Retrieving video info...";
         }
         auto result =
@@ -75,14 +75,22 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
             case Youtube::RetrieveVideoResult::Success:
                 vi = result.info->Clone();
                 {
-                    std::lock_guard lock(jobConfig.Mutex);
+                    std::lock_guard lock(*jobConfig.JobsLock);
                     job.VideoInfo = std::move(result.info);
                 }
                 break;
             case Youtube::RetrieveVideoResult::ParseFailure:
                 // this seems to happen randomly from time to time, just retry later
+                {
+                    std::lock_guard lock(*jobConfig.JobsLock);
+                    job.TextStatus = "Video info parsing failed, retrying later";
+                }
                 return ResultType::TemporarilyUnavailable;
-            default: return ResultType::Failure;
+            default: {
+                std::lock_guard lock(*jobConfig.JobsLock);
+                job.TextStatus = "Video info retrieval failed";
+                return ResultType::NetworkError;
+            }
         }
     }
 
@@ -105,7 +113,7 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
                 return ResultType::Failure;
             }
             {
-                std::lock_guard lock(jobConfig.Mutex);
+                std::lock_guard lock(*jobConfig.JobsLock);
                 job.TextStatus = "Running youtube-dl...";
             }
             // don't know expected filesize, so hope we have a sensible value in minimum free space
@@ -115,7 +123,7 @@ static ResultType RunYoutubeVideoJob(YoutubeVideoJob& job,
                        cancellationToken,
                        ShouldStallWriteRegularFile,
                        [&](std::string status) {
-                           std::lock_guard lock(jobConfig.Mutex);
+                           std::lock_guard lock(*jobConfig.JobsLock);
                            job.TextStatus = std::move(status);
                        });
             if (cancellationToken.IsCancellationRequested()) {
