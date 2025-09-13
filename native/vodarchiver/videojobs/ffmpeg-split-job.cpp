@@ -34,7 +34,8 @@ bool FFMpegSplitJob::IsWaitingForUserInput() const {
 }
 
 static std::string GenerateOutputFilenameInternal(std::string_view fullPath) {
-    std::string_view inputName = HyoutaUtils::IO::SplitPath(fullPath).Filename;
+    std::string_view inputName =
+        HyoutaUtils::TextUtils::Replace(HyoutaUtils::IO::SplitPath(fullPath).Filename, "%", "%%");
     std::string_view fn = HyoutaUtils::IO::GetFileNameWithoutExtension(inputName);
     std::string_view ext = HyoutaUtils::IO::GetExtension(inputName);
     std::vector<std::string_view> split = HyoutaUtils::TextUtils::Split(fn, "_");
@@ -64,6 +65,46 @@ static std::string GenerateOutputName(std::string_view inputName, std::string_vi
     std::string dir = std::string(HyoutaUtils::IO::SplitPath(inputName).Directory);
     HyoutaUtils::IO::AppendPathElement(dir, GenerateOutputFilenameInternal(fullPath));
     return dir;
+}
+
+static std::string EvaluateOutputName(std::string_view input, size_t index) {
+    std::string result;
+    size_t i = 0;
+    while (i < input.size()) {
+        const char ch = input[i];
+        if (ch == '%') {
+            ++i;
+            if (i < input.size()) {
+                const char format = input[i];
+                if (format == '%') {
+                    // %% -> %
+                    result.push_back('%');
+                    ++i;
+                    continue;
+                }
+                if (format == 'd') {
+                    // %d -> index
+                    result.append(std::format("{}", index));
+                    ++i;
+                    continue;
+                }
+
+                // unclear what to do here, should probably report error?
+                result.push_back(ch);
+                result.push_back(format);
+                ++i;
+                continue;
+            } else {
+                // unclear what to do here, should probably report error?
+                result.push_back(ch);
+                break;
+            }
+        } else {
+            result.push_back(ch);
+            ++i;
+        }
+    }
+    return result;
 }
 
 static ResultType
@@ -130,7 +171,7 @@ static ResultType
     args.push_back("-start_number");
     args.push_back("1");
 
-    std::string exampleOutname = HyoutaUtils::TextUtils::Replace(outname, "%d", "0");
+    std::string exampleOutname = EvaluateOutputName(outname, 0);
     bool existedBefore = HyoutaUtils::IO::Exists(std::string_view(exampleOutname))
                          == HyoutaUtils::IO::ExistsResult::DoesExist;
 
@@ -172,12 +213,10 @@ static ResultType
             std::string output;
         };
         std::vector<Pair> l;
-        int digit = 0;
+        size_t digit = 0;
         while (true) {
-            std::string input =
-                HyoutaUtils::TextUtils::Replace(outname, "%d", std::format("{}", digit));
-            std::string output =
-                HyoutaUtils::TextUtils::Replace(outname, "%d", std::format("{}", (digit + 1)));
+            std::string input = EvaluateOutputName(outname, digit);
+            std::string output = EvaluateOutputName(outname, digit + 1);
             if (HyoutaUtils::IO::FileExists(std::string_view(input))
                 == HyoutaUtils::IO::ExistsResult::DoesExist) {
                 l.push_back(Pair{.input = std::move(input), .output = std::move(output)});
