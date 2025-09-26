@@ -1,6 +1,7 @@
 #include "filename_util.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <format>
 #include <string>
 #include <string_view>
@@ -91,7 +92,57 @@ std::string MakeIntercapsFilename(std::string_view gamename) {
     return result;
 }
 
+static size_t GetCodePointLength(std::string_view s, size_t offset) {
+    if (offset >= s.size()) {
+        return 0;
+    }
+
+    uint8_t c = static_cast<uint8_t>(s[offset]);
+    if ((c & 0x80) == 0) {
+        return 1;
+    }
+    if ((c & 0xe0) == 0xc0) {
+        if ((s.size() - offset) < 2) {
+            return 0;
+        }
+        return 2;
+    }
+    if ((c & 0xf0) == 0xe0) {
+        if ((s.size() - offset) < 3) {
+            return 0;
+        }
+        return 3;
+    }
+    if ((c & 0xf8) == 0xf0) {
+        if ((s.size() - offset) < 4) {
+            return 0;
+        }
+        return 4;
+    }
+    return 0;
+}
+
 std::string Crop(std::string_view s, size_t length) {
-    return s.size() <= length ? std::string(s) : std::string(s.substr(0, length));
+    if (length == 0) {
+        return std::string();
+    }
+
+    // we need codepoints, not bytes
+    size_t bytecount = 0;
+    size_t codepointcount = 0;
+    while (bytecount < s.size()) {
+        size_t len = GetCodePointLength(s, bytecount);
+        if (len == 0) {
+            // invalid utf8 encoding, crop off the remaining string
+            break;
+        }
+        bytecount += len;
+        ++codepointcount;
+        if (codepointcount >= length) {
+            break;
+        }
+    }
+
+    return std::string(s.substr(0, bytecount));
 }
 } // namespace VodArchiver
