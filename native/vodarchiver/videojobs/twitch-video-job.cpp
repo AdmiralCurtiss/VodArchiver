@@ -814,7 +814,7 @@ static ResultType RunTwitchVideoJob(TwitchVideoJob& job,
                             actualVideoLength.GetTotalSeconds());
                         job.UserInputRequest =
                             std::make_unique<UserInputRequestTimeMismatchCombined>(&job);
-                        job.WaitingForUserInput = true;
+                        // job.WaitingForUserInput = true;
                         return ResultType::DubiousCombine;
                     }
                 }
