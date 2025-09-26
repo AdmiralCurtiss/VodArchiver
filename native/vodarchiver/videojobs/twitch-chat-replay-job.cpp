@@ -197,9 +197,13 @@ static ResultType RunChatJob(TwitchChatReplayJob& job,
     std::vector<std::string> args;
     args.push_back("chatdownload");
     args.push_back("-E");
+    args.push_back("--bttv");
+    args.push_back("false");
+    args.push_back("--ffz");
+    args.push_back("false");
     args.push_back("--stv");
     args.push_back("false");
-    args.push_back("--chat-connections");
+    args.push_back("--threads");
     args.push_back("1");
     args.push_back("--id");
     args.push_back(std::string(videoInfo->GetVideoId(buffer)));
