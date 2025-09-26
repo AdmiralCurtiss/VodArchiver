@@ -162,7 +162,7 @@ static ResultType Download(TwitchVideoJob& job,
             std::lock_guard lock(*jobConfig.JobsLock);
             job.TextStatus = std::format(
                 "Failed to download individual parts after {} tries, aborting.", MaxTries);
-            return ResultType::Failure;
+            return ResultType::NetworkError;
         }
         files.clear();
         for (size_t i = 0; i < downloadInfos.size(); ++i) {
