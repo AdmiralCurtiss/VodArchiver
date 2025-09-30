@@ -15,9 +15,7 @@
 #endif
 
 namespace VodArchiver {
-static std::chrono::time_point<std::chrono::tai_clock,
-                               std::chrono::duration<int64_t, std::ratio<1, 10000000>>>
-    DateTimeToTaiTimePoint(const DateTime& dt) {
+static auto DateTimeToTaiTimePoint(const DateTime& dt) {
     static constexpr int64_t EPOCH_DIFFERENCE_IN_TICKS = 617569056000000000;
     std::chrono::duration<int64_t, std::ratio<1, 10000000>> chrono_ticks(
         dt.GetTicks() - EPOCH_DIFFERENCE_IN_TICKS);
@@ -36,7 +34,10 @@ static DateTime DateTimeFromTaiTimePoint(
 }
 
 DateTime DateTime::UtcNow() {
-    return DateTimeFromTaiTimePoint(std::chrono::tai_clock::now());
+    auto now = std::chrono::tai_clock::now();
+    auto casted =
+        std::chrono::time_point_cast<std::chrono::duration<int64_t, std::ratio<1, 10000000>>>(now);
+    return DateTimeFromTaiTimePoint(casted);
 }
 
 DateTime DateTime::FromDate(uint64_t year,
