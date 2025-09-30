@@ -170,6 +170,8 @@ static ResultType
     args.push_back(outname);
     args.push_back("-start_number");
     args.push_back("1");
+    args.push_back("-reset_timestamps");
+    args.push_back("1");
 
     std::string exampleOutname = EvaluateOutputName(outname, 0);
     bool existedBefore = HyoutaUtils::IO::Exists(std::string_view(exampleOutname))
