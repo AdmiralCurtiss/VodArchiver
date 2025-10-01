@@ -167,11 +167,11 @@ static ResultType
     args.push_back("segment");
     args.push_back("-segment_times");
     args.push_back(splitTimes);
-    args.push_back(outname);
-    args.push_back("-start_number");
+    args.push_back("-segment_start_number");
     args.push_back("1");
     args.push_back("-reset_timestamps");
     args.push_back("1");
+    args.push_back(outname);
 
     std::string exampleOutname = EvaluateOutputName(outname, 0);
     bool existedBefore = HyoutaUtils::IO::Exists(std::string_view(exampleOutname))
@@ -202,38 +202,6 @@ static ResultType
             std::lock_guard lock(*jobConfig.JobsLock);
             job.TextStatus = std::format("ffmpeg_split failed with return value {}", retval);
             return ResultType::Failure;
-        }
-    }
-
-
-    if (!existedBefore
-        && HyoutaUtils::IO::FileExists(std::string_view(exampleOutname))
-               == HyoutaUtils::IO::ExistsResult::DoesExist) {
-        // output generated with indices starting at 0 instead of 1, rename
-        struct Pair {
-            std::string input;
-            std::string output;
-        };
-        std::vector<Pair> l;
-        size_t digit = 0;
-        while (true) {
-            std::string input = EvaluateOutputName(outname, digit);
-            std::string output = EvaluateOutputName(outname, digit + 1);
-            if (HyoutaUtils::IO::FileExists(std::string_view(input))
-                == HyoutaUtils::IO::ExistsResult::DoesExist) {
-                l.push_back(Pair{.input = std::move(input), .output = std::move(output)});
-            } else {
-                break;
-            }
-            ++digit;
-        }
-
-        for (size_t i = l.size(); i > 0; --i) {
-            auto& pair = l[i - 1];
-            if (HyoutaUtils::IO::Exists(std::string_view(pair.output))
-                != HyoutaUtils::IO::ExistsResult::DoesExist) {
-                HyoutaUtils::IO::Move(pair.input, pair.output, false);
-            }
         }
     }
 
