@@ -10,6 +10,8 @@
 #ifdef BUILD_FOR_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#else
+#include <sys/statvfs.h>
 #endif
 
 namespace VodArchiver {
@@ -34,7 +36,22 @@ std::optional<uint64_t> GetFreeDiskSpaceAtPath(std::string_view path) {
     }
     return static_cast<uint64_t>(availableFreeBytes.QuadPart);
 #else
-    return std::nullopt;
+    std::string_view p = path;
+    while (p.size() > 0 && p.back() != '/') {
+        p = p.substr(0, p.size() - 1);
+    }
+    if (p.empty()) {
+        return std::nullopt;
+    }
+    std::string s(p);
+    struct statvfs vfs{};
+    if (statvfs(s.c_str(), &vfs) != 0) {
+        return std::nullopt;
+    }
+
+    uint64_t result = static_cast<uint64_t>(vfs.f_bavail);
+    result *= static_cast<uint64_t>(vfs.f_bsize);
+    return result;
 #endif
 }
 } // namespace VodArchiver
