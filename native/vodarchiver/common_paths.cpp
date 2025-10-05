@@ -17,19 +17,6 @@
 #endif
 
 namespace VodArchiver::CommonPaths {
-std::optional<std::string> GetSavedGamesFolder() {
-#ifdef BUILD_FOR_WINDOWS
-    PWSTR path;
-    if (FAILED(SHGetKnownFolderPath(FOLDERID_SavedGames, 0, nullptr, &path))) {
-        return std::nullopt;
-    }
-    auto pathScope = HyoutaUtils::MakeScopeGuard([&path]() { CoTaskMemFree(path); });
-    return HyoutaUtils::TextUtils::WStringToUtf8(path, static_cast<size_t>(lstrlenW(path)));
-#else
-    return std::nullopt;
-#endif
-}
-
 std::optional<std::string> GetLocalAppDataFolder() {
 #ifdef BUILD_FOR_WINDOWS
     PWSTR path;
