@@ -12,6 +12,13 @@
 #ifdef BUILD_FOR_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#else
+#include <array>
+#include <fcntl.h>
+#include <poll.h>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #endif
 
 namespace VodArchiver {
@@ -308,7 +315,160 @@ int RunProgram(const std::string& programName,
                const std::vector<std::string>& args,
                const std::function<void(std::string_view)>& stdOutRedirect,
                const std::function<void(std::string_view)>& stdErrRedirect) {
-    return -1;
+    pid_t child_pid = 0;
+    {
+        std::array<int, 2> stdout_pipe{};
+        std::array<int, 2> stderr_pipe{};
+        bool stdout_pipe_initialized = false;
+        bool stderr_pipe_initialized = false;
+        auto stdout_pipe_0_guard = HyoutaUtils::MakeDisposableScopeGuard([&]() {
+            if (stdout_pipe_initialized) {
+                close(stdout_pipe[0]);
+            }
+        });
+        auto stderr_pipe_0_guard = HyoutaUtils::MakeDisposableScopeGuard([&]() {
+            if (stderr_pipe_initialized) {
+                close(stderr_pipe[0]);
+            }
+        });
+
+        {
+            // posix_spawnp() needs non-const char pointers for some reason, set that up...
+            std::vector<std::string> mutable_args;
+            mutable_args.push_back(programName);
+            mutable_args.insert(mutable_args.end(), args.begin(), args.end());
+            std::vector<char*> arg_pointers;
+            for (std::string& arg : mutable_args) {
+                arg_pointers.push_back(arg.data());
+            }
+            arg_pointers.push_back(nullptr);
+            {
+                // make two pipes that redirect the stdout and stderr of the child process to us
+                if (pipe2(stdout_pipe.data(), O_NONBLOCK | O_CLOEXEC) != 0) {
+                    return -1;
+                }
+                stdout_pipe_initialized = true;
+                auto stdout_pipe_1_guard =
+                    HyoutaUtils::MakeScopeGuard([&]() { close(stdout_pipe[1]); });
+                if (pipe2(stderr_pipe.data(), O_NONBLOCK | O_CLOEXEC) != 0) {
+                    return -1;
+                }
+                stderr_pipe_initialized = true;
+                auto stderr_pipe_1_guard =
+                    HyoutaUtils::MakeScopeGuard([&]() { close(stderr_pipe[1]); });
+
+                // set up the write end of the pipes as the child's stdout and stderr
+                posix_spawn_file_actions_t file_actions;
+                if (posix_spawn_file_actions_init(&file_actions) != 0) {
+                    return -1;
+                }
+                auto file_actions_guard = HyoutaUtils::MakeScopeGuard(
+                    [&]() { posix_spawn_file_actions_destroy(&file_actions); });
+                if (posix_spawn_file_actions_adddup2(&file_actions, stdout_pipe[1], STDOUT_FILENO)
+                    != 0) {
+                    return -1;
+                }
+                if (posix_spawn_file_actions_adddup2(&file_actions, stderr_pipe[1], STDERR_FILENO)
+                    != 0) {
+                    return -1;
+                }
+
+                // spawn the child process
+                if (posix_spawnp(&child_pid,
+                                 programName.c_str(),
+                                 &file_actions,
+                                 nullptr,
+                                 arg_pointers.data(),
+                                 nullptr)
+                    != 0) {
+                    return -1;
+                }
+
+                // we leave the read end of our redirect pipes open, but close the write end
+                // (happens automatically via scope guards)
+            }
+        }
+
+        // now poll and read the redirected stdout/stderr until they're closed from the other side
+        std::array<struct pollfd, 2> pollfds{};
+        pollfds[0].fd = stdout_pipe[0];
+        pollfds[0].events = POLLIN | POLLRDHUP;
+        pollfds[1].fd = stderr_pipe[0];
+        pollfds[1].events = POLLIN | POLLRDHUP;
+        static constexpr size_t bufferSize = 4096;
+        std::array<char, bufferSize> buffer;
+        struct pollfd* fds_to_poll = pollfds.data();
+        nfds_t number_of_poll_fds = static_cast<nfds_t>(2);
+        bool stdout_hung_up = false;
+        bool stderr_hung_up = false;
+        while (true) {
+            const int p = poll(fds_to_poll, number_of_poll_fds, -1);
+            if (p <= 0) {
+                break;
+            }
+            if (!stdout_hung_up) {
+                if (pollfds[0].revents & POLLIN) {
+                    ssize_t bytes_read = 0;
+                    while (true) {
+                        bytes_read = read(stdout_pipe[0], buffer.data(), bufferSize);
+                        if (bytes_read <= 0) {
+                            break;
+                        }
+                        std::string_view str(buffer.data(), static_cast<size_t>(bytes_read));
+                        stdOutRedirect(str);
+                        if (static_cast<size_t>(bytes_read) < bufferSize) {
+                            break;
+                        }
+                    }
+                }
+                if (pollfds[0].revents & POLLHUP) {
+                    stdout_hung_up = true;
+                    if (!stderr_hung_up) {
+                        // only poll stderr from now
+                        fds_to_poll = &pollfds[1];
+                        number_of_poll_fds = static_cast<nfds_t>(1);
+                    }
+                }
+            }
+            if (!stderr_hung_up) {
+                if (pollfds[1].revents & POLLIN) {
+                    ssize_t bytes_read = 0;
+                    while (true) {
+                        bytes_read = read(stderr_pipe[0], buffer.data(), bufferSize);
+                        if (bytes_read <= 0) {
+                            break;
+                        }
+                        std::string_view str(buffer.data(), static_cast<size_t>(bytes_read));
+                        stdErrRedirect(str);
+                        if (static_cast<size_t>(bytes_read) < bufferSize) {
+                            break;
+                        }
+                    }
+                }
+                if (pollfds[1].revents & POLLHUP) {
+                    stderr_hung_up = true;
+                    if (!stdout_hung_up) {
+                        // only poll stdout from now
+                        fds_to_poll = pollfds.data();
+                        number_of_poll_fds = static_cast<nfds_t>(1);
+                    }
+                }
+            }
+            if (stdout_hung_up && stderr_hung_up) {
+                break;
+            }
+        }
+    }
+
+    // wait for process to exit and get its exit status
+    int exit_status = -1;
+    if (waitpid(child_pid, &exit_status, 0) == -1) {
+        return -1;
+    }
+    if (WIFEXITED(exit_status) == 0) {
+        return -1;
+    }
+    return static_cast<int8_t>(static_cast<uint8_t>(WEXITSTATUS(exit_status)));
 }
 #endif
 } // namespace VodArchiver
