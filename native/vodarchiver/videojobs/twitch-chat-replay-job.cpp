@@ -12,6 +12,7 @@
 #include "vodarchiver/exec.h"
 #include "vodarchiver/system_util.h"
 #include "vodarchiver/twitch_util.h"
+#include "vodarchiver/videojobs/twitch-video-job.h"
 
 static bool DeleteDirectoryRecursive(const std::filesystem::path& rootDir) {
     {
@@ -160,10 +161,11 @@ static ResultType RunChatJob(TwitchChatReplayJob& job,
         videoInfo = newVideoInfo->Clone();
 
         std::lock_guard lock(*jobConfig.JobsLock);
+        MergeTwitchVideoInfo(newVideoInfo.get(), job.VideoInfo.get());
         job.VideoInfo = std::move(newVideoInfo);
     }
 
-    if (!assumeFinished && videoInfo->GetVideoRecordingState() == RecordingState::Live) {
+    if (!assumeFinished && videoInfo->GetVideoRecordingState() != RecordingState::Recorded) {
         std::lock_guard lock(*jobConfig.JobsLock);
         job.UserInputRequest = std::make_unique<UserInputRequestStreamLiveTwitchChatReplay>(&job);
         job.TextStatus = "Still live, retrying later";

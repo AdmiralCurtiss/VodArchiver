@@ -496,10 +496,9 @@ std::optional<TwitchVideo> VideoFromJson(const std::string& str) {
     v.UserID = 0;
     {
         auto str = ReadString(jo, "uploader");
-        if (!str) {
-            return std::nullopt;
+        if (str) {
+            v.Username = std::move(*str);
         }
-        v.Username = std::move(*str);
     }
     {
         auto str = ReadString(jo, "title");
@@ -529,18 +528,23 @@ std::optional<TwitchVideo> VideoFromJson(const std::string& str) {
         }
     }
 
-    auto is_live = ReadBool(jo, "is_live");
     auto was_live = ReadBool(jo, "was_live");
-    if (!is_live.has_value() || !was_live.has_value()) {
-        return std::nullopt;
-    }
-
-    if (*is_live || *was_live) {
+    if (!was_live.has_value()) {
+        v.Type = TwitchVideoType::Unknown;
+    } else if (*was_live) {
         v.Type = TwitchVideoType::Archive;
     } else {
         v.Type = TwitchVideoType::Upload;
     }
-    v.State = *is_live ? RecordingState::Live : RecordingState::Recorded;
+
+    auto is_live = ReadBool(jo, "is_live");
+    if (!is_live.has_value()) {
+        v.State = RecordingState::Unknown;
+    } else if (*is_live) {
+        v.State = RecordingState::Live;
+    } else {
+        v.State = RecordingState::Recorded;
+    }
 
     return v;
 }

@@ -25,4 +25,8 @@ struct TwitchVideoJob : public IVideoJob {
 
     std::string VideoQuality = "chunked";
 };
+
+struct IVideoInfo;
+struct TwitchVideoInfo;
+void MergeTwitchVideoInfo(TwitchVideoInfo* newVideoInfo, IVideoInfo* oldVideoInfo);
 } // namespace VodArchiver

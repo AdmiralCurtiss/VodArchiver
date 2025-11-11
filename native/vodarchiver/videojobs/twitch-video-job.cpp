@@ -506,6 +506,65 @@ static void GetFilenamesFromM3U8(std::vector<DownloadInfo>& downloadInfos,
     }
 }
 
+void MergeTwitchVideoInfo(TwitchVideoInfo* newVideoInfo, IVideoInfo* oldVideoInfo) {
+    if (!newVideoInfo || !oldVideoInfo) {
+        return;
+    }
+
+    // copy important info from the existing object if we don't have it
+    if (!newVideoInfo->Video.Username.has_value()) {
+        std::array<char, 256> buffer;
+        std::string_view sv = oldVideoInfo->GetUsername(buffer);
+        if (!sv.empty()) {
+            newVideoInfo->Video.Username = std::string(sv);
+        }
+    }
+    if (!newVideoInfo->Video.Title.has_value() || newVideoInfo->Video.Title == "Untitled Broadcast") {
+        std::array<char, 256> buffer;
+        std::string_view sv = oldVideoInfo->GetVideoTitle(buffer);
+        if (!sv.empty()) {
+            newVideoInfo->Video.Title = std::string(sv);
+        }
+    }
+    if (!newVideoInfo->Video.Game.has_value()) {
+        std::array<char, 256> buffer;
+        std::string_view sv = oldVideoInfo->GetVideoGame(buffer);
+        if (!sv.empty()) {
+            newVideoInfo->Video.Game = std::string(sv);
+        }
+    }
+    if (!newVideoInfo->Video.Description.has_value()) {
+        auto* oldTvi = dynamic_cast<TwitchVideoInfo*>(oldVideoInfo);
+        if (oldTvi && oldTvi->Video.Description.has_value()) {
+            newVideoInfo->Video.Description = oldTvi->Video.Description;
+        }
+    }
+    if (!newVideoInfo->Video.CreatedAt.has_value()) {
+        auto* oldTvi = dynamic_cast<TwitchVideoInfo*>(oldVideoInfo);
+        if (oldTvi && oldTvi->Video.CreatedAt.has_value()) {
+            newVideoInfo->Video.CreatedAt = oldTvi->Video.CreatedAt;
+        }
+    }
+    if (!newVideoInfo->Video.PublishedAt.has_value()) {
+        auto* oldTvi = dynamic_cast<TwitchVideoInfo*>(oldVideoInfo);
+        if (oldTvi && oldTvi->Video.PublishedAt.has_value()) {
+            newVideoInfo->Video.PublishedAt = oldTvi->Video.PublishedAt;
+        }
+    }
+    if (newVideoInfo->Video.Duration == 0) {
+        auto* oldTvi = dynamic_cast<TwitchVideoInfo*>(oldVideoInfo);
+        if (oldTvi) {
+            newVideoInfo->Video.Duration = oldTvi->Video.Duration;
+        }
+    }
+    if (newVideoInfo->Video.State == RecordingState::Unknown) {
+        auto* oldTvi = dynamic_cast<TwitchVideoInfo*>(oldVideoInfo);
+        if (oldTvi) {
+            newVideoInfo->Video.State = oldTvi->Video.State;
+        }
+    }
+}
+
 static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
                                    JobConfig& jobConfig,
                                    std::unique_ptr<IVideoInfo>& videoInfo,
@@ -535,6 +594,7 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
         videoInfo = newVideoInfo->Clone();
 
         std::lock_guard lock(*jobConfig.JobsLock);
+        MergeTwitchVideoInfo(newVideoInfo.get(), job.VideoInfo.get());
         job.VideoInfo = std::move(newVideoInfo);
     }
 
@@ -581,7 +641,7 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
                 return ResultType::NetworkError;
             }
             if (result->ResponseCode == 404
-                && videoInfo->GetVideoRecordingState() == RecordingState::Live) {
+                && videoInfo->GetVideoRecordingState() != RecordingState::Recorded) {
                 // this can happen on streams that have just started, in this just wait a bit
                 // and retry
                 if (!cancellationToken.DelayFor(std::chrono::seconds(20))) {
@@ -603,6 +663,7 @@ static ResultType GetFileUrlsOfVod(TwitchVideoJob& job,
                     videoInfo = newVideoInfo->Clone();
 
                     std::lock_guard lock(*jobConfig.JobsLock);
+                    MergeTwitchVideoInfo(newVideoInfo.get(), job.VideoInfo.get());
                     job.VideoInfo = std::move(newVideoInfo);
                 }
                 continue;
