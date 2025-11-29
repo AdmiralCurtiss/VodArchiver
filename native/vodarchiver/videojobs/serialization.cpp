@@ -865,6 +865,12 @@ std::optional<std::vector<std::unique_ptr<IVideoJob>>>
         }
     }
 
+    for (auto& job : result) {
+        if (job->JobStatus == VideoJobStatus::Running) {
+            job->JobStatus = VideoJobStatus::NotStarted;
+        }
+    }
+
     return result;
 }
 
